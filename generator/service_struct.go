@@ -7,7 +7,19 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
+func generateServiceStructFile(base string, path string, name string, service *types.Service) *GoFile {
+	file := NewGoFile(base, path, name, true, false)
+	generateServiceStructType(file, service)
+	generateServiceStructTypeNewFunc(file, service)
+	generateServiceStructRegisterFunc(file, service)
+	for _, method := range service.Methods {
+		generateServiceStructMethodHandler(file, service.Name, method)
+	}
+	return file
+}
+
 func generateServiceStructType(file *GoFile, service *types.Service) {
+	file.AddImport("", service.ImportPath, "/service/handlers")
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("type %s struct {", serviceName)
 	for _, method := range service.Methods {
@@ -20,21 +32,23 @@ func generateServiceStructType(file *GoFile, service *types.Service) {
 }
 
 func generateServiceStructTypeNewFunc(file *GoFile, service *types.Service) {
+	file.AddImport("", "context")
+	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/service/errors")
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func New() *%s {", serviceName)
 	file.Pf("return &%s{", serviceName)
-	// Import errors
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
 		lowerMethodName := strings.ToLowerFirst(method.Name)
 		args := []string{"ctx context.Context"}
 		if len(method.Arguments) > 0 {
-			// Import requests
+			file.AddImport("", service.ImportPath, "/service/requests")
 			args = append(args, "req *requests."+methodName+"Request")
 		}
 		results := []string{"err error"}
 		if len(method.Results) > 0 {
-			// Import responses
+			file.AddImport("", service.ImportPath, "/service/responses")
 			results = append([]string{"res *responses." + methodName + "Response"}, results...)
 		}
 		file.Pf("%sHandler: handlers.%sRequestResponseHandlerFunc(func(%s) (%s) {", lowerMethodName, methodName, strs.Join(args, ", "), strs.Join(results, ", "))
@@ -56,6 +70,9 @@ func generateServiceStructRegisterFunc(file *GoFile, service *types.Service) {
 }
 
 func generateTypeSwitchForMethodHandler(file *GoFile, method *types.Method) {
+	file.AddImport("", "context")
+	file.AddImport("", method.Service.ImportPath, "/service/handlers")
+	file.AddImport("", method.Service.ImportPath, "/service/handlers/converters")
 	file.Pf("switch t := h.(type) {")
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
@@ -65,14 +82,14 @@ func generateTypeSwitchForMethodHandler(file *GoFile, method *types.Method) {
 	file.Pf("s.%sHandler = converters.%sRequestResponseHandlerTo%sRequestHandler(converters.%sRequestHandlerTo%sHandler(handlers.%sHandlerFunc(t)))", lowerMethodName, methodName, methodName, methodName, methodName, methodName)
 	args = []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		// Import requests
+		file.AddImport("", method.Service.ImportPath, "/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	file.Pf("case func(%s) (%s):", strs.Join(args, ", "), strs.Join(results, ", "))
 	file.Pf("s.%sHandler = converters.%sRequestResponseHandlerTo%sRequestHandler(handlers.%sRequestHandlerFunc(t))", lowerMethodName, methodName, methodName, methodName)
 	results = []string{"err error"}
 	if len(method.Results) > 0 {
-		// Import responses
+		file.AddImport("", method.Service.ImportPath, "/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("case func(%s) (%s):", strs.Join(args, ", "), strs.Join(results, ", "))
@@ -94,34 +111,24 @@ func generateTypeSwitchForMethodHandler(file *GoFile, method *types.Method) {
 }
 
 func generateServiceStructMethodHandler(file *GoFile, service string, method *types.Method) {
+	file.AddImport("", "context")
 	serviceName := strings.ToUpperFirst(service)
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	args := []string{"ctx context.Context"}
 	argsInCall := []string{"ctx"}
 	if len(method.Arguments) > 0 {
-		// Import requests
+		file.AddImport("", method.Service.ImportPath, "/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 		argsInCall = append(argsInCall, "req")
 	}
 	results := []string{"err error"}
 	if len(method.Results) > 0 {
-		// Import responses
+		file.AddImport("", method.Service.ImportPath, "/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (s *%s) %s(%s) (%s) {", serviceName, methodName, strs.Join(args, ", "), strs.Join(results, ", "))
 	file.Pf("return s.%sHandler.%s(%s)", lowerMethodName, methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
-}
-
-func generateServiceStructFile(base string, path string, name string, service *types.Service) *GoFile {
-	file := NewGoFile(base, path, name, true, false)
-	generateServiceStructType(file, service)
-	generateServiceStructTypeNewFunc(file, service)
-	generateServiceStructRegisterFunc(file, service)
-	for _, method := range service.Methods {
-		generateServiceStructMethodHandler(file, service.Name, method)
-	}
-	return file
 }
