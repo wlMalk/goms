@@ -9,6 +9,17 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
+func Generate(s *types.Service) (files Files, err error) {
+	files = append(files, generateRequestsFile(s.Path, filepath.Join("service", "requests"), "requests", s.Methods))
+	files = append(files, generateResponseFile(s.Path, filepath.Join("service", "responses"), "responses", s.Methods))
+	files = append(files, generateHandlersFile(s.Path, filepath.Join("service", "handlers"), "handlers", s))
+	files = append(files, generateConvertersFile(s.Path, filepath.Join("service", "handlers", "converters"), "converters", s.Methods))
+	files = append(files, generateServiceMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "middleware", s))
+	files = append(files, generateServiceStructFile(s.Path, filepath.Join("service"), strings.ToLowerFirst(s.Name), s))
+	files = append(files, generateServiceImplementationFile(s.Path, filepath.Join("strings"), strings.ToLowerFirst(s.Name), s))
+	return
+}
+
 func getMethodArguments(args []*types.Argument) []string {
 	var a []string
 	for _, arg := range args {
@@ -122,15 +133,5 @@ func getResultsVarsFromResponse(results []*types.Field) (a []string) {
 	for i := range a {
 		a[i] = "res." + strings.ToUpperFirst(a[i])
 	}
-	return
-}
-
-func Generate(s *types.Service) (files Files, err error) {
-	files = append(files, generateRequestsFile(s.Path, filepath.Join("service", "requests"), "requests", s.Methods))
-	files = append(files, generateResponseFile(s.Path, filepath.Join("service", "responses"), "responses", s.Methods))
-	files = append(files, generateHandlersFile(s.Path, filepath.Join("service", "handlers"), "handlers", s))
-	files = append(files, generateConvertersFile(s.Path, filepath.Join("service", "handlers", "converters"), "converters", s.Methods))
-	files = append(files, generateServiceMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "middleware", s))
-	files = append(files, generateServiceStructFile(s.Path, filepath.Join("service"), strings.ToLowerFirst(s.Name), s))
 	return
 }
