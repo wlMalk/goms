@@ -14,6 +14,39 @@ import (
 
 var versionPattern = regexp.MustCompile(`(?is)^v?([0-9]+)((\.|-|_|:)([0-9]+))?((\.|-|_|:)([0-9]+))?$`)
 
+func Parse(ast *astTypes.File) (s *types.Service, err error) {
+	s = &types.Service{}
+	s.Name = strings.ToUpperFirst(strings.ToCamelCase(ast.Name))
+	iface := getServiceInterface(ast.Interfaces)
+	if iface == nil {
+		return nil, errors.New("Service interface is not defined in service.go file")
+	}
+	for _, method := range iface.Methods {
+		m, err := parseMethod(method)
+		if err != nil {
+			return nil, err
+		}
+		m.Service = s
+		if err := validateMethod(m); err != nil {
+			return nil, err
+		}
+		s.Methods = append(s.Methods, m)
+	}
+	s.Tags, s.Docs = cleanComments(iface.Docs)
+	// ast.
+	return
+}
+
+func ParseVersion(ver string) (*types.Version, error) {
+	v := &types.Version{}
+	var err error
+	v.Major, v.Minor, v.Patch, err = parseVersion(ver)
+	if err != nil {
+		return nil, err
+	}
+	return v, nil
+}
+
 func parseVersion(ver string) (int, int, int, error) {
 	err := fmt.Errorf("cannot parse \"%s\" as a version", ver)
 	matches := versionPattern.FindAllStringSubmatch(ver, -1)
@@ -40,38 +73,6 @@ func parseVersion(ver string) (int, int, int, error) {
 		}
 	}
 	return major, minor, patch, nil
-}
-
-func ParseVersion(ver string) (*types.Version, error) {
-	v := &types.Version{}
-	var err error
-	v.Major, v.Minor, v.Patch, err = parseVersion(ver)
-	if err != nil {
-		return nil, err
-	}
-	return v, nil
-}
-
-func Parse(ast *astTypes.File) (s *types.Service, err error) {
-	s = &types.Service{}
-	s.Name = strings.ToUpperFirst(strings.ToCamelCase(ast.Name))
-	iface := getServiceInterface(ast.Interfaces)
-	if iface == nil {
-		return nil, errors.New("Service interface is not defined in service.go file")
-	}
-	for _, method := range iface.Methods {
-		m, err := parseMethod(method)
-		if err != nil {
-			return nil, err
-		}
-		if err := validateMethod(m); err != nil {
-			return nil, err
-		}
-		s.Methods = append(s.Methods, m)
-	}
-	s.Tags, s.Docs = cleanComments(iface.Docs)
-	// ast.
-	return
 }
 
 func parseArgument(v astTypes.Variable) (*types.Argument, error) {

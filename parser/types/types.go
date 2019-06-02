@@ -37,6 +37,7 @@ func (v *Version) String() string {
 }
 
 type Method struct {
+	Service   *Service
 	Name      string
 	Docs      []string
 	Tags      []string
