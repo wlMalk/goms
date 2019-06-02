@@ -38,6 +38,27 @@ var methodTagsParsers = map[string]func(method *types.Method, tag string) error{
 	"validate":     parseMethodValidateTag,
 }
 
+func limitLineLength(str string, length int) []string {
+	words := strs.Fields(str)
+	var lines []string
+	charCount := 0
+	var line []string
+	for i := 0; i < len(words); {
+		count := charCount + len(words[i]) + len(line) - 1
+		if count <= length {
+			line = append(line, words[i])
+			charCount += len(words[i])
+			i++
+		}
+		if count > length || i == len(words) {
+			lines = append(lines, strs.Join(line, " "))
+			line = []string{}
+			charCount = 0
+		}
+	}
+	return lines
+}
+
 func cleanComments(comments []string) (tags []string, docs []string) {
 	for i := range comments {
 		comments[i] = strs.TrimSpace(strs.TrimPrefix(comments[i], "//"))
@@ -47,7 +68,7 @@ func cleanComments(comments []string) (tags []string, docs []string) {
 			docs = append(docs, comments[i])
 		}
 	}
-	return strings.SplitS(strs.Join(tags, " "), " "), docs
+	return strings.SplitS(strs.Join(tags, " "), " "), limitLineLength(strs.Join(docs, " "), 80)
 }
 
 func parseServiceTags(service *types.Service, tags []string) error {
