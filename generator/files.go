@@ -169,18 +169,21 @@ func (f *GoFile) getImport(path string) *goImportDef {
 	return nil
 }
 
-const dnsName string = `^([a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62}){1}(\.[a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62})*[\._]?$`
+const dnsName string = `^([a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62}){1}(\.[a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62})+[\._]?$`
 
 var rxDNSName = regexp.MustCompile(dnsName)
 
-func (f *GoFile) AddImport(alias string, path string) {
-	if !f.HasImport(path) {
-		if strs.HasPrefix(path, filepath.ToSlash(f.base)) {
-			f.imports[1] = append(f.imports[1], &goImportDef{alias: alias, path: path})
-		} else if pathParts := filepath.SplitList(path); len(pathParts) > 0 && rxDNSName.MatchString(pathParts[0]) {
-			f.imports[2] = append(f.imports[2], &goImportDef{alias: alias, path: path})
+func (f *GoFile) AddImport(alias string, path ...string) {
+	for i := range path {
+		path[i] = strs.Trim(path[i], "/")
+	}
+	if !f.HasImport(strs.Join(path, "/")) {
+		if strs.HasSuffix(filepath.ToSlash(f.base), path[0]) {
+			f.imports[1] = append(f.imports[1], &goImportDef{alias: alias, path: strs.Join(path, "/")})
+		} else if pathParts := filepath.SplitList(strs.Join(path, "/")); len(pathParts) > 0 && rxDNSName.MatchString(pathParts[0]) {
+			f.imports[2] = append(f.imports[2], &goImportDef{alias: alias, path: strs.Join(path, "/")})
 		} else {
-			f.imports[0] = append(f.imports[0], &goImportDef{alias: strs.TrimSpace(alias), path: path})
+			f.imports[0] = append(f.imports[0], &goImportDef{alias: strs.TrimSpace(alias), path: strs.Join(path, "/")})
 		}
 	}
 }
