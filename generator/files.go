@@ -180,7 +180,7 @@ func (f *GoFile) AddImport(alias string, path ...string) {
 	if !f.HasImport(strs.Join(path, "/")) {
 		if strs.HasSuffix(filepath.ToSlash(f.base), path[0]) {
 			f.imports[1] = append(f.imports[1], &goImportDef{alias: alias, path: strs.Join(path, "/")})
-		} else if pathParts := filepath.SplitList(strs.Join(path, "/")); len(pathParts) > 0 && rxDNSName.MatchString(pathParts[0]) {
+		} else if pathParts := strs.Split(strs.Join(path, "/"), "/"); len(pathParts) > 0 && rxDNSName.MatchString(pathParts[0]) {
 			f.imports[2] = append(f.imports[2], &goImportDef{alias: alias, path: strs.Join(path, "/")})
 		} else {
 			f.imports[0] = append(f.imports[0], &goImportDef{alias: strs.TrimSpace(alias), path: strs.Join(path, "/")})
