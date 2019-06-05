@@ -14,6 +14,8 @@ func generateConvertersFile(base string, path string, name string, methods []*ty
 		generateHandlerToRequestHandlerConverter(file, method)
 		generateRequestResponseHandlerToRequestHandlerConverter(file, method)
 		generateRequestHandlerToRequestResponseHandlerConverter(file, method)
+		generateEndpointToRequestResponseConverter(file, method)
+		generateRequestResponseHandlerToEndpointConverter(file, method)
 	}
 	return file
 }
@@ -41,16 +43,18 @@ func generateRequestHandlerToHandlerConverter(file *GoFile, method *types.Method
 func generateHandlerToRequestHandlerConverter(file *GoFile, method *types.Method) {
 	file.AddImport("", "context")
 	file.AddImport("", method.Service.ImportPath, "/service/handlers")
-	file.AddImport("", method.Service.ImportPath, "/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
 	args := append([]string{"ctx context.Context"}, getMethodArguments(method.Arguments)...)
 	results := append(getMethodResults(method.Results), "err error")
 	argsInCall := getMethodArgumentsInCall(method.Arguments)
 	file.Pf("func %sHandlerTo%sRequestHandler(next handlers.%sRequestHandler) handlers.%sHandler {", methodName, methodName, methodName, methodName)
 	file.Pf("return handlers.%sHandlerFunc(func(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
-	file.Pf("req := requests.%s(%s)", methodName, strs.Join(argsInCall, ", "))
+	if len(method.Arguments) > 0 {
+		file.Pf("req := requests.%s(%s)", methodName, strs.Join(argsInCall, ", "))
+	}
 	argsInCall = []string{"ctx"}
 	if len(method.Arguments) > 0 {
+		file.AddImport("", method.Service.ImportPath, "/service/requests")
 		argsInCall = append(argsInCall, "req")
 	}
 	file.Pf("return next.%s(%s)", methodName, strs.Join(argsInCall, ", "))
@@ -111,11 +115,77 @@ func generateRequestHandlerToRequestResponseHandlerConverter(file *GoFile, metho
 	resultVars := append(getResultsVarsFromResponse(method.Results), "nil")
 	file.Pf("func %sRequestHandlerTo%sRequestResponseHandler(next handlers.%sRequestResponseHandler) handlers.%sRequestHandler {", methodName, methodName, methodName, methodName)
 	file.Pf("return handlers.%sRequestHandlerFunc(func(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
-	file.Pf("%s := next.%s(%s)", strs.Join(returnValues, ", "), methodName, strs.Join(argsInCall, ", "))
+	if len(method.Results) > 0 {
+		file.Pf("%s := next.%s(%s)", strs.Join(returnValues, ", "), methodName, strs.Join(argsInCall, ", "))
+	} else {
+		file.Pf("%s = next.%s(%s)", strs.Join(returnValues, ", "), methodName, strs.Join(argsInCall, ", "))
+	}
 	file.Pf("if err != nil {")
 	file.Pf("return")
 	file.Pf("}")
 	file.Pf("return %s", strs.Join(resultVars, ", "))
+	file.Pf("})")
+	file.Pf("}")
+	file.Pf("")
+}
+
+func generateEndpointToRequestResponseConverter(file *GoFile, method *types.Method) {
+	file.AddImport("", "context")
+	file.AddImport("", method.Service.ImportPath, "/service/handlers")
+	file.AddImport("", "github.com/go-kit/kit/endpoint")
+	methodName := strings.ToUpperFirst(method.Name)
+	file.Pf("func EndpointTo%sRequestResponseHandler(next handlers.%sRequestResponseHandler) endpoint.Endpoint {", methodName, methodName)
+	file.Pf("return endpoint.Endpoint(func(ctx context.Context, req interface{}) (res interface{}, err error) {")
+	retValue := ""
+	if len(method.Results) == 0 {
+		retValue = "nil, "
+	}
+	if len(method.Arguments) > 0 {
+		file.AddImport("", method.Service.ImportPath, "/service/requests")
+		file.Pf("return %snext.%s(ctx, req.(*requests.%sRequest))", retValue, methodName, methodName)
+	} else {
+		file.Pf("return %snext.%s(ctx)", retValue, methodName)
+	}
+	file.Pf("})")
+	file.Pf("}")
+	file.Pf("")
+}
+
+func generateRequestResponseHandlerToEndpointConverter(file *GoFile, method *types.Method) {
+	file.AddImport("", "context")
+	file.AddImport("", method.Service.ImportPath, "/service/handlers")
+	file.AddImport("", "github.com/go-kit/kit/endpoint")
+	methodName := strings.ToUpperFirst(method.Name)
+	args := []string{"ctx context.Context"}
+	if len(method.Arguments) > 0 {
+		file.AddImport("", method.Service.ImportPath, "/service/requests")
+		args = append(args, "req *requests."+methodName+"Request")
+	}
+	results := []string{"err error"}
+	if len(method.Results) > 0 {
+		file.AddImport("", method.Service.ImportPath, "/service/responses")
+		results = append([]string{"res *responses." + methodName + "Response"}, results...)
+	}
+	file.Pf("func %sRequestResponseHandlerToEndpoint(next endpoint.Endpoint) handlers.%sRequestResponseHandler {", methodName, methodName)
+	file.Pf("return handlers.%sRequestResponseHandlerFunc(func(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
+	req := "nil"
+	if len(method.Arguments) > 0 {
+		req = "req"
+	}
+	if len(method.Results) > 0 {
+		file.Pf("resp, err := next(ctx, %s)", req)
+	} else {
+		file.Pf("_, err = next(ctx, %s)", req)
+	}
+	if len(method.Results) > 0 {
+		file.Pf("if err != nil {")
+		file.Pf("return nil, err")
+		file.Pf("}")
+		file.Pf("if resp != nil {")
+		file.Pf("return resp.(*responses.%sResponse), nil", methodName)
+		file.Pf("}")
+	}
+	file.Pf("return")
 	file.Pf("})")
 	file.Pf("}")
 	file.Pf("")
