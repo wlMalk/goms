@@ -43,6 +43,16 @@ type Method struct {
 	Tags      []string
 	Arguments []*Argument
 	Results   []*Field
+
+	Options MethodOptions
+}
+
+type MethodOptions struct {
+	HTTP HTTPMethodOptions
+}
+
+type HTTPMethodOptions struct {
+	Method string
 }
 
 type Type struct {
@@ -130,6 +140,16 @@ type Argument struct {
 	Type         *Type
 	IsOptional   bool
 	DefaultValue string
+
+	Options ArgumentOptions
+}
+
+type ArgumentOptions struct {
+	HTTP HTTPArgumentOptions
+}
+
+type HTTPArgumentOptions struct {
+	Origin string
 }
 
 type Field struct {
