@@ -13,8 +13,27 @@ func generateServiceImplementationFile(base string, path string, name string, se
 	generateServiceImplementationStructNewFunc(file, service)
 	for _, method := range service.Methods {
 		generateServiceMethodImplementation(file, service.Name, method)
-		generateServiceMethodImplementationMiddleware(file, service.Name, method)
 	}
+	return file
+}
+
+func generateServiceImplementationValidatorsFile(base string, path string, name string, service *types.Service) *GoFile {
+	file := NewGoFile(base, path, name, false, false)
+	for _, method := range service.Methods {
+		if len(method.Arguments) > 0 {
+			generateServiceMethodImplementationValidateFunc(file, method)
+		}
+	}
+	return file
+}
+
+func generateServiceImplementationMiddlewareFile(base string, path string, name string, service *types.Service) *GoFile {
+	file := NewGoFile(base, path, name, false, false)
+	for _, method := range service.Methods {
+		generateServiceMethodImplementationMiddleware(file, method)
+		generateServiceMethodImplementationOuterMiddleware(file, method)
+	}
+	generateServiceImplementationMiddleware(file, service)
 	return file
 }
 
@@ -45,12 +64,46 @@ func generateServiceMethodImplementation(file *GoFile, service string, method *t
 	file.Pf("")
 }
 
-func generateServiceMethodImplementationMiddleware(file *GoFile, service string, method *types.Method) {
+func generateServiceMethodImplementationMiddleware(file *GoFile, method *types.Method) {
+	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	methodName := strings.ToUpperFirst(method.Name)
-	serviceName := strings.ToUpperFirst(service)
-	file.Pf("func (s *%s) %sMiddleware() []interface{} {", serviceName, methodName)
-	file.Cf("TODO: Add %sMiddleware", methodName)
-	file.Pf("return []interface{}{}")
+	serviceName := strings.ToUpperFirst(method.Service.Name)
+	file.Pf("func (s *%s) %sMiddleware(e endpoint.Endpoint) endpoint.Endpoint {", serviceName, methodName)
+	file.Cf("TODO: Wrap %s middleware around e", methodName)
+	file.Pf("return e")
+	file.Pf("}")
+	file.Pf("")
+}
+
+func generateServiceMethodImplementationOuterMiddleware(file *GoFile, method *types.Method) {
+	file.AddImport("", "github.com/go-kit/kit/endpoint")
+	methodName := strings.ToUpperFirst(method.Name)
+	serviceName := strings.ToUpperFirst(method.Service.Name)
+	file.Pf("func (s *%s) Outer%sMiddleware(e endpoint.Endpoint) endpoint.Endpoint {", serviceName, methodName)
+	file.Cf("TODO: Wrap %s middleware around e", methodName)
+	file.Pf("return e")
+	file.Pf("}")
+	file.Pf("")
+}
+
+func generateServiceMethodImplementationValidateFunc(file *GoFile, method *types.Method) {
+	file.AddImport("", "context")
+	file.AddImport("", method.Service.ImportPath, "/service/requests")
+	methodName := strings.ToUpperFirst(method.Name)
+	serviceName := strings.ToUpperFirst(method.Service.Name)
+	file.Pf("func (s *%s) Validate%s(ctx context.Context, req requests.%sRequest) error {", serviceName, methodName, methodName)
+	file.Cf("TODO: Validate %s request", methodName)
+	file.Pf("return nil")
+	file.Pf("}")
+	file.Pf("")
+}
+
+func generateServiceImplementationMiddleware(file *GoFile, service *types.Service) {
+	file.AddImport("", service.ImportPath, "/service/handlers")
+	serviceName := strings.ToUpperFirst(service.Name)
+	file.Pf("func (s *%s) Middleware(h handlers.RequestResponseHandler) handlers.RequestResponseHandler {", serviceName)
+	file.Cf("TODO: Wrap %s middleware around h", serviceName)
+	file.Pf("return h")
 	file.Pf("}")
 	file.Pf("")
 }
