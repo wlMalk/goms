@@ -18,6 +18,7 @@ func Generate(s *types.Service) (files Files, err error) {
 	files = append(files, generateServiceEndpointsFile(s.Path, filepath.Join("service"), "endpoints", s))
 	files = append(files, generateServiceImplementationFile(s.Path, filepath.Join("strings"), strings.ToLowerFirst(s.Name), s))
 	files = append(files, generateHTTPRequestsFile(s.Path, filepath.Join("service", "transport", "http", "requests"), "requests", s.Methods))
+	files = append(files, generateHTTPResponsesFile(s.Path, filepath.Join("service", "transport", "http", "responses"), "responses", s.Methods))
 	return
 }
 
