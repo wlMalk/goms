@@ -15,7 +15,7 @@ func Generate(s *types.Service) (files Files, err error) {
 	files = append(files, generateHandlersFile(s.Path, filepath.Join("service", "handlers"), "handlers", s))
 	files = append(files, generateConvertersFile(s.Path, filepath.Join("service", "handlers", "converters"), "converters", s.Methods))
 	files = append(files, generateServiceMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "middleware", s))
-	files = append(files, generateServiceStructFile(s.Path, filepath.Join("service"), strings.ToLowerFirst(s.Name), s))
+	files = append(files, generateServiceEndpointsFile(s.Path, filepath.Join("service"), "endpoints", s))
 	files = append(files, generateServiceImplementationFile(s.Path, filepath.Join("strings"), strings.ToLowerFirst(s.Name), s))
 	return
 }
@@ -77,6 +77,9 @@ func getFieldTagsString(tags map[string]string) string {
 }
 
 func generateStruct(file *GoFile, name string, fields []*types.Field) {
+	if len(fields) == 0 {
+		return
+	}
 	file.Pf("type %s struct {", name)
 	for _, f := range fields {
 		jsonName := f.Name
