@@ -75,8 +75,14 @@ func parseVersion(ver string) (int, int, int, error) {
 	return major, minor, patch, nil
 }
 
-func parseArgument(v astTypes.Variable) (*types.Argument, error) {
+func defaultArgument() *types.Argument {
 	a := &types.Argument{}
+	a.Options.HTTP.Origin = "BODY"
+	return a
+}
+
+func parseArgument(v astTypes.Variable) (*types.Argument, error) {
+	a := defaultArgument()
 	var err error
 	a.Name = strings.ToUpperFirst(strings.ToCamelCase(v.Name))
 	a.Type, err = parseType(v.Type)
@@ -147,8 +153,14 @@ func parseResults(m *types.Method, args []astTypes.Variable) error {
 	return nil
 }
 
-func parseMethod(method *astTypes.Function) (*types.Method, error) {
+func defaultMethod() *types.Method {
 	m := &types.Method{}
+	m.Options.HTTP.Method = "POST"
+	return m
+}
+
+func parseMethod(method *astTypes.Function) (*types.Method, error) {
+	m := defaultMethod()
 	m.Name = method.Name
 	err := parseArguments(m, method.Args)
 	if err != nil {
