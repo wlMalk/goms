@@ -14,6 +14,16 @@ type Service struct {
 	Methods    []*Method
 	Structs    []*Struct
 	Enums      []*Enum
+
+	Options ServiceOptions
+}
+
+type ServiceOptions struct {
+	HTTP HTTPServiceOptions
+}
+
+type HTTPServiceOptions struct {
+	URIPrefix string
 }
 
 type Version struct {
@@ -53,6 +63,8 @@ type MethodOptions struct {
 
 type HTTPMethodOptions struct {
 	Method string
+	URI    string
+	AbsURI string
 }
 
 type Type struct {
