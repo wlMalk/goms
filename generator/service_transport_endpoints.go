@@ -7,7 +7,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func generateServiceEndpointsFile(base string, path string, name string, service *types.Service) *GoFile {
+func generateServiceTransportEndpointsFile(base string, path string, name string, service *types.Service) *GoFile {
 	file := NewGoFile(base, path, name, true, false)
 	generateServiceStructType(file, service)
 	generateServiceStructTypeNewFunc(file, service)
@@ -20,8 +20,9 @@ func generateServiceEndpointsFile(base string, path string, name string, service
 func generateServiceStructType(file *GoFile, service *types.Service) {
 	file.AddImport("", service.ImportPath, "/service/handlers")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
+	serviceName := strings.ToUpperFirst(service.Name)
 	lowerServiceName := strings.ToLowerFirst(service.Name)
-	file.Pf("type endpoints struct {")
+	file.Pf("type endpointsHandler struct {")
 	for _, method := range service.Methods {
 		lowerMethodName := strings.ToLowerFirst(method.Name)
 		file.Pf("%s endpoint.Endpoint", lowerMethodName)
@@ -29,11 +30,11 @@ func generateServiceStructType(file *GoFile, service *types.Service) {
 	file.Pf("}")
 	file.Pf("")
 	file.Pf("type %s struct {", lowerServiceName)
-	file.Pf("endpoints *endpoints")
+	file.Pf("endpoints *endpointsHandler")
 	file.Pf("handler handlers.RequestResponseHandler")
 	file.Pf("}")
 	file.Pf("")
-	file.Pf("type Endpoints struct {")
+	file.Pf("type %s struct {", serviceName)
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
 		file.Pf("%s endpoint.Endpoint", methodName)
@@ -46,10 +47,11 @@ func generateServiceStructTypeNewFunc(file *GoFile, service *types.Service) {
 	file.AddImport("", "context")
 	file.AddImport("", "github.com/wlMalk/goms/goms/errors")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
+	serviceName := strings.ToUpperFirst(service.Name)
 	lowerServiceName := strings.ToLowerFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
-	file.Pf("func New(h interface{}) *Endpoints {")
-	file.Pf("handler := &endpoints{")
+	file.Pf("func Endpoints(h interface{}) *%s {", serviceName)
+	file.Pf("handler := &endpointsHandler{")
 	for _, method := range service.Methods {
 		lowerMethodName := strings.ToLowerFirst(method.Name)
 		methodNameSnake := strings.ToSnakeCase(method.Name)
@@ -154,7 +156,7 @@ func generateServiceStructMethodHandler(file *GoFile, method *types.Method) {
 		file.AddImport("", method.Service.ImportPath, "/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
-	file.Pf("func (s *endpoints) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
+	file.Pf("func (s *endpointsHandler) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
 	req := "nil"
 	if len(method.Arguments) > 0 {
 		req = "req"
@@ -181,6 +183,7 @@ func generateServiceStructMethodHandler(file *GoFile, method *types.Method) {
 
 func generateEndpointsPacker(file *GoFile, service *types.Service) {
 	file.Pf("var (")
+	serviceName := strings.ToUpperFirst(service.Name)
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
 		lowerMethodName := strings.ToLowerFirst(method.Name)
@@ -198,7 +201,7 @@ func generateEndpointsPacker(file *GoFile, service *types.Service) {
 		file.Pf("}")
 		file.Pf("")
 	}
-	file.Pf("endpoints := &Endpoints{")
+	file.Pf("endpoints := &%s{", serviceName)
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
 		lowerMethodName := strings.ToLowerFirst(method.Name)
