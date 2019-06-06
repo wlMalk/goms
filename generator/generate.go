@@ -15,12 +15,15 @@ func Generate(s *types.Service) (files Files, err error) {
 	files = append(files, generateHandlersFile(s.Path, filepath.Join("service", "handlers"), "handlers", s))
 	files = append(files, generateConvertersFile(s.Path, filepath.Join("service", "handlers", "converters"), "converters", s.Methods))
 	files = append(files, generateServiceMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "middleware", s))
-	files = append(files, generateServiceEndpointsFile(s.Path, filepath.Join("service"), "endpoints", s))
-	files = append(files, generateServiceImplementationFile(s.Path, "strings", strings.ToLowerFirst(s.Name), s))
-	files = append(files, generateServiceImplementationValidatorsFile(s.Path, "strings", "validators", s))
-	files = append(files, generateServiceImplementationMiddlewareFile(s.Path, "strings", "middleware", s))
+	files = append(files, generateServiceTransportEndpointsFile(s.Path, filepath.Join("service", "transport"), "endpoints", s))
+	files = append(files, generateServiceImplementationFile(s.Path, strings.ToLowerFirst(s.Name), strings.ToLowerFirst(s.Name), s))
+	files = append(files, generateServiceImplementationValidatorsFile(s.Path, strings.ToLowerFirst(s.Name), "validators", s))
+	files = append(files, generateServiceImplementationMiddlewareFile(s.Path, strings.ToLowerFirst(s.Name), "middleware", s))
 	files = append(files, generateHTTPRequestsFile(s.Path, filepath.Join("service", "transport", "http", "requests"), "requests", s.Methods))
 	files = append(files, generateHTTPResponsesFile(s.Path, filepath.Join("service", "transport", "http", "responses"), "responses", s.Methods))
+	files = append(files, generateHTTPServerFile(s.Path, filepath.Join("service", "transport", "http", "server"), "server", s))
+	files = append(files, generateHTTPDecodersFile(s.Path, filepath.Join("service", "transport", "http"), "decoders", s))
+	files = append(files, generateHTTPEncodersFile(s.Path, filepath.Join("service", "transport", "http"), "encoders", s))
 	return
 }
 
