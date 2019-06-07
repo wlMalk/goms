@@ -27,11 +27,10 @@ func New(r *httprouter.Router) *Router {
 }
 
 func (r *Router) Method(method string, uri string, handler http.Handler) {
-	r.r.Handler(method, uri, handler)
-}
-
-func (r *Router) Params(req *http.Request) goms_http.Params {
-	return &Params{params: httprouter.ParamsFromContext(req.Context())}
+	r.r.Handle(method, uri, httprouter.Handle(func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
+		req.WithContext(goms_http.SetParams(req.Context(), &Params{params: params}))
+		handler.ServeHTTP(w, req)
+	}))
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
