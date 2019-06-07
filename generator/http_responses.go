@@ -59,7 +59,7 @@ func generateHTTPResponseNewHTTPFunc(file *GoFile, method *types.Method) {
 	file.AddImport("", "net/http")
 	file.AddImport("", "encoding/json")
 	methodName := strings.ToUpperFirst(method.Name)
-	file.Pf("func %sHTTP(res *http.Response) (*%sResponse, error) {", methodName, methodName)
+	file.Pf("func %sFromHTTP(res *http.Response) (*%sResponse, error) {", methodName, methodName)
 	file.Pf("resp := &%sResponse{}", methodName)
 	file.Pf("err := json.NewDecoder(res.Body).Decode(resp)")
 	file.Pf("if err!=nil{")
