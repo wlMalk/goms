@@ -91,10 +91,7 @@ func generateStruct(file *GoFile, name string, fields []*types.Field) {
 	}
 	file.Pf("type %s struct {", name)
 	for _, f := range fields {
-		jsonName := f.Name
-		if f.Alias != "" {
-			jsonName = f.Alias
-		}
+		jsonName := getName(f.Name, f.Alias)
 		if len(f.Tags) == 0 {
 			f.Tags = map[string]string{"json": strings.ToLowerFirst(jsonName)}
 		} else {
@@ -146,4 +143,12 @@ func getResultsVarsFromResponse(results []*types.Field) (a []string) {
 		a[i] = "res." + strings.ToUpperFirst(a[i])
 	}
 	return
+}
+
+func getName(name string, alias string) string {
+	n := name
+	if alias != "" {
+		n = alias
+	}
+	return strings.ToLowerFirst(n)
 }
