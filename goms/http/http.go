@@ -13,9 +13,10 @@ func HTTPResponseEncoder(_ context.Context, w http.ResponseWriter, response inte
 
 type Router interface {
 	Method(method string, uri string, handler http.Handler)
-	PathParams(req *http.Request) PathParams
+	Params(req *http.Request) Params
+	ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
-type PathParams interface {
+type Params interface {
 	Get(name string) string
 }
