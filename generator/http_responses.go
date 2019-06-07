@@ -30,8 +30,8 @@ func generateHTTPResponse(file *GoFile, method *types.Method) {
 func generateHTTPResponseFields(file *GoFile, fields []*types.Field) {
 	for _, field := range fields {
 		fieldName := strings.ToUpperFirst(field.Name)
-		lowerFieldName := strings.ToLowerFirst(field.Name)
-		file.Pf("%s %s `json:\"%s\"`", fieldName, field.Type.GoType(), lowerFieldName)
+		fieldSpecialName := getName(field.Name, field.Alias)
+		file.Pf("%s %s `json:\"%s\"`", fieldName, field.Type.GoType(), fieldSpecialName)
 	}
 }
 
