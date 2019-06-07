@@ -22,8 +22,10 @@ func Generate(s *types.Service) (files Files, err error) {
 	files = append(files, generateHTTPRequestsFile(s.Path, filepath.Join("service", "transport", "http", "requests"), "requests", s.Methods))
 	files = append(files, generateHTTPResponsesFile(s.Path, filepath.Join("service", "transport", "http", "responses"), "responses", s.Methods))
 	files = append(files, generateHTTPServerFile(s.Path, filepath.Join("service", "transport", "http", "server"), "server", s))
+	files = append(files, generateHTTPClientFile(s.Path, filepath.Join("service", "transport", "http", "client"), "client", s))
 	files = append(files, generateHTTPDecodersFile(s.Path, filepath.Join("service", "transport", "http"), "decoders", s))
 	files = append(files, generateHTTPEncodersFile(s.Path, filepath.Join("service", "transport", "http"), "encoders", s))
+
 	return
 }
 
