@@ -34,7 +34,7 @@ func generateHTTPTransportServerNewFunc(file *GoFile, service *types.Service) {
 		methodName := strings.ToUpperFirst(method.Name)
 		methodHTTPMethod := method.Options.HTTP.Method
 		methodURI := getMethodURI(method)
-		file.Pf("router.Method(\"%s\", \"/%s\", kit_http.NewServer(", methodHTTPMethod, methodURI)
+		file.Pf("router.Method(\"%s\", \"%s\", kit_http.NewServer(", methodHTTPMethod, methodURI)
 		file.Pf("endpoints.%s,", methodName)
 		file.Pf("%s_http.Decode%sRequest,", serviceNameSnake, methodName)
 		file.Pf("%s_http.Encode%sResponse,", serviceNameSnake, methodName)
@@ -61,5 +61,5 @@ func getMethodURI(method *types.Method) string {
 		}
 		methodHTTPabsURI = path.Join(serviceHTTPURIPrefix, methodHTTPURI)
 	}
-	return path.Join(serviceVersion, methodHTTPabsURI)
+	return "/" + path.Join(serviceVersion, methodHTTPabsURI)
 }
