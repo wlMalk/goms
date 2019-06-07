@@ -33,3 +33,14 @@ func GetParams(ctx context.Context) Params {
 	return ctx.Value(ContextParamsKey).(Params)
 }
 
+func FormatURI(uri string, pairs ...string) string {
+	if len(pairs)%2 != 0 {
+		return ""
+	}
+	uri += "/"
+	for i := 0; i < len(pairs); i += 2 {
+		strings.Replace(uri, "/:"+pairs[i]+"/", "/"+pairs[i+1]+"/", -1)
+		strings.Replace(uri, "/*"+pairs[i]+"/", "/"+pairs[i+1]+"/", -1)
+	}
+	return strings.TrimSuffix(uri, "/")
+}
