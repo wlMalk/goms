@@ -21,16 +21,20 @@ type Params interface {
 	Get(name string) string
 }
 
-type contextKey int
+type contextKey string
 
-const ContextParamsKey contextKey = iota
+const contextParamsKey contextKey = "params-key"
 
 func SetParams(ctx context.Context, params Params) context.Context {
-	return context.WithValue(ctx, ContextParamsKey, params)
+	return context.WithValue(ctx, contextParamsKey, params)
 }
 
 func GetParams(ctx context.Context) Params {
-	return ctx.Value(ContextParamsKey).(Params)
+	params := ctx.Value(contextParamsKey)
+	if params == nil {
+		return nil
+	}
+	return params.(Params)
 }
 
 func FormatURI(uri string, pairs ...string) string {
