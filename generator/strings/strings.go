@@ -44,6 +44,11 @@ var (
 	ToURLSnakeCase = ToSomeCaseWithSep('-', unicode.ToLower)
 )
 
+func ToKebabCase(s string) string {
+	s = ToSnakeCase(s)
+	return strings.Replace(strings.Title(strings.Replace(s, "_", " ", -1)), " ", "-", -1)
+}
+
 func ToLowerFirst(s string) string {
 	if len(s) == 0 {
 		return ""
