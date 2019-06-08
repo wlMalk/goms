@@ -28,7 +28,7 @@ func New(r *httprouter.Router) *Router {
 
 func (r *Router) Method(method string, uri string, handler http.Handler) {
 	r.r.Handle(method, uri, httprouter.Handle(func(w http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		req.WithContext(goms_http.SetParams(req.Context(), &Params{params: params}))
+		req = req.WithContext(goms_http.SetParams(req.Context(), &Params{params: params}))
 		handler.ServeHTTP(w, req)
 	}))
 }
