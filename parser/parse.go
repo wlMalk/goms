@@ -33,7 +33,10 @@ func Parse(ast *astTypes.File) (s *types.Service, err error) {
 		s.Methods = append(s.Methods, m)
 	}
 	s.Tags, s.Docs = cleanComments(iface.Docs)
-	// ast.
+	err = parseServiceTags(s, s.Tags)
+	if err != nil {
+		return nil, err
+	}
 	return
 }
 
@@ -171,6 +174,10 @@ func parseMethod(method *astTypes.Function) (*types.Method, error) {
 		return nil, err
 	}
 	m.Tags, m.Docs = cleanComments(method.Docs)
+	err = parseMethodTags(m, m.Tags)
+	if err != nil {
+		return nil, err
+	}
 	return m, nil
 }
 
