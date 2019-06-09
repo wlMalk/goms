@@ -35,3 +35,16 @@ func CounterMiddleware(counter metrics.Counter) endpoint.Middleware {
 	}
 }
 
+func CounterLatencyMiddleware(counter metrics.Counter, latency metrics.Histogram) endpoint.Middleware {
+	return func(e endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
+			defer func(begin time.Time) {
+				counter.With("service", "service", "method", "method").Add(1)
+				latency.With("service", "service", "method", "method").Observe(time.Since(begin).Seconds())
+			}(time.Now())
+
+			return e(ctx, req)
+		}
+	}
+}
+
