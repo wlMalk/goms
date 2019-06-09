@@ -56,7 +56,7 @@ func main() {
 	service.Version = *version
 	service.Path = currentDir
 	service.ImportPath = importPath
-	files, err := generator.Generate(service)
+	files, err := generator.GenerateService(service)
 	if err != nil {
 		log.Fatalln(err)
 	}
