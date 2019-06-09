@@ -21,9 +21,9 @@ type Params interface {
 	Get(name string) string
 }
 
-type contextKey string
+type contextKeyType string
 
-const contextParamsKey contextKey = "params-key"
+const contextParamsKey contextKeyType = "params"
 
 func SetParams(ctx context.Context, params Params) context.Context {
 	return context.WithValue(ctx, contextParamsKey, params)
