@@ -9,7 +9,7 @@ import (
 )
 
 var serviceTags = []string{
-	"gen",
+	"goms",
 	"http-URI-prefix",
 }
 
@@ -28,7 +28,7 @@ var paramTags = []string{
 }
 
 var serviceTagsParsers = map[string]func(service *types.Service, tag string) error{
-	"gen":             parseServiceGenTag,
+	"goms":            parseServiceGomsTag,
 	"http-URI-prefix": parseServiceHttpUriPrefixTag,
 }
 
@@ -141,7 +141,7 @@ func cleanTag(tag string) string {
 	return strs.TrimSpace(strs.TrimSuffix(strs.TrimPrefix(strs.TrimSpace(tag), "("), ")"))
 }
 
-func parseServiceGenTag(service *types.Service, tag string) error {
+func parseServiceGomsTag(service *types.Service, tag string) error {
 	return nil
 }
 
