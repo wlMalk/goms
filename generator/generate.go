@@ -1,154 +1,30 @@
 package generator
 
 import (
-	"fmt"
 	"path/filepath"
-	strs "strings"
 
+	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/generate_service"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func Generate(s *types.Service) (files Files, err error) {
-	files = append(files, generateRequestsFile(s.Path, filepath.Join("service", "requests"), "requests", s.Methods))
-	files = append(files, generateResponseFile(s.Path, filepath.Join("service", "responses"), "responses", s.Methods))
-	files = append(files, generateHandlersFile(s.Path, filepath.Join("service", "handlers"), "handlers", s))
-	files = append(files, generateConvertersFile(s.Path, filepath.Join("service", "handlers", "converters"), "converters", s.Methods))
-	files = append(files, generateServiceMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "middleware", s))
-	files = append(files, generateServiceTransportEndpointsFile(s.Path, filepath.Join("service", "transport"), "endpoints", s))
-	files = append(files, generateServiceImplementationFile(s.Path, strings.ToLowerFirst(s.Name), strings.ToLowerFirst(s.Name), s))
-	files = append(files, generateServiceImplementationValidatorsFile(s.Path, strings.ToLowerFirst(s.Name), "validators", s))
-	files = append(files, generateServiceImplementationMiddlewareFile(s.Path, strings.ToLowerFirst(s.Name), "middleware", s))
-	files = append(files, generateHTTPRequestsFile(s.Path, filepath.Join("service", "transport", "http", "requests"), "requests", s.Methods))
-	files = append(files, generateHTTPResponsesFile(s.Path, filepath.Join("service", "transport", "http", "responses"), "responses", s.Methods))
-	files = append(files, generateHTTPServerFile(s.Path, filepath.Join("service", "transport", "http", "server"), "server", s))
-	files = append(files, generateHTTPClientFile(s.Path, filepath.Join("service", "transport", "http", "client"), "client", s))
-	files = append(files, generateHTTPDecodersFile(s.Path, filepath.Join("service", "transport", "http"), "decoders", s))
-	files = append(files, generateHTTPEncodersFile(s.Path, filepath.Join("service", "transport", "http"), "encoders", s))
+func GenerateService(s *types.Service) (files files.Files, err error) {
+	files = append(files, generate_service.GenerateRequestsFile(s.Path, filepath.Join("service", "requests"), "requests.goms", s.Methods))
+	files = append(files, generate_service.GenerateResponseFile(s.Path, filepath.Join("service", "responses"), "responses.goms", s.Methods))
+	files = append(files, generate_service.GenerateHandlersFile(s.Path, filepath.Join("service", "handlers"), "handlers.goms", s))
+	files = append(files, generate_service.GenerateConvertersFile(s.Path, filepath.Join("service", "handlers", "converters"), "converters.goms", s.Methods))
+	files = append(files, generate_service.GenerateServiceMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "middleware.goms", s))
+	files = append(files, generate_service.GenerateServiceTransportEndpointsFile(s.Path, filepath.Join("service", "transport"), "endpoints.goms", s))
+	files = append(files, generate_service.GenerateServiceImplementationFile(s.Path, strings.ToLowerFirst(s.Name), strings.ToLowerFirst(s.Name), s))
+	files = append(files, generate_service.GenerateServiceImplementationValidatorsFile(s.Path, strings.ToLowerFirst(s.Name), "validators", s))
+	files = append(files, generate_service.GenerateServiceImplementationMiddlewareFile(s.Path, strings.ToLowerFirst(s.Name), "middleware", s))
+	files = append(files, generate_service.GenerateHTTPRequestsFile(s.Path, filepath.Join("service", "transport", "http", "requests"), "requests.goms", s.Methods))
+	files = append(files, generate_service.GenerateHTTPResponsesFile(s.Path, filepath.Join("service", "transport", "http", "responses"), "responses.goms", s.Methods))
+	files = append(files, generate_service.GenerateHTTPServerFile(s.Path, filepath.Join("service", "transport", "http", "server"), "server.goms", s))
+	files = append(files, generate_service.GenerateHTTPClientFile(s.Path, filepath.Join("service", "transport", "http", "client"), "client.goms", s))
+	files = append(files, generate_service.GenerateHTTPDecodersFile(s.Path, filepath.Join("service", "transport", "http"), "decoders.goms", s))
+	files = append(files, generate_service.GenerateHTTPEncodersFile(s.Path, filepath.Join("service", "transport", "http"), "encoders.goms", s))
 
 	return
-}
-
-func getMethodArguments(args []*types.Argument) []string {
-	var a []string
-	for _, arg := range args {
-		a = append(a, fmt.Sprintf("%s %s", strings.ToLowerFirst(arg.Name), arg.Type.GoArgumentType()))
-	}
-	return a
-}
-
-func getMethodResults(results []*types.Field) []string {
-	var r []string
-	for _, result := range results {
-		r = append(r, fmt.Sprintf("%s %s", strings.ToLowerFirst(result.Name), result.Type.GoArgumentType()))
-	}
-	return r
-}
-
-func addMethodImports(file *GoFile, method *types.Method) {
-	file.AddImport("", "context")
-}
-
-func generateFunc(file *GoFile, receiver string, name string, args []string, results []string, f func()) {
-	file.P(getFuncSignature(receiver, name, args, results))
-	f()
-	file.P("}")
-	file.P("")
-}
-
-func getFuncSignature(receiver string, name string, args []string, results []string) string {
-	signature := "func "
-	if receiver != "" {
-		signature += "(" + receiver + ") "
-	}
-	signature += name + "(" + strs.Join(args, ", ") + ") "
-	if len(results) > 0 {
-		signature += "(" + strs.Join(results, ", ") + ") "
-	}
-	signature += "{"
-	return signature
-}
-
-func getExportedMethodSignature(receiver string, method *types.Method) string {
-	return getFuncSignature(receiver, strings.ToUpperFirst(method.Name), getMethodArguments(method.Arguments), getMethodResults(method.Results))
-}
-
-func getUnexportedMethodSignature(receiver string, method *types.Method) string {
-	return getFuncSignature(receiver, strings.ToLowerFirst(method.Name), getMethodArguments(method.Arguments), getMethodResults(method.Results))
-}
-
-func getFieldTagsString(tags map[string]string) string {
-	var a []string
-	for k, v := range tags {
-		a = append(a, fmt.Sprintf("%s:\"%s\"", k, v))
-	}
-	return strs.Join(a, ",")
-}
-
-func generateStruct(file *GoFile, name string, fields []*types.Field) {
-	if len(fields) == 0 {
-		return
-	}
-	file.Pf("type %s struct {", name)
-	for _, f := range fields {
-		jsonName := getName(f.Name, f.Alias)
-		if len(f.Tags) == 0 {
-			f.Tags = map[string]string{"json": strings.ToLowerFirst(jsonName)}
-		} else {
-			f.Tags["json"] = strings.ToLowerFirst(jsonName)
-		}
-		file.Pf("%s %s `%s`", f.Name, f.Type.GoType(), getFieldTagsString(f.Tags))
-	}
-	file.P("}")
-	file.P("")
-}
-
-func generateExportedStruct(file *GoFile, name string, fields []*types.Field) {
-	generateStruct(file, strings.ToUpperFirst(name), fields)
-}
-
-func generateUnexportedStruct(file *GoFile, name string, fields []*types.Field) {
-	generateStruct(file, strings.ToLowerFirst(name), fields)
-}
-
-func getMethodArgumentsInCall(args []*types.Argument) (a []string) {
-	for _, arg := range args {
-		if arg.Type.IsVariadic {
-			a = append(a, strings.ToLowerFirst(arg.Name)+"...")
-		} else {
-			a = append(a, strings.ToLowerFirst(arg.Name))
-		}
-	}
-	return
-}
-
-func getMethodArgumentsFromRequestInCall(args []*types.Argument) (a []string) {
-	a = getMethodArgumentsInCall(args)
-	for i := range a {
-		a[i] = "req." + strings.ToUpperFirst(a[i])
-	}
-	return
-}
-
-func getResultsVars(results []*types.Field) (a []string) {
-	for _, result := range results {
-		a = append(a, strings.ToLowerFirst(result.Name))
-	}
-	return
-}
-
-func getResultsVarsFromResponse(results []*types.Field) (a []string) {
-	a = getResultsVars(results)
-	for i := range a {
-		a[i] = "res." + strings.ToUpperFirst(a[i])
-	}
-	return
-}
-
-func getName(name string, alias string) string {
-	n := name
-	if alias != "" {
-		n = alias
-	}
-	return strings.ToLowerFirst(n)
 }
