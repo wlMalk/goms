@@ -1,12 +1,13 @@
-package generator
+package generate_service
 
 import (
+	"github.com/wlMalk/goms/generator/files"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func generateHTTPDecodersFile(base string, path string, name string, service *types.Service) *GoFile {
-	file := NewGoFile(base, path, name, true, false)
+func GenerateHTTPDecodersFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, true, false)
 	for _, method := range service.Methods {
 		generateHTTPRequestDecoder(file, method)
 		generateHTTPResponseDecoder(file, method)
@@ -14,7 +15,7 @@ func generateHTTPDecodersFile(base string, path string, name string, service *ty
 	return file
 }
 
-func generateHTTPRequestDecoder(file *GoFile, method *types.Method) {
+func generateHTTPRequestDecoder(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
 	file.AddImport("", "net/http")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -33,7 +34,7 @@ func generateHTTPRequestDecoder(file *GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateHTTPResponseDecoder(file *GoFile, method *types.Method) {
+func generateHTTPResponseDecoder(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
 	file.AddImport("", "net/http")
 	methodName := strings.ToUpperFirst(method.Name)

@@ -1,14 +1,16 @@
-package generator
+package generate_service
 
 import (
 	strs "strings"
 
+	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func generateServiceImplementationFile(base string, path string, name string, service *types.Service) *GoFile {
-	file := NewGoFile(base, path, name, false, false)
+func GenerateServiceImplementationFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, false, false)
 	generateServiceImplementationStruct(file, service)
 	generateServiceImplementationStructNewFunc(file, service)
 	for _, method := range service.Methods {
@@ -17,8 +19,8 @@ func generateServiceImplementationFile(base string, path string, name string, se
 	return file
 }
 
-func generateServiceImplementationValidatorsFile(base string, path string, name string, service *types.Service) *GoFile {
-	file := NewGoFile(base, path, name, false, false)
+func GenerateServiceImplementationValidatorsFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, false, false)
 	for _, method := range service.Methods {
 		if len(method.Arguments) > 0 {
 			generateServiceMethodImplementationValidateFunc(file, method)
@@ -27,8 +29,8 @@ func generateServiceImplementationValidatorsFile(base string, path string, name 
 	return file
 }
 
-func generateServiceImplementationMiddlewareFile(base string, path string, name string, service *types.Service) *GoFile {
-	file := NewGoFile(base, path, name, false, false)
+func GenerateServiceImplementationMiddlewareFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, false, false)
 	for _, method := range service.Methods {
 		generateServiceMethodImplementationMiddleware(file, method)
 		generateServiceMethodImplementationOuterMiddleware(file, method)
@@ -37,13 +39,13 @@ func generateServiceImplementationMiddlewareFile(base string, path string, name 
 	return file
 }
 
-func generateServiceImplementationStruct(file *GoFile, service *types.Service) {
+func generateServiceImplementationStruct(file *files.GoFile, service *types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("type %s struct {}", serviceName)
 	file.Pf("")
 }
 
-func generateServiceImplementationStructNewFunc(file *GoFile, service *types.Service) {
+func generateServiceImplementationStructNewFunc(file *files.GoFile, service *types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func New() *%s {", serviceName)
 	file.Pf("return &%s{}", serviceName)
@@ -51,12 +53,12 @@ func generateServiceImplementationStructNewFunc(file *GoFile, service *types.Ser
 	file.Pf("")
 }
 
-func generateServiceMethodImplementation(file *GoFile, service string, method *types.Method) {
+func generateServiceMethodImplementation(file *files.GoFile, service string, method *types.Method) {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
 	serviceName := strings.ToUpperFirst(service)
-	args := append([]string{"ctx context.Context"}, getMethodArguments(method.Arguments)...)
-	results := append(getMethodResults(method.Results), "err error")
+	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
+	results := append(helpers.GetMethodResults(method.Results), "err error")
 	file.Pf("func (s *%s) %s(%s) (%s) {", serviceName, methodName, strs.Join(args, ", "), strs.Join(results, ", "))
 	file.Cf("TODO: Implement %s method", methodName)
 	file.Pf("return")
@@ -64,7 +66,7 @@ func generateServiceMethodImplementation(file *GoFile, service string, method *t
 	file.Pf("")
 }
 
-func generateServiceMethodImplementationMiddleware(file *GoFile, method *types.Method) {
+func generateServiceMethodImplementationMiddleware(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	methodName := strings.ToUpperFirst(method.Name)
 	serviceName := strings.ToUpperFirst(method.Service.Name)
@@ -75,7 +77,7 @@ func generateServiceMethodImplementationMiddleware(file *GoFile, method *types.M
 	file.Pf("")
 }
 
-func generateServiceMethodImplementationOuterMiddleware(file *GoFile, method *types.Method) {
+func generateServiceMethodImplementationOuterMiddleware(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	methodName := strings.ToUpperFirst(method.Name)
 	serviceName := strings.ToUpperFirst(method.Service.Name)
@@ -86,7 +88,7 @@ func generateServiceMethodImplementationOuterMiddleware(file *GoFile, method *ty
 	file.Pf("")
 }
 
-func generateServiceMethodImplementationValidateFunc(file *GoFile, method *types.Method) {
+func generateServiceMethodImplementationValidateFunc(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
 	file.AddImport("", method.Service.ImportPath, "/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -98,7 +100,7 @@ func generateServiceMethodImplementationValidateFunc(file *GoFile, method *types
 	file.Pf("")
 }
 
-func generateServiceImplementationMiddleware(file *GoFile, service *types.Service) {
+func generateServiceImplementationMiddleware(file *files.GoFile, service *types.Service) {
 	file.AddImport("", service.ImportPath, "/service/handlers")
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func (s *%s) Middleware(h handlers.RequestResponseHandler) handlers.RequestResponseHandler {", serviceName)

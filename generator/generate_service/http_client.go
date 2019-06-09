@@ -1,14 +1,16 @@
-package generator
+package generate_service
 
 import (
 	strs "strings"
 
+	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func generateHTTPClientFile(base string, path string, name string, service *types.Service) *GoFile {
-	file := NewGoFile(base, path, name, true, false)
+func GenerateHTTPClientFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, true, false)
 	generateHTTPTransportClientStruct(file, service)
 	generateHTTPTransportClientNewFunc(file, service)
 	for _, method := range service.Methods {
@@ -21,7 +23,7 @@ func generateHTTPClientFile(base string, path string, name string, service *type
 	return file
 }
 
-func generateHTTPTransportClientStruct(file *GoFile, service *types.Service) {
+func generateHTTPTransportClientStruct(file *files.GoFile, service *types.Service) {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/service/handlers")
 	file.Pf("type Client struct {")
@@ -34,7 +36,7 @@ func generateHTTPTransportClientStruct(file *GoFile, service *types.Service) {
 	file.Pf("")
 }
 
-func generateHTTPTransportClientNewFunc(file *GoFile, service *types.Service) {
+func generateHTTPTransportClientNewFunc(file *files.GoFile, service *types.Service) {
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("", "net/url")
 	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
@@ -60,29 +62,29 @@ func generateHTTPTransportClientNewFunc(file *GoFile, service *types.Service) {
 	file.Pf("")
 }
 
-func generateHTTPTransportClientMethodFunc(file *GoFile, method *types.Method) {
+func generateHTTPTransportClientMethodFunc(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
-	args := append([]string{"ctx context.Context"}, getMethodArguments(method.Arguments)...)
-	results := append(getMethodResults(method.Results), "err error")
-	argsInCall := append([]string{"ctx"}, getMethodArgumentsInCall(method.Arguments)...)
+	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
+	results := append(helpers.GetMethodResults(method.Results), "err error")
+	argsInCall := append([]string{"ctx"}, helpers.GetMethodArgumentsInCall(method.Arguments)...)
 	file.Pf("func (c *Client) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
 	file.Pf("return c.%s.%s(%s)", lowerMethodName, methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
 }
 
-func generateHTTPTransportClientGlobalVar(file *GoFile, service *types.Service) {
+func generateHTTPTransportClientGlobalVar(file *files.GoFile, service *types.Service) {
 	file.Pf("var client *Client = New(nil)")
 	file.Pf("")
 }
 
-func generateHTTPTransportClientGlobalFunc(file *GoFile, method *types.Method) {
+func generateHTTPTransportClientGlobalFunc(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
-	args := append([]string{"ctx context.Context"}, getMethodArguments(method.Arguments)...)
-	results := append(getMethodResults(method.Results), "err error")
-	argsInCall := append([]string{"ctx"}, getMethodArgumentsInCall(method.Arguments)...)
+	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
+	results := append(helpers.GetMethodResults(method.Results), "err error")
+	argsInCall := append([]string{"ctx"}, helpers.GetMethodArgumentsInCall(method.Arguments)...)
 	file.Pf("func %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
 	file.Pf("return client.%s.%s(%s)", lowerMethodName, methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")

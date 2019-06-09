@@ -1,12 +1,14 @@
-package generator
+package generate_service
 
 import (
+	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func generateHTTPResponsesFile(base string, path string, name string, methods []*types.Method) *GoFile {
-	file := NewGoFile(base, path, name, true, false)
+func GenerateHTTPResponsesFile(base string, path string, name string, methods []*types.Method) *files.GoFile {
+	file := files.NewGoFile(base, path, name, true, false)
 	for _, method := range methods {
 		generateHTTPResponse(file, method)
 		generateHTTPResponseNewFunc(file, method)
@@ -16,7 +18,7 @@ func generateHTTPResponsesFile(base string, path string, name string, methods []
 	return file
 }
 
-func generateHTTPResponse(file *GoFile, method *types.Method) {
+func generateHTTPResponse(file *files.GoFile, method *types.Method) {
 	if len(method.Results) == 0 {
 		return
 	}
@@ -27,15 +29,15 @@ func generateHTTPResponse(file *GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateHTTPResponseFields(file *GoFile, fields []*types.Field) {
+func generateHTTPResponseFields(file *files.GoFile, fields []*types.Field) {
 	for _, field := range fields {
 		fieldName := strings.ToUpperFirst(field.Name)
-		fieldSpecialName := getName(field.Name, field.Alias)
+		fieldSpecialName := helpers.GetName(field.Name, field.Alias)
 		file.Pf("%s %s `json:\"%s\"`", fieldName, field.Type.GoType(), fieldSpecialName)
 	}
 }
 
-func generateHTTPResponseNewFunc(file *GoFile, method *types.Method) {
+func generateHTTPResponseNewFunc(file *files.GoFile, method *types.Method) {
 	if len(method.Results) == 0 {
 		return
 	}
@@ -52,7 +54,7 @@ func generateHTTPResponseNewFunc(file *GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateHTTPResponseNewHTTPFunc(file *GoFile, method *types.Method) {
+func generateHTTPResponseNewHTTPFunc(file *files.GoFile, method *types.Method) {
 	if len(method.Results) == 0 {
 		return
 	}
@@ -70,7 +72,7 @@ func generateHTTPResponseNewHTTPFunc(file *GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateHTTPResponseToResponseFunc(file *GoFile, method *types.Method) {
+func generateHTTPResponseToResponseFunc(file *files.GoFile, method *types.Method) {
 	if len(method.Results) == 0 {
 		return
 	}

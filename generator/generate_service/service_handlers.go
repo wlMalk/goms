@@ -1,14 +1,16 @@
-package generator
+package generate_service
 
 import (
 	strs "strings"
 
+	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func generateHandlersFile(base string, path string, name string, service *types.Service) *GoFile {
-	file := NewGoFile(base, path, name, true, false)
+func GenerateHandlersFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, true, false)
 	generateServiceHandlerTypes(file, service)
 	for _, method := range service.Methods {
 		generateMethodHandlers(file, method)
@@ -16,13 +18,13 @@ func generateHandlersFile(base string, path string, name string, service *types.
 	return file
 }
 
-func generateMethodHandlers(file *GoFile, method *types.Method) {
+func generateMethodHandlers(file *files.GoFile, method *types.Method) {
 	generateMethodHandlerTypes(file, method)
 	generateMethodHandlerFuncTypes(file, method)
 	generateMethodHandlerFuncHandlers(file, method)
 }
 
-func generateServiceHandlerTypes(file *GoFile, service *types.Service) {
+func generateServiceHandlerTypes(file *files.GoFile, service *types.Service) {
 	file.Pf("type (")
 	file.Pf("Handler interface {")
 	for _, method := range service.Methods {
@@ -42,15 +44,21 @@ func generateServiceHandlerTypes(file *GoFile, service *types.Service) {
 		file.Pf("%sRequestResponseHandler", methodName)
 	}
 	file.Pf("}")
+	file.Pf("EndpointHandler interface {")
+	for _, method := range service.Methods {
+		methodName := strings.ToUpperFirst(method.Name)
+		file.Pf("%s(ctx context.Context, req interface{}) (res interface{}, err error)", methodName)
+	}
+	file.Pf("}")
 	file.Pf(")")
 	file.Pf("")
 }
 
-func generateMethodHandlerTypes(file *GoFile, method *types.Method) {
+func generateMethodHandlerTypes(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
-	args := append([]string{"ctx context.Context"}, getMethodArguments(method.Arguments)...)
-	results := append(getMethodResults(method.Results), "err error")
+	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
+	results := append(helpers.GetMethodResults(method.Results), "err error")
 	file.Pf("type (")
 	file.Pf("%sHandler interface {", methodName)
 	file.Pf("%s(%s) (%s)", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
@@ -75,11 +83,11 @@ func generateMethodHandlerTypes(file *GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateMethodHandlerFuncTypes(file *GoFile, method *types.Method) {
+func generateMethodHandlerFuncTypes(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
-	args := append([]string{"ctx context.Context"}, getMethodArguments(method.Arguments)...)
-	results := append(getMethodResults(method.Results), "err error")
+	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
+	results := append(helpers.GetMethodResults(method.Results), "err error")
 	file.Pf("type (")
 
 	file.Pf("%sHandlerFunc func(%s) (%s)", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
@@ -102,12 +110,12 @@ func generateMethodHandlerFuncTypes(file *GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateMethodHandlerFuncHandlers(file *GoFile, method *types.Method) {
+func generateMethodHandlerFuncHandlers(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
-	args := append([]string{"ctx context.Context"}, getMethodArguments(method.Arguments)...)
-	argsInCall := append([]string{"ctx"}, getMethodArgumentsInCall(method.Arguments)...)
-	results := append(getMethodResults(method.Results), "err error")
+	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
+	argsInCall := append([]string{"ctx"}, helpers.GetMethodArgumentsInCall(method.Arguments)...)
+	results := append(helpers.GetMethodResults(method.Results), "err error")
 	file.Pf("func (f %sHandlerFunc) %s(%s) (%s) {", methodName, methodName, strs.Join(args, ", "), strs.Join(results, ", "))
 	file.Pf("return f(%s)", strs.Join(argsInCall, ", "))
 	file.Pf("}")

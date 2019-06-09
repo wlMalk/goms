@@ -1,14 +1,15 @@
-package generator
+package generate_service
 
 import (
 	strs "strings"
 
+	"github.com/wlMalk/goms/generator/files"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func generateServiceTransportEndpointsFile(base string, path string, name string, service *types.Service) *GoFile {
-	file := NewGoFile(base, path, name, true, false)
+func GenerateServiceTransportEndpointsFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, true, false)
 	generateServiceStructType(file, service)
 	generateServiceStructTypeNewFunc(file, service)
 	for _, method := range service.Methods {
@@ -17,7 +18,7 @@ func generateServiceTransportEndpointsFile(base string, path string, name string
 	return file
 }
 
-func generateServiceStructType(file *GoFile, service *types.Service) {
+func generateServiceStructType(file *files.GoFile, service *types.Service) {
 	file.AddImport("", service.ImportPath, "/service/handlers")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	serviceName := strings.ToUpperFirst(service.Name)
@@ -43,7 +44,7 @@ func generateServiceStructType(file *GoFile, service *types.Service) {
 	file.Pf("")
 }
 
-func generateServiceStructTypeNewFunc(file *GoFile, service *types.Service) {
+func generateServiceStructTypeNewFunc(file *files.GoFile, service *types.Service) {
 	file.AddImport("", "context")
 	file.AddImport("", "github.com/wlMalk/goms/goms/errors")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
@@ -70,7 +71,7 @@ func generateServiceStructTypeNewFunc(file *GoFile, service *types.Service) {
 	file.Pf("")
 }
 
-func generateServiceMethodsRegisteration(file *GoFile, service *types.Service) {
+func generateServiceMethodsRegisteration(file *files.GoFile, service *types.Service) {
 	for _, method := range service.Methods {
 		generateTypeSwitchForMethodHandler(file, method)
 		generateMethodRequestValidatorMiddleware(file, method)
@@ -82,7 +83,7 @@ func generateServiceMethodsRegisteration(file *GoFile, service *types.Service) {
 	file.Pf("")
 }
 
-func generateTypeSwitchForMethodHandler(file *GoFile, method *types.Method) {
+func generateTypeSwitchForMethodHandler(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
 	file.AddImport("", method.Service.ImportPath, "/service/handlers")
 	file.AddImport("", method.Service.ImportPath, "/service/handlers/converters")
@@ -99,7 +100,7 @@ func generateTypeSwitchForMethodHandler(file *GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateMethodRequestValidatorMiddleware(file *GoFile, method *types.Method) {
+func generateMethodRequestValidatorMiddleware(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	file.Pf("if t, ok := h.(interface {")
@@ -117,7 +118,7 @@ func generateMethodRequestValidatorMiddleware(file *GoFile, method *types.Method
 	file.Pf("")
 }
 
-func generateMiddlewareCheckerForEndpoint(file *GoFile, method *types.Method) {
+func generateMiddlewareCheckerForEndpoint(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	file.Pf("if t, ok := h.(interface{ %sMiddleware(e endpoint.Endpoint) endpoint.Endpoint }); ok {", methodName)
@@ -126,14 +127,14 @@ func generateMiddlewareCheckerForEndpoint(file *GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateMiddlewareCheckerForService(file *GoFile, service *types.Service) {
+func generateMiddlewareCheckerForService(file *files.GoFile, service *types.Service) {
 	file.Pf("if t, ok := h.(interface{ Middleware(h handlers.RequestResponseHandler) handlers.RequestResponseHandler }); ok {")
 	file.Pf("s.handler = t.Middleware(s.endpoints)")
 	file.Pf("}")
 	file.Pf("")
 }
 
-func generateOuterMiddlewareCheckerForEndpoint(file *GoFile, method *types.Method) {
+func generateOuterMiddlewareCheckerForEndpoint(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	file.Pf("if t, ok := h.(interface{ Outer%sMiddleware(e endpoint.Endpoint) endpoint.Endpoint }); ok {", methodName)
@@ -142,7 +143,7 @@ func generateOuterMiddlewareCheckerForEndpoint(file *GoFile, method *types.Metho
 	file.Pf("")
 }
 
-func generateServiceStructMethodHandler(file *GoFile, method *types.Method) {
+func generateServiceStructMethodHandler(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
@@ -181,7 +182,7 @@ func generateServiceStructMethodHandler(file *GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateEndpointsPacker(file *GoFile, service *types.Service) {
+func generateEndpointsPacker(file *files.GoFile, service *types.Service) {
 	file.Pf("var (")
 	serviceName := strings.ToUpperFirst(service.Name)
 	for _, method := range service.Methods {

@@ -1,27 +1,28 @@
-package generator
+package generate_service
 
 import (
 	"path"
 
+	"github.com/wlMalk/goms/generator/files"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func generateHTTPServerFile(base string, path string, name string, service *types.Service) *GoFile {
-	file := NewGoFile(base, path, name, true, false)
+func GenerateHTTPServerFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, true, false)
 	generateHTTPTransportServerStruct(file, service)
 	generateHTTPTransportServerNewFunc(file, service)
 	return file
 }
 
-func generateHTTPTransportServerStruct(file *GoFile, service *types.Service) {
+func generateHTTPTransportServerStruct(file *files.GoFile, service *types.Service) {
 	file.Pf("type Server struct {")
 	file.Pf("http.Server")
 	file.Pf("}")
 	file.Pf("")
 }
 
-func generateHTTPTransportServerNewFunc(file *GoFile, service *types.Service) {
+func generateHTTPTransportServerNewFunc(file *files.GoFile, service *types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("", "net/http")

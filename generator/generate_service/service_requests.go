@@ -1,14 +1,16 @@
-package generator
+package generate_service
 
 import (
 	strs "strings"
 
+	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func generateRequestsFile(base string, path string, name string, methods []*types.Method) *GoFile {
-	file := NewGoFile(base, path, name, true, false)
+func GenerateRequestsFile(base string, path string, name string, methods []*types.Method) *files.GoFile {
+	file := files.NewGoFile(base, path, name, true, false)
 	for _, m := range methods {
 		var fields []*types.Field
 		for _, arg := range m.Arguments {
@@ -21,15 +23,15 @@ func generateRequestsFile(base string, path string, name string, methods []*type
 		if len(fields) == 0 {
 			continue
 		}
-		generateExportedStruct(file, m.Name+"Request", fields)
+		helpers.GenerateExportedStruct(file, m.Name+"Request", fields)
 		generateMethodRequestNewFunc(file, m)
 	}
 	return file
 }
 
-func generateMethodRequestNewFunc(file *GoFile, method *types.Method) {
+func generateMethodRequestNewFunc(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
-	args := getMethodArguments(method.Arguments)
+	args := helpers.GetMethodArguments(method.Arguments)
 	file.Pf("func %s(%s)*%sRequest{", methodName, strs.Join(args, ", "), methodName)
 	file.Pf("return &%sRequest{", methodName)
 	for _, arg := range method.Arguments {
