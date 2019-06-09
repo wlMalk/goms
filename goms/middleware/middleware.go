@@ -48,3 +48,17 @@ func CounterLatencyMiddleware(counter metrics.Counter, latency metrics.Histogram
 	}
 }
 
+func RecoveringMiddleware() endpoint.Middleware {
+	return func(e endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Log(ctx, "message", r)
+					err = fmt.Errorf("%v", r)
+				}
+			}()
+
+			return e(ctx, req)
+		}
+	}
+}
