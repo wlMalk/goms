@@ -51,7 +51,7 @@ func generateServiceStructTypeNewFunc(file *files.GoFile, service *types.Service
 	serviceName := strings.ToUpperFirst(service.Name)
 	lowerServiceName := strings.ToLowerFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
-	file.Pf("func Endpoints(h interface{}) *%s {", serviceName)
+	file.Pf("func Endpoints(h interface{}) %s {", serviceName)
 	file.Pf("handler := &endpointsHandler{")
 	for _, method := range service.Methods {
 		lowerMethodName := strings.ToLowerFirst(method.Name)
@@ -202,7 +202,7 @@ func generateEndpointsPacker(file *files.GoFile, service *types.Service) {
 		file.Pf("}")
 		file.Pf("")
 	}
-	file.Pf("endpoints := &%s{", serviceName)
+	file.Pf("endpoints := %s{", serviceName)
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
 		lowerMethodName := strings.ToLowerFirst(method.Name)

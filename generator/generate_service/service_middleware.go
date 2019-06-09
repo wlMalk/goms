@@ -12,12 +12,8 @@ func GenerateServiceMiddlewareFile(base string, path string, name string, servic
 	generateServiceMiddlewareChainFunc(file, service)
 	generateServiceRequestMiddlewareChainFunc(file, service)
 	generateServiceRequestResponseMiddlewareChainFunc(file, service)
-	generateServiceEndpointMiddlewareStruct(file, service)
-	generateServiceEndpointMiddlewareChainFunc(file, service)
-	generateServiceEndpointMiddlewareNewFuncs(file, service)
-	for _, method := range service.Methods {
-		generateServiceEndpointMiddlewareMethod(file, method)
-	}
+	generateServiceApplyMiddlewareFunc(file, service)
+	generateServiceApplyMiddlewareConditionalFunc(file, service)
 	return file
 }
 
@@ -70,68 +66,40 @@ func generateServiceRequestResponseMiddlewareChainFunc(file *files.GoFile, servi
 	file.P("")
 }
 
-func generateServiceEndpointMiddlewareStruct(file *files.GoFile, service *types.Service) {
+func generateServiceApplyMiddlewareFunc(file *files.GoFile, service *types.Service) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
-	file.Pf("type endpointMiddleware struct {")
-	for _, method := range service.Methods {
-		lowerMethodName := strings.ToLowerFirst(method.Name)
-		file.Pf("%s endpoint.Endpoint", lowerMethodName)
-	}
-	file.Pf("}")
-	file.Pf("")
-}
-
-func generateServiceEndpointMiddlewareChainFunc(file *files.GoFile, service *types.Service) {
-	file.AddImport("", "github.com/go-kit/kit/endpoint")
-	file.Pf("func chainEndpointMiddleware(mw ...endpoint.Middleware) endpoint.Middleware {")
-	file.Pf("if len(mw) == 1 {")
-	file.Pf("return mw[0]")
-	file.Pf("} else if len(mw) > 1 {")
-	file.Pf("return endpoint.Chain(mw[0], mw[1:]...)")
-	file.Pf("}")
-	file.Pf("return nil")
-	file.Pf("}")
-	file.Pf("")
-}
-
-func generateServiceEndpointMiddlewareNewFuncs(file *files.GoFile, service *types.Service) {
-	file.AddImport("", "github.com/go-kit/kit/endpoint")
-	file.AddImport("", service.ImportPath, "/service/handlers")
-	file.Pf("func EndpointMiddleware(h handlers.EndpointHandler, mw ...endpoint.Middleware) handlers.EndpointHandler {")
-	file.Pf("return EndpointMiddlewareSpecial(h, func(method string) bool {")
+	file.AddImport("", service.ImportPath, "/service/transport")
+	serviceName := strings.ToUpperFirst(service.Name)
+	file.Pf("func ApplyMiddleware(endpoints transport.%s, mw ...endpoint.Middleware) transport.%s {", serviceName, serviceName)
+	file.Pf("return ApplyMiddlewareConditional(endpoints, func(method string) bool {")
 	file.Pf("return true")
 	file.Pf("}, mw...)")
 	file.Pf("}")
 	file.Pf("")
-	file.Pf("func EndpointMiddlewareSpecial(h handlers.EndpointHandler, f func(method string) bool, mw ...endpoint.Middleware) handlers.EndpointHandler {")
-	file.Pf("if len(mw) == 0 {")
-	file.Pf("return h")
-	file.Pf("}")
-	file.Pf("")
-	file.Pf("fun := func(name string, e endpoint.Endpoint) endpoint.Endpoint {")
-	file.Pf("if !f(name) {")
-	file.Pf("return e")
-	file.Pf("}")
-	file.Pf("return chainEndpointMiddleware(mw...)(e)")
-	file.Pf("}")
-	file.Pf("")
-	file.Pf("return &endpointMiddleware{")
-	for _, method := range service.Methods {
-		methodName := strings.ToUpperFirst(method.Name)
-		lowerMethodName := strings.ToLowerFirst(method.Name)
-		file.Pf("%s: fun(\"%s\", h.%s),", lowerMethodName, methodName, methodName)
-	}
-	file.Pf("}")
-	file.Pf("}")
-	file.Pf("")
 }
 
-func generateServiceEndpointMiddlewareMethod(file *files.GoFile, method *types.Method) {
-	file.AddImport("", "context")
-	methodName := strings.ToUpperFirst(method.Name)
-	lowerMethodName := strings.ToLowerFirst(method.Name)
-	file.Pf("func (mw endpointMiddleware) %s(ctx context.Context, req interface{}) (res interface{}, err error) {", methodName)
-	file.Pf("return mw.%s(ctx, req)", lowerMethodName)
+func generateServiceApplyMiddlewareConditionalFunc(file *files.GoFile, service *types.Service) {
+	file.AddImport("", "github.com/go-kit/kit/endpoint")
+	file.AddImport("", service.ImportPath, "/service/transport")
+	file.AddImport("goms_endpoint", "github.com/wlMalk/goms/goms/endpoint")
+	serviceName := strings.ToUpperFirst(service.Name)
+	file.Pf("func ApplyMiddlewareConditional(endpoints transport.%s, f func(method string) bool, mw ...endpoint.Middleware) transport.%s {", serviceName, serviceName)
+	file.Pf("if len(mw) == 0 {")
+	file.Pf("return endpoints")
+	file.Pf("}")
+	file.Pf("")
+	file.Pf("fun := func(method string, e endpoint.Endpoint) endpoint.Endpoint {")
+	file.Pf("if !f(method) {")
+	file.Pf("return e")
+	file.Pf("}")
+	file.Pf("return goms_endpoint.Chain(mw...)(e)")
+	file.Pf("}")
+	file.Pf("")
+	for _, method := range service.Methods {
+		methodName := strings.ToUpperFirst(method.Name)
+		file.Pf("endpoints.%s = fun(\"%s\", endpoints.%s)", methodName, methodName, methodName)
+	}
+	file.Pf("return endpoints")
 	file.Pf("}")
 	file.Pf("")
 }
