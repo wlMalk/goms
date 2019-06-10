@@ -202,7 +202,7 @@ func generateHTTPRequestToHTTPArgFunc(file *files.GoFile, method *types.Method) 
 			}
 		}
 		if hasArgumentsOfOrigin(method.Arguments, "PATH") {
-			file.AddImport("goms_http", "github.com/wlMalk/goms/goms/http")
+			file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
 			for _, arg := range method.Arguments {
 				argName := strings.ToUpperFirst(arg.Name)
 				lowerArgName := strings.ToLowerFirst(arg.Name)
@@ -259,7 +259,7 @@ func generateHTTPRequestExtractors(file *files.GoFile, args []*types.Argument) {
 		}
 	}
 	if hasArgumentsOfOrigin(args, "PATH") {
-		file.AddImport("goms_http", "github.com/wlMalk/goms/goms/http")
+		file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
 		file.Pf("pathParams:=goms_http.GetParams(r.Context())")
 		for _, arg := range getArgumentsOfOrigin(args, "PATH") {
 			generatePathExtractor(file, arg)

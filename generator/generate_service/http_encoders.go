@@ -37,7 +37,7 @@ func generateHTTPResponseEncoder(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func Encode%sResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {", methodName)
 	if len(method.Results) > 0 {
-		file.AddImport("goms_http", "github.com/wlMalk/goms/goms/http")
+		file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
 		file.AddImport("http_responses", method.Service.ImportPath, "/service/transport/http/responses")
 		file.AddImport("", method.Service.ImportPath, "service/responses")
 		file.Pf("return goms_http.HTTPResponseEncoder(ctx, w, http_responses.%s(response.(*responses.%sResponse)))", methodName, methodName)

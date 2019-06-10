@@ -3,7 +3,7 @@ package httprouter
 import (
 	"net/http"
 
-	goms_http "github.com/wlMalk/goms/goms/http"
+	goms_http "github.com/wlMalk/goms/goms/transport/http"
 
 	"github.com/julienschmidt/httprouter"
 )
