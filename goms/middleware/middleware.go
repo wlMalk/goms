@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/wlMalk/goms/goms/correlation"
 	"github.com/wlMalk/goms/goms/log"
+	"github.com/wlMalk/goms/goms/request"
+	"github.com/wlMalk/goms/goms/service"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/metrics"
@@ -15,7 +18,7 @@ func LatencyMiddleware(latency metrics.Histogram) endpoint.Middleware {
 	return func(e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
 			defer func(begin time.Time) {
-				latency.With("service", "service", "method", "method").Observe(time.Since(begin).Seconds())
+				latency.With("success", fmt.Sprint(err == nil)).Observe(time.Since(begin).Seconds())
 			}(time.Now())
 
 			return e(ctx, req)
@@ -26,24 +29,53 @@ func LatencyMiddleware(latency metrics.Histogram) endpoint.Middleware {
 func CounterMiddleware(counter metrics.Counter) endpoint.Middleware {
 	return func(e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
-			defer func() {
-				counter.With("service", "service", "method", "method").Add(1)
-			}()
-
+			counter.Add(1)
 			return e(ctx, req)
 		}
 	}
 }
 
-func CounterLatencyMiddleware(counter metrics.Counter, latency metrics.Histogram) endpoint.Middleware {
+func FrequencyMiddleware(frequency metrics.Gauge) endpoint.Middleware {
+	return func(e endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
+			frequency.Add(1)
+			res, err = e(ctx, req)
+			frequency.Add(-1)
+			return
+		}
+	}
+}
+
+func InstrumentingMiddleware(counter metrics.Counter, latency metrics.Histogram, frequency metrics.Gauge) endpoint.Middleware {
 	return func(e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
 			defer func(begin time.Time) {
-				counter.With("service", "service", "method", "method").Add(1)
-				latency.With("service", "service", "method", "method").Observe(time.Since(begin).Seconds())
+				latency.With("success", fmt.Sprint(err == nil)).Observe(time.Since(begin).Seconds())
+				frequency.Add(-1)
 			}(time.Now())
+			frequency.Add(1)
+			counter.Add(1)
+			res, err = e(ctx, req)
+			return
+		}
+	}
+}
 
+func LoggingMiddleware() endpoint.Middleware {
+	return func(e endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
+			method := service.GetMethod(ctx)
+			correlationID := correlation.GetCorrelationID(ctx)
+			callerRequestID := request.GetCallerRequestID(ctx)
+			defer func(begin time.Time) {
+				if err != nil {
+					log.Log(ctx, "service", method.Service.Name, "method", method.Name, "correlation_id", correlationID, "caller_request_id", callerRequestID, "transport_error", err, "took", time.Since(begin))
+				} else {
+					log.Log(ctx, "service", method.Service.Name, "method", method.Name, "took", time.Since(begin))
+				}
+			}(time.Now())
 			return e(ctx, req)
+
 		}
 	}
 }
@@ -53,7 +85,7 @@ func RecoveringMiddleware() endpoint.Middleware {
 		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
 			defer func() {
 				if r := recover(); r != nil {
-					log.Log(ctx, "message", r)
+					log.Error(ctx, "message", r)
 					err = fmt.Errorf("%v", r)
 				}
 			}()
