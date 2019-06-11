@@ -132,3 +132,12 @@ func GetName(name string, alias string) string {
 	}
 	return strings.ToLowerFirst(n)
 }
+
+func IsCachingEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Caching {
+			return true
+		}
+	}
+	return false
+}
