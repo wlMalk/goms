@@ -13,6 +13,7 @@ func GenerateServiceMiddlewareFile(base string, path string, name string, servic
 	generateServiceRequestMiddlewareChainFunc(file, service)
 	generateServiceRequestResponseMiddlewareChainFunc(file, service)
 	generateServiceApplyMiddlewareFunc(file, service)
+	generateServiceApplyMiddlewareSpecialFunc(file, service)
 	generateServiceApplyMiddlewareConditionalFunc(file, service)
 	return file
 }
@@ -78,6 +79,24 @@ func generateServiceApplyMiddlewareFunc(file *files.GoFile, service *types.Servi
 	file.Pf("")
 }
 
+func generateServiceApplyMiddlewareSpecialFunc(file *files.GoFile, service *types.Service) {
+	file.AddImport("", "github.com/go-kit/kit/endpoint")
+	file.AddImport("", service.ImportPath, "/service/transport")
+	serviceName := strings.ToUpperFirst(service.Name)
+	file.Pf("func ApplyMiddlewareSpecial(endpoints transport.%s, middlewareFunc func(method string) (mw []endpoint.Middleware)) transport.%s {", serviceName, serviceName)
+	file.Pf("if middlewareFunc == nil {")
+	file.Pf("return endpoints")
+	file.Pf("}")
+	file.Pf("")
+	for _, method := range service.Methods {
+		methodName := strings.ToUpperFirst(method.Name)
+		file.Pf("endpoints.%s = goms_endpoint.Chain(middlewareFunc(\"%s\")...)(endpoints.%s)", methodName, methodName, methodName)
+	}
+	file.Pf("")
+	file.Pf("return endpoints")
+	file.Pf("}")
+	file.Pf("")
+}
 func generateServiceApplyMiddlewareConditionalFunc(file *files.GoFile, service *types.Service) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	file.AddImport("", service.ImportPath, "/service/transport")
