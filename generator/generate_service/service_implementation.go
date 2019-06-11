@@ -129,15 +129,17 @@ func generateCachingMiddlewareCacheKeyerType(file *files.GoFile, service *types.
 }
 
 func generateCachingMiddlewareKeyerNewFunc(file *files.GoFile, service *types.Service) {
-	file.P("func NewCacheKeyer(){")
+	file.P("func NewCacheKeyer() *CacheKeyer{")
 	file.P("return &CacheKeyer{}")
 	file.P("}")
 	file.Pf("")
 }
 
 func generateCachingMiddlewareKeyerMethodFunc(file *files.GoFile, method *types.Method) {
+	file.AddImport("", "context")
+	file.AddImport("", method.Service.ImportPath, "/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
-	file.Pf("%s(ctx context.Context, req *requests.%sRequest) (keys []interface{}, ok bool) {", methodName, methodName)
+	file.Pf("func (ck *CacheKeyer) %s(ctx context.Context, req *requests.%sRequest) (keys []interface{}, ok bool) {", methodName, methodName)
 	file.Cf("TODO: Implement %s cache keyer method", methodName)
 	file.Pf("return")
 	file.Pf("}")
