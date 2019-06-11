@@ -71,7 +71,9 @@ func generateServiceStructTypeNewFunc(file *files.GoFile, service *types.Service
 func generateServiceMethodsRegisteration(file *files.GoFile, service *types.Service) {
 	for _, method := range service.Methods {
 		generateTypeSwitchForMethodHandler(file, method)
-		generateMethodRequestValidatorMiddleware(file, method)
+		if len(method.Arguments) > 0 {
+			generateMethodRequestValidatorMiddleware(file, method)
+		}
 		generateMiddlewareCheckerForEndpoint(file, method)
 	}
 	generateMiddlewareCheckerForService(file, service)
