@@ -83,7 +83,7 @@ type goImportDef struct {
 
 type GoFile struct {
 	file
-	pkg     string
+	Pkg     string
 	imports [][]*goImportDef
 }
 
@@ -116,7 +116,7 @@ func generateFileHeader(overwrite bool) (lines []string) {
 
 func (f *GoFile) writePackage() (lines []string) {
 	lines = append(lines, generateFileHeader(f.Overwrite())...)
-	lines = append(lines, "package "+f.pkg)
+	lines = append(lines, "package "+f.Pkg)
 	lines = append(lines, "")
 	return
 }
@@ -225,7 +225,7 @@ func NewGoFile(base string, path string, name string, overwrite bool, merge bool
 	f.path = path
 	f.name = name
 	f.extension = "go"
-	f.pkg = strings.ToSnakeCase(filepath.Base(path))
+	f.Pkg = strings.ToSnakeCase(filepath.Base(path))
 	f.imports = make([][]*goImportDef, 3)
 	f.overwrite = overwrite
 	return f
