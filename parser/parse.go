@@ -21,21 +21,27 @@ func Parse(ast *astTypes.File) (s *types.Service, err error) {
 	if iface == nil {
 		return nil, errors.New("Service interface is not defined in service.go file")
 	}
+	s.Tags, s.Docs = cleanComments(iface.Docs)
+	err = parseServiceTags(s, s.Tags)
+	if err != nil {
+		return nil, err
+	}
 	for _, method := range iface.Methods {
 		m, err := parseMethod(method)
 		if err != nil {
 			return nil, err
 		}
 		m.Service = s
+		m.Options.Caching = s.Options.Generate.Caching
+		m.Options.Logging.Logging = s.Options.Generate.Logging
+		err = parseMethodTags(m, m.Tags)
+		if err != nil {
+			return nil, err
+		}
 		if err := validateMethod(m); err != nil {
 			return nil, err
 		}
 		s.Methods = append(s.Methods, m)
-	}
-	s.Tags, s.Docs = cleanComments(iface.Docs)
-	err = parseServiceTags(s, s.Tags)
-	if err != nil {
-		return nil, err
 	}
 	return
 }
@@ -174,10 +180,6 @@ func parseMethod(method *astTypes.Function) (*types.Method, error) {
 		return nil, err
 	}
 	m.Tags, m.Docs = cleanComments(method.Docs)
-	err = parseMethodTags(m, m.Tags)
-	if err != nil {
-		return nil, err
-	}
 	return m, nil
 }
 

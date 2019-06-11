@@ -45,6 +45,8 @@ type GenerateServiceOptions struct {
 	ServiceDiscovery bool
 	ProtoBuf         bool
 	Main             bool
+	Validators       bool
+	Middleware       bool
 }
 
 type Version struct {
