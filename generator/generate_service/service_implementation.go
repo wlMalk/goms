@@ -39,6 +39,18 @@ func GenerateServiceImplementationMiddlewareFile(base string, path string, name 
 	return file
 }
 
+func GenerateCachingKeyerFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, false, false)
+	generateCachingMiddlewareCacheKeyerType(file, service)
+	generateCachingMiddlewareKeyerNewFunc(file, service)
+	for _, method := range service.Methods {
+		if len(method.Arguments) > 0 && len(method.Results) > 0 && method.Options.Caching {
+			generateCachingMiddlewareKeyerMethodFunc(file, method)
+		}
+	}
+	return file
+}
+
 func generateServiceImplementationStruct(file *files.GoFile, service *types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("type %s struct {}", serviceName)
@@ -106,6 +118,28 @@ func generateServiceImplementationMiddleware(file *files.GoFile, service *types.
 	file.Pf("func (s *%s) Middleware(h handlers.RequestResponseHandler) handlers.RequestResponseHandler {", serviceName)
 	file.Cf("TODO: Wrap %s middleware around h", serviceName)
 	file.Pf("return h")
+	file.Pf("}")
+	file.Pf("")
+}
+
+func generateCachingMiddlewareCacheKeyerType(file *files.GoFile, service *types.Service) {
+	file.Pf("type CacheKeyer struct {")
+	file.Pf("}")
+	file.Pf("")
+}
+
+func generateCachingMiddlewareKeyerNewFunc(file *files.GoFile, service *types.Service) {
+	file.P("func NewCacheKeyer(){")
+	file.P("return &CacheKeyer{}")
+	file.P("}")
+	file.Pf("")
+}
+
+func generateCachingMiddlewareKeyerMethodFunc(file *files.GoFile, method *types.Method) {
+	methodName := strings.ToUpperFirst(method.Name)
+	file.Pf("%s(ctx context.Context, req *requests.%sRequest) (keys []interface{}, ok bool) {", methodName, methodName)
+	file.Cf("TODO: Implement %s cache keyer method", methodName)
+	file.Pf("return")
 	file.Pf("}")
 	file.Pf("")
 }
