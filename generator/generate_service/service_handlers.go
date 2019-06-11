@@ -79,6 +79,9 @@ func generateMethodHandlerTypes(file *files.GoFile, method *types.Method) {
 	file.Pf("%sRequestResponseHandler interface {", methodName)
 	file.Pf("%s(%s) (%s)", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
 	file.Pf("}")
+	file.Pf("%sEndpointHandler interface {", methodName)
+	file.Pf("%s(ctx context.Context, req interface{}) (res interface{}, err error)", methodName)
+	file.Pf("}")
 	file.Pf(")")
 	file.Pf("")
 }
@@ -105,6 +108,8 @@ func generateMethodHandlerFuncTypes(file *files.GoFile, method *types.Method) {
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("%sRequestResponseHandlerFunc func(%s) (%s)", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
+
+	file.Pf("%sEndpointHandlerFunc func(ctx context.Context, req interface{}) (res interface{}, err error)", methodName)
 
 	file.Pf(")")
 	file.Pf("")
@@ -137,6 +142,10 @@ func generateMethodHandlerFuncHandlers(file *files.GoFile, method *types.Method)
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (f %sRequestResponseHandlerFunc) %s(%s) (%s) {", methodName, methodName, strs.Join(args, ", "), strs.Join(results, ", "))
+	file.Pf("return f(%s)", strs.Join(argsInCall, ", "))
+	file.Pf("}")
+	file.Pf("")
+	file.Pf("func (f %sEndpointHandlerFunc) %s(ctx context.Context, req interface{}) (res interface{}, err error) {", methodName, methodName)
 	file.Pf("return f(%s)", strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
