@@ -19,11 +19,32 @@ type Service struct {
 }
 
 type ServiceOptions struct {
-	HTTP HTTPServiceOptions
+	Transports TransportOptions
+	HTTP       HTTPServiceOptions
+	GRPC       GRPCServiceOptions
+	Generate   GenerateServiceOptions
+}
+
+type TransportOptions struct {
+	HTTP bool
+	GRPC bool
 }
 
 type HTTPServiceOptions struct {
 	URIPrefix string
+}
+
+type GRPCServiceOptions struct {
+}
+
+type GenerateServiceOptions struct {
+	Caching          bool
+	Logging          bool
+	Metrics          bool
+	Tracing          bool
+	ServiceDiscovery bool
+	ProtoBuf         bool
+	Main             bool
 }
 
 type Version struct {
@@ -58,13 +79,28 @@ type Method struct {
 }
 
 type MethodOptions struct {
-	HTTP HTTPMethodOptions
+	Transports TransportOptions
+	HTTP       HTTPMethodOptions
+	GRPC       GRPCMethodOptions
+	Caching    bool
+	Logging    LoggingMethodOptions
 }
 
 type HTTPMethodOptions struct {
 	Method string
 	URI    string
 	AbsURI string
+}
+
+type GRPCMethodOptions struct {
+}
+
+type LoggingMethodOptions struct {
+	Logging          bool
+	IgnoredArguments []string
+	IgnoredResults   []string
+	LenArguments     []string
+	LenResults       []string
 }
 
 type Type struct {
