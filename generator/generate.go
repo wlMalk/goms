@@ -18,8 +18,9 @@ func GenerateService(s *types.Service) (files files.Files, err error) {
 	files = append(files, generate_service.GenerateServiceMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "middleware.goms", s))
 	if helpers.IsCachingEnabled(s) {
 		files = append(files, generate_service.GenerateCachingMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "caching_middleware.goms", s))
-		files = append(files, generate_service.GenerateCachingKeyerFile(s.Path, filepath.Join(s.Path, strings.ToLowerFirst(s.Name)), "caching_keyer", s))
+		files = append(files, generate_service.GenerateCachingKeyerFile(s.Path, strings.ToLowerFirst(s.Name), "caching_keyer", s))
 	}
+
 	files = append(files, generate_service.GenerateServiceTransportEndpointsFile(s.Path, filepath.Join("service", "transport"), "endpoints.goms", s))
 	files = append(files, generate_service.GenerateServiceImplementationFile(s.Path, strings.ToLowerFirst(s.Name), strings.ToLowerFirst(s.Name), s))
 	files = append(files, generate_service.GenerateServiceImplementationValidatorsFile(s.Path, strings.ToLowerFirst(s.Name), "validators", s))
@@ -30,7 +31,9 @@ func GenerateService(s *types.Service) (files files.Files, err error) {
 	files = append(files, generate_service.GenerateHTTPClientFile(s.Path, filepath.Join("service", "transport", "http", "client"), "client.goms", s))
 	files = append(files, generate_service.GenerateHTTPDecodersFile(s.Path, filepath.Join("service", "transport", "http"), "decoders.goms", s))
 	files = append(files, generate_service.GenerateHTTPEncodersFile(s.Path, filepath.Join("service", "transport", "http"), "encoders.goms", s))
-	files = append(files, generate_service.GenerateServiceMainFile(s.Path, filepath.Join("cmd", strings.ToLowerFirst(s.Name)), "main", s))
 
+	if s.Options.Generate.Main {
+		files = append(files, generate_service.GenerateServiceMainFile(s.Path, filepath.Join("cmd", strings.ToLowerFirst(s.Name)), "main", s))
+	}
 	return
 }
