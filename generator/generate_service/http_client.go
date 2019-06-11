@@ -47,9 +47,9 @@ func generateHTTPTransportClientNewFunc(file *files.GoFile, service *types.Servi
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
 		lowerMethodName := strings.ToLowerFirst(method.Name)
-		file.Pf("%s: converters.%sHandlerTo%sRequestHandler(", lowerMethodName, methodName, methodName)
-		file.Pf("converters.%sRequestHandlerTo%sRequestResponseHandler(", methodName, methodName)
-		file.Pf("converters.%sRequestResponseHandlerToEndpoint(", methodName)
+		file.Pf("%s: converters.%sRequestHandlerTo%sHandler(", lowerMethodName, methodName, methodName)
+		file.Pf("converters.%sRequestResponseHandlerTo%sRequestHandler(", methodName, methodName)
+		file.Pf("converters.EndpointTo%sRequestResponseHandler(", methodName)
 		file.Pf("kit_http.NewClient(")
 		file.Pf("\"POST\", u,")
 		file.Pf("%s_http.Encode%sRequest,", serviceNameSnake, methodName)
