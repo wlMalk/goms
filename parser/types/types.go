@@ -25,9 +25,14 @@ type ServiceOptions struct {
 	Generate   GenerateServiceOptions
 }
 
+type transport struct {
+	Server bool
+	Client bool
+}
+
 type TransportOptions struct {
-	HTTP bool
-	GRPC bool
+	HTTP transport
+	GRPC transport
 }
 
 type HTTPServiceOptions struct {
@@ -47,6 +52,7 @@ type GenerateServiceOptions struct {
 	Main             bool
 	Validators       bool
 	Middleware       bool
+	MethodStubs      bool
 }
 
 type Version struct {
@@ -81,11 +87,17 @@ type Method struct {
 }
 
 type MethodOptions struct {
-	Transports TransportOptions
-	HTTP       HTTPMethodOptions
-	GRPC       GRPCMethodOptions
-	Caching    bool
-	Logging    LoggingMethodOptions
+	HTTP           HTTPMethodOptions
+	GRPC           GRPCMethodOptions
+	LoggingOptions LoggingMethodOptions
+	Caching        bool
+	Logging        bool
+	Validator      bool
+	Middleware     bool
+	MethodStubs    bool
+	Tracing        bool
+	Metrics        bool
+	Transports     TransportOptions
 }
 
 type HTTPMethodOptions struct {
