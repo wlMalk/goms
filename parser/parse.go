@@ -36,7 +36,8 @@ func Parse(ast *astTypes.File) (s *types.Service, err error) {
 		m.Options.Generate.Logging = s.Options.Generate.Logging
 		m.Options.Generate.MethodStubs = s.Options.Generate.MethodStubs
 		m.Options.Generate.Middleware = s.Options.Generate.Middleware
-		m.Options.Generate.Validator = s.Options.Generate.Validators
+		m.Options.Generate.Validators = s.Options.Generate.Validators
+		m.Options.Generate.Validating = s.Options.Generate.Validating
 		m.Options.Generate.CircuitBreaking = s.Options.Generate.CircuitBreaking
 		m.Options.Generate.RateLimiting = s.Options.Generate.RateLimiting
 		m.Options.Generate.Recovering = s.Options.Generate.Recovering

@@ -43,6 +43,7 @@ type generateServiceOptions struct {
 	ProtoBuf         bool
 	Main             bool
 	Validators       bool
+	Validating       bool
 	Middleware       bool
 	MethodStubs      bool
 	FrequencyMetric  bool
@@ -98,7 +99,8 @@ type generateMethodOptions struct {
 	Recovering      bool
 	Caching         bool
 	Logging         bool
-	Validator       bool
+	Validators      bool
+	Validating      bool
 	Middleware      bool
 	MethodStubs     bool
 	Tracing         bool

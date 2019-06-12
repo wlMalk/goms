@@ -188,6 +188,8 @@ func parseServiceGenerateTag(service *types.Service, tag string) error {
 			service.Options.Generate.ServiceDiscovery = true
 		case "validators":
 			service.Options.Generate.Validators = true
+		case "validating":
+			service.Options.Generate.Validating = true
 		case "middleware":
 			service.Options.Generate.Middleware = true
 		case "method-stubs":
@@ -229,6 +231,7 @@ func parseServiceGenerateAllTag(service *types.Service, tag string) error {
 	service.Options.Generate.CounterMetric = true
 	service.Options.Generate.ServiceDiscovery = true
 	service.Options.Generate.Validators = true
+	service.Options.Generate.Validating = true
 	service.Options.Generate.Middleware = true
 	service.Options.Generate.MethodStubs = true
 	service.Options.Generate.GRPCServer = true
@@ -264,6 +267,8 @@ func parseServiceGenerateAllTag(service *types.Service, tag string) error {
 			service.Options.Generate.ServiceDiscovery = false
 		case "validators":
 			service.Options.Generate.Validators = false
+		case "validating":
+			service.Options.Generate.Validating = false
 		case "middleware":
 			service.Options.Generate.Middleware = false
 		case "method-stubs":
@@ -408,6 +413,9 @@ func parseMethodParamsTag(method *types.Method, tag string) error {
 	args := filterArguments(method.Arguments, func(arg *types.Argument) bool {
 		return contains(argNames, strings.ToLowerFirst(arg.Name))
 	})
+	if len(argNames) != len(args) {
+		return fmt.Errorf("invalid arguments '%s' given to params method tag in '%s' method", strs.Join(argNames, ", "), method.Name)
+	}
 	tags := strings.SplitS(strs.TrimSpace(strs.TrimSuffix(strs.TrimPrefix(params[1], "("), ")")), ",")
 	for _, arg := range args {
 		err := parseParamTags(arg, tags)
@@ -495,7 +503,9 @@ func parseMethodDisableTag(method *types.Method, tag string) error {
 			method.Options.Generate.LatencyMetric = false
 			method.Options.Generate.CounterMetric = false
 		case "validators":
-			method.Options.Generate.Validator = false
+			method.Options.Generate.Validators = false
+		case "validating":
+			method.Options.Generate.Validating = false
 		case "middleware":
 			method.Options.Generate.Middleware = false
 		case "method-stubs":
@@ -542,7 +552,9 @@ func parseMethodEnableTag(method *types.Method, tag string) error {
 			method.Options.Generate.LatencyMetric = true
 			method.Options.Generate.CounterMetric = true
 		case "validators":
-			method.Options.Generate.Validator = true
+			method.Options.Generate.Validators = true
+		case "validating":
+			method.Options.Generate.Validating = true
 		case "middleware":
 			method.Options.Generate.Middleware = true
 		case "method-stubs":
