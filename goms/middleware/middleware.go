@@ -71,7 +71,7 @@ func LoggingMiddleware() endpoint.Middleware {
 				if err != nil {
 					log.Log(ctx, "service", method.Service.Name, "method", method.Name, "correlation_id", correlationID, "caller_request_id", callerRequestID, "transport_error", err, "took", time.Since(begin))
 				} else {
-					log.Log(ctx, "service", method.Service.Name, "method", method.Name, "took", time.Since(begin))
+					log.Log(ctx, "service", method.Service.Name, "method", method.Name, "correlation_id", correlationID, "caller_request_id", callerRequestID, "took", time.Since(begin))
 				}
 			}(time.Now())
 			return e(ctx, req)
@@ -85,7 +85,7 @@ func RecoveringMiddleware() endpoint.Middleware {
 		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
 			defer func() {
 				if r := recover(); r != nil {
-					log.Error(ctx, "message", r)
+					log.Error(ctx, "error", r)
 					err = fmt.Errorf("%v", r)
 				}
 			}()
