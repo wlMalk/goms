@@ -4,7 +4,6 @@ import (
 	"fmt"
 	goParser "go/parser"
 	"go/token"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,70 +13,85 @@ import (
 	"github.com/wlMalk/goms/parser"
 	"github.com/wlMalk/goms/parser/types"
 
+	"github.com/gookit/color"
 	"github.com/vetcher/go-astra"
 )
 
 func main() {
+	color.New(color.FgBlack, color.BgWhite, color.Bold).Printf("  GoMS  ")
+	fmt.Printf(" v%s", goms.VERSION)
+	fmt.Println("")
 	var service *types.Service
 	var err error
 	defer func() {
 		if err == nil {
-			fmt.Printf("GoMS v%s\n", goms.VERSION)
-			fmt.Printf("All files are successfully generated for '%s' service\n", service.Name)
+			success(fmt.Sprintf("All files are successfully generated for '%s' service", service.Name))
+		}
+	}()
+	defer func() {
+		if err := recover(); err != nil {
+			fail(fmt.Errorf("%s", err))
 		}
 	}()
 	currentDir, err := os.Getwd()
 	if err != nil {
-		log.Fatalln(err)
+		fail(err)
 	}
 	version, err := parser.ParseVersion(filepath.Base(currentDir))
 	if err != nil {
-		log.Fatalln(err)
+		fail(err)
 	}
 	goPath := os.Getenv("GOPATH")
 	if strings.TrimSpace(goPath) == "" {
-		log.Fatalln("GOPATH is not defined")
+		fail(fmt.Errorf("GOPATH is not defined"))
 	}
 	if !filepath.HasPrefix(currentDir, goPath) {
-		log.Fatalln("service has to be located inside GOPATH")
+		fail(fmt.Errorf("service has to be located inside GOPATH"))
 	}
 	importPath, err := filepath.Rel(filepath.Join(os.Getenv("GOPATH"), "./src/"), currentDir)
 	if err != nil {
-		log.Fatalln(err)
+		fail(err)
 	}
 	path := filepath.Join(currentDir, "./service.go")
 	fset := token.NewFileSet()
 	f, err := goParser.ParseFile(fset, path, nil, goParser.ParseComments|goParser.AllErrors)
 	if err != nil {
-		log.Fatalln(fmt.Errorf("error when parse file: %v", err))
+		fail(fmt.Errorf("error when parse file: %v", err))
 	}
 	file, err := astra.ParseAstFile(f)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Fatalln(fmt.Errorf("%s file does not exist", path))
+			fail(fmt.Errorf("%s file does not exist", path))
 		}
-		log.Fatalln(err)
+		fail(err)
 	}
 
 	service, err = parser.Parse(file)
 	if err != nil {
-		log.Fatalln(err)
+		fail(err)
 	}
 	service.Version = *version
 	service.Path = currentDir
 	service.ImportPath = importPath
 	files, err := generator.GenerateService(service)
 	if err != nil {
-		log.Fatalln(err)
+		fail(err)
 	}
 	err = files.Save()
 	if err != nil {
-		log.Fatalln(err)
+		fail(err)
 	}
-	// t, err := json.MarshalIndent(service, "", " ")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(string(t))
-	// fmt.Println(parser.CleanComments(file.Interfaces[0].Methods[0].Docs))
+}
+
+func success(s string) {
+	color.BgGreen.Print("  DONE  ")
+	fmt.Print(" ")
+	color.Green.Printf("%s\n", s)
+}
+
+func fail(err error) {
+	color.BgRed.Print("  FAIL  ")
+	fmt.Print(" ")
+	color.Red.Printf("%s\n", err.Error())
+	os.Exit(2)
 }
