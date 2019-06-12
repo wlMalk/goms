@@ -328,6 +328,31 @@ func parseMethodParamsTag(method *types.Method, tag string) error {
 }
 
 func parseMethodLogsIgnoreTag(method *types.Method, tag string) error {
+	params := strings.SplitS(tag, ",")
+paramsLoop:
+	for _, p := range params {
+		param := strs.ToLower(p)
+		if contains(method.Options.LoggingOptions.IgnoredArguments, param) || contains(method.Options.LoggingOptions.IgnoredResults, param) {
+			continue
+		}
+		if param == "err" {
+			method.Options.LoggingOptions.IgnoreError = true
+			continue
+		}
+		for _, arg := range method.Arguments {
+			if strs.ToLower(arg.Name) == param || (len(arg.Alias) > 0 && strs.ToLower(arg.Alias) == param) {
+				method.Options.LoggingOptions.IgnoredArguments = append(method.Options.LoggingOptions.IgnoredArguments, param)
+				continue paramsLoop
+			}
+		}
+		for _, result := range method.Results {
+			if strs.ToLower(result.Name) == param || (len(result.Alias) > 0 && strs.ToLower(result.Alias) == param) {
+				method.Options.LoggingOptions.IgnoredResults = append(method.Options.LoggingOptions.IgnoredResults, param)
+				continue paramsLoop
+			}
+		}
+		return fmt.Errorf("invalid name '%s' given to logs-ignore method tag in '%s' method", p, method.Name)
+	}
 	return nil
 }
 
