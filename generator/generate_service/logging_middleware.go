@@ -81,7 +81,7 @@ func generateLoggingMiddlewareMethodHandler(file *files.GoFile, method *types.Me
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (m *loggingMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
-	if method.Options.Generate.Logging && (helpers.HasLoggedArguments(method) || helpers.HasLoggedResults(method)) {
+	if method.Options.Generate.Middleware && method.Options.Generate.Logging && (helpers.HasLoggedArguments(method) || helpers.HasLoggedResults(method)) {
 		file.Pf("defer func() {")
 		file.Pf("if err == nil {")
 		file.Pf("log.Info(ctx,")
@@ -139,7 +139,7 @@ func generateErrorLoggingMiddlewareMethodHandler(file *files.GoFile, method *typ
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (m *errorLoggingMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
-	if method.Options.Generate.Logging && !method.Options.Logging.IgnoreError {
+	if method.Options.Generate.Middleware && method.Options.Generate.Logging && !method.Options.Logging.IgnoreError {
 		file.Pf("defer func() {")
 		file.Pf("if err != nil {")
 		file.Pf("log.Error(ctx, \"error\", err)")
@@ -161,33 +161,35 @@ func generateLoggingMiddlewareTypes(file *files.GoFile, service *types.Service) 
 		file.Pf("type (")
 		for _, method := range methods {
 			methodName := strings.ToUpperFirst(method.Name)
-			if helpers.HasLoggedArguments(method) {
-				file.Pf("log%sRequest struct {", methodName)
-				for _, arg := range helpers.GetLoggedArgumentsForMethod(method) {
-					argName := strings.ToUpperFirst(arg.Name)
-					argSpecialName := helpers.GetName(arg.Name, arg.Alias)
-					file.Pf("%s %s `json:\"%s\"`", argName, arg.Type.GoType(), argSpecialName)
+			if method.Options.Generate.Middleware && method.Options.Generate.Logging {
+				if helpers.HasLoggedArguments(method) {
+					file.Pf("log%sRequest struct {", methodName)
+					for _, arg := range helpers.GetLoggedArgumentsForMethod(method) {
+						argName := strings.ToUpperFirst(arg.Name)
+						argSpecialName := helpers.GetName(arg.Name, arg.Alias)
+						file.Pf("%s %s `json:\"%s\"`", argName, arg.Type.GoType(), argSpecialName)
+					}
+					for _, arg := range helpers.GetLoggedArgumentsLenForMethod(method) {
+						argName := strings.ToUpperFirst(arg.Name)
+						argSpecialName := helpers.GetName(arg.Name, arg.Alias)
+						file.Pf("Len%s %s `json:\"len(%s)\"`", argName, arg.Type.GoType(), argSpecialName)
+					}
+					file.Pf("}")
 				}
-				for _, arg := range helpers.GetLoggedArgumentsLenForMethod(method) {
-					argName := strings.ToUpperFirst(arg.Name)
-					argSpecialName := helpers.GetName(arg.Name, arg.Alias)
-					file.Pf("Len%s %s `json:\"len(%s)\"`", argName, arg.Type.GoType(), argSpecialName)
+				if helpers.HasLoggedResults(method) {
+					file.Pf("log%sResponse struct {", methodName)
+					for _, field := range helpers.GetLoggedResultsForMethod(method) {
+						fieldName := strings.ToUpperFirst(field.Name)
+						fieldSpecialName := helpers.GetName(field.Name, field.Alias)
+						file.Pf("%s %s `json:\"%s\"`", fieldName, field.Type.GoType(), fieldSpecialName)
+					}
+					for _, field := range helpers.GetLoggedResultsLenForMethod(method) {
+						fieldName := strings.ToUpperFirst(field.Name)
+						fieldSpecialName := helpers.GetName(field.Name, field.Alias)
+						file.Pf("Len%s %s `json:\"len(%s)\"`", fieldName, field.Type.GoType(), fieldSpecialName)
+					}
+					file.Pf("}")
 				}
-				file.Pf("}")
-			}
-			if helpers.HasLoggedResults(method) {
-				file.Pf("log%sResponse struct {", methodName)
-				for _, field := range helpers.GetLoggedResultsForMethod(method) {
-					fieldName := strings.ToUpperFirst(field.Name)
-					fieldSpecialName := helpers.GetName(field.Name, field.Alias)
-					file.Pf("%s %s `json:\"%s\"`", fieldName, field.Type.GoType(), fieldSpecialName)
-				}
-				for _, field := range helpers.GetLoggedResultsLenForMethod(method) {
-					fieldName := strings.ToUpperFirst(field.Name)
-					fieldSpecialName := helpers.GetName(field.Name, field.Alias)
-					file.Pf("Len%s %s `json:\"len(%s)\"`", fieldName, field.Type.GoType(), fieldSpecialName)
-				}
-				file.Pf("}")
 			}
 		}
 		file.Pf(")")
