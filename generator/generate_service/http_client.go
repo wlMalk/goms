@@ -13,11 +13,11 @@ func GenerateHTTPClientFile(base string, path string, name string, service *type
 	file := files.NewGoFile(base, path, name, true, false)
 	generateHTTPTransportClientStruct(file, service)
 	generateHTTPTransportClientNewFunc(file, service)
-	for _, method := range service.Methods {
+	for _, method := range helpers.GetMethodsWithHTTPClientEnabled(service) {
 		generateHTTPTransportClientMethodFunc(file, method)
 	}
 	generateHTTPTransportClientGlobalVar(file, service)
-	for _, method := range service.Methods {
+	for _, method := range helpers.GetMethodsWithHTTPClientEnabled(service) {
 		generateHTTPTransportClientGlobalFunc(file, method)
 	}
 	return file

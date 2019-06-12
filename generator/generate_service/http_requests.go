@@ -9,9 +9,9 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateHTTPRequestsFile(base string, path string, name string, methods []*types.Method) *files.GoFile {
+func GenerateHTTPRequestsFile(base string, path string, name string, service *types.Service) *files.GoFile {
 	file := files.NewGoFile(base, path, name, true, false)
-	for _, method := range methods {
+	for _, method := range helpers.GetMethodsWithHTTPEnabled(service) {
 		generateHTTPRequest(file, method)
 		generateHTTPRequestNewFunc(file, method)
 		generateHTTPRequestNewHTTPFunc(file, method)

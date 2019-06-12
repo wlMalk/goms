@@ -2,13 +2,14 @@ package generate_service
 
 import (
 	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
 func GenerateHTTPDecodersFile(base string, path string, name string, service *types.Service) *files.GoFile {
 	file := files.NewGoFile(base, path, name, true, false)
-	for _, method := range service.Methods {
+	for _, method := range helpers.GetMethodsWithHTTPEnabled(service) {
 		generateHTTPRequestDecoder(file, method)
 		generateHTTPResponseDecoder(file, method)
 	}

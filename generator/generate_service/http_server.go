@@ -4,6 +4,7 @@ import (
 	"path"
 
 	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
@@ -23,7 +24,7 @@ func generateHTTPTransportServerRegisterFunc(file *files.GoFile, service *types.
 	file.AddImport(serviceNameSnake+"_http", service.ImportPath, "/service/transport/http")
 	file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
 	file.Pf("func Register(server *goms_http.Server, endpoints *transport.%s, opts ...kit_http.ServerOption) {", serviceName)
-	for _, method := range service.Methods {
+	for _, method := range helpers.GetMethodsWithHTTPServerEnabled(service) {
 		methodName := strings.ToUpperFirst(method.Name)
 		methodHTTPMethod := method.Options.HTTP.Method
 		methodURI := getMethodURI(method)
@@ -46,7 +47,7 @@ func generateHTTPTransportServerRegisterSpecialFunc(file *files.GoFile, service 
 	file.AddImport(serviceNameSnake+"_http", service.ImportPath, "/service/transport/http")
 	file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
 	file.Pf("func RegisterSpecial(server *goms_http.Server, endpoints *transport.%s, optionsFunc func(method string) (opts []kit_http.ServerOption)) {", serviceName)
-	for _, method := range service.Methods {
+	for _, method := range helpers.GetMethodsWithHTTPServerEnabled(service) {
 		methodName := strings.ToUpperFirst(method.Name)
 		methodHTTPMethod := method.Options.HTTP.Method
 		methodURI := getMethodURI(method)

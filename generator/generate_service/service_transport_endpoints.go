@@ -2,6 +2,7 @@ package generate_service
 
 import (
 	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
@@ -71,15 +72,17 @@ func generateServiceStructTypeNewFunc(file *files.GoFile, service *types.Service
 func generateServiceMethodsRegisteration(file *files.GoFile, service *types.Service) {
 	for _, method := range service.Methods {
 		generateTypeSwitchForMethodHandler(file, method)
-		if len(method.Arguments) > 0 {
+		if len(method.Arguments) > 0 && method.Options.Validator {
 			generateMethodRequestValidatorMiddleware(file, method)
 		}
-		generateMiddlewareCheckerForEndpoint(file, method)
+		if method.Options.Middleware {
+			generateMiddlewareCheckerForEndpoint(file, method)
+		}
 	}
-	generateMiddlewareCheckerForService(file, service)
-
+	if service.Options.Generate.Middleware {
+		generateMiddlewareCheckerForService(file, service)
+	}
 	generateEndpointsPacker(file, service)
-	file.Pf("")
 }
 
 func generateTypeSwitchForMethodHandler(file *files.GoFile, method *types.Method) {
@@ -139,8 +142,10 @@ func generateMiddlewareCheckerForService(file *files.GoFile, service *types.Serv
 func generateOuterMiddlewareCheckerForEndpoint(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
-	file.Pf("if t, ok := middlewareGetter.(interface{ Outer%sMiddleware(e endpoint.Endpoint) endpoint.Endpoint }); ok {", methodName)
-	file.Pf("s.endpoints.%s = t.Outer%sMiddleware(s.endpoints.%s)", lowerMethodName, methodName, lowerMethodName)
+	file.Pf("if t, ok := h.(interface {")
+	file.Pf("Outer%sMiddleware(e endpoint.Endpoint) endpoint.Endpoint", methodName)
+	file.Pf("}); ok {")
+	file.Pf("%s = t.Outer%sMiddleware(%s)", lowerMethodName, methodName, lowerMethodName)
 	file.Pf("}")
 	file.Pf("")
 }
@@ -165,15 +170,8 @@ func generateEndpointsPacker(file *files.GoFile, service *types.Service) {
 	}
 	file.Pf(")")
 	file.Pf("")
-	for _, method := range service.Methods {
-		methodName := strings.ToUpperFirst(method.Name)
-		lowerMethodName := strings.ToLowerFirst(method.Name)
-		file.Pf("if t, ok := h.(interface {")
-		file.Pf("Outer%sMiddleware(e endpoint.Endpoint) endpoint.Endpoint", methodName)
-		file.Pf("}); ok {")
-		file.Pf("%s = t.Outer%sMiddleware(%s)", lowerMethodName, methodName, lowerMethodName)
-		file.Pf("}")
-		file.Pf("")
+	for _, method := range helpers.GetMethodsWithMiddlewareEnabled(service) {
+		generateOuterMiddlewareCheckerForEndpoint(file, method)
 	}
 	file.Pf("endpoints := %s{", serviceName)
 	for _, method := range service.Methods {
@@ -184,5 +182,4 @@ func generateEndpointsPacker(file *files.GoFile, service *types.Service) {
 	file.Pf("}")
 	file.Pf("")
 	file.Pf("return endpoints")
-	file.Pf("")
 }

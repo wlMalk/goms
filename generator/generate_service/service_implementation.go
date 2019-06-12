@@ -13,7 +13,7 @@ func GenerateServiceImplementationFile(base string, path string, name string, se
 	file := files.NewGoFile(base, path, name, false, false)
 	generateServiceImplementationStruct(file, service)
 	generateServiceImplementationStructNewFunc(file, service)
-	for _, method := range service.Methods {
+	for _, method := range helpers.GetMethodsWithMethodStubsEnabled(service) {
 		generateServiceMethodImplementation(file, service.Name, method)
 	}
 	return file
@@ -21,7 +21,7 @@ func GenerateServiceImplementationFile(base string, path string, name string, se
 
 func GenerateServiceImplementationValidatorsFile(base string, path string, name string, service *types.Service) *files.GoFile {
 	file := files.NewGoFile(base, path, name, false, false)
-	for _, method := range service.Methods {
+	for _, method := range helpers.GetMethodsWithValidatorEnabled(service) {
 		if len(method.Arguments) > 0 {
 			generateServiceMethodImplementationValidateFunc(file, method)
 		}
@@ -31,11 +31,13 @@ func GenerateServiceImplementationValidatorsFile(base string, path string, name 
 
 func GenerateServiceImplementationMiddlewareFile(base string, path string, name string, service *types.Service) *files.GoFile {
 	file := files.NewGoFile(base, path, name, false, false)
-	for _, method := range service.Methods {
+	for _, method := range helpers.GetMethodsWithMiddlewareEnabled(service) {
 		generateServiceMethodImplementationMiddleware(file, method)
 		generateServiceMethodImplementationOuterMiddleware(file, method)
 	}
-	generateServiceImplementationMiddleware(file, service)
+	if service.Options.Generate.Middleware {
+		generateServiceImplementationMiddleware(file, service)
+	}
 	return file
 }
 
@@ -43,8 +45,8 @@ func GenerateCachingKeyerFile(base string, path string, name string, service *ty
 	file := files.NewGoFile(base, path, name, false, false)
 	generateCachingMiddlewareCacheKeyerType(file, service)
 	generateCachingMiddlewareKeyerNewFunc(file, service)
-	for _, method := range service.Methods {
-		if len(method.Arguments) > 0 && len(method.Results) > 0 && method.Options.Caching {
+	for _, method := range helpers.GetMethodsWithCachingEnabled(service) {
+		if len(method.Arguments) > 0 && len(method.Results) > 0 {
 			generateCachingMiddlewareKeyerMethodFunc(file, method)
 		}
 	}
