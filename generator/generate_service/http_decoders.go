@@ -21,7 +21,7 @@ func generateHTTPRequestDecoder(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "net/http")
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func Decode%sRequest(ctx context.Context, req *http.Request) (interface{}, error) {", methodName)
-	if len(method.Results) > 0 {
+	if len(method.Arguments) > 0 {
 		file.AddImport("", method.Service.ImportPath, "service/transport/http/requests")
 		file.Pf("r, err := requests.%sFromHTTP(req)", methodName)
 		file.Pf("if err!=nil{")
