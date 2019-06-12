@@ -451,18 +451,18 @@ func parseMethodEnableTag(method *types.Method, tag string) error {
 
 func parseMethodAliasTag(method *types.Method, tag string) error {
 	params := strings.SplitS(tag, ",")
-	if len(params) != 2 {
+	if len(params) != 2 || strs.TrimSpace(params[0]) == "" || strs.TrimSpace(params[1]) == "" {
 		return fmt.Errorf("invalid params '%s' for alias tag in '%s' method", tag, method.Name)
 	}
 	for _, arg := range method.Arguments {
 		if strings.ToUpperFirst(arg.Name) == strings.ToUpperFirst(params[0]) {
-			arg.Alias = params[1]
+			arg.Alias = strs.TrimSpace(params[1])
 			return nil
 		}
 	}
 	for _, res := range method.Results {
 		if strings.ToUpperFirst(res.Name) == strings.ToUpperFirst(params[0]) {
-			res.Alias = params[1]
+			res.Alias = strs.TrimSpace(params[1])
 			return nil
 		}
 	}
