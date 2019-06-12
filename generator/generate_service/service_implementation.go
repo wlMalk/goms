@@ -19,12 +19,17 @@ func GenerateServiceImplementationFile(base string, path string, name string, se
 	return file
 }
 
-func GenerateServiceImplementationValidatorsFile(base string, path string, name string, service *types.Service) *files.GoFile {
+func GenerateServiceImplementationValidatorFile(base string, path string, name string, service *types.Service) *files.GoFile {
 	file := files.NewGoFile(base, path, name, false, false)
-	for _, method := range helpers.GetMethodsWithValidatorEnabled(service) {
-		if len(method.Arguments) > 0 {
-			generateServiceMethodImplementationValidateFunc(file, method)
-		}
+	serviceName := strings.ToUpperFirst(service.Name)
+	file.Pf("type %sValidator struct {}", serviceName)
+	file.Pf("")
+	file.Pf("func NewValidator() *%sValidator {", serviceName)
+	file.Pf("return &%sValidator{}", serviceName)
+	file.Pf("}")
+	file.Pf("")
+	for _, method := range helpers.GetMethodsWithValidatingEnabled(service) {
+		generateServiceMethodImplementationValidateFunc(file, method)
 	}
 	return file
 }
@@ -107,7 +112,7 @@ func generateServiceMethodImplementationValidateFunc(file *files.GoFile, method 
 	file.AddImport("", method.Service.ImportPath, "/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
 	serviceName := strings.ToUpperFirst(method.Service.Name)
-	file.Pf("func (s *%s) Validate%s(ctx context.Context, req requests.%sRequest) error {", serviceName, methodName, methodName)
+	file.Pf("func (v *%sValidator) Validate%s(ctx context.Context, req requests.%sRequest) error {", serviceName, methodName, methodName)
 	file.Cf("TODO: Validate %s request", methodName)
 	file.Pf("return nil")
 	file.Pf("}")
