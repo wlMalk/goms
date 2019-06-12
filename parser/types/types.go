@@ -19,33 +19,25 @@ type Service struct {
 }
 
 type ServiceOptions struct {
-	Transports TransportOptions
-	HTTP       HTTPServiceOptions
-	GRPC       GRPCServiceOptions
-	Generate   GenerateServiceOptions
+	HTTP     httpServiceOptions
+	GRPC     grpcServiceOptions
+	Generate generateServiceOptions
 }
 
-type transport struct {
-	Server bool
-	Client bool
-}
-
-type TransportOptions struct {
-	HTTP transport
-	GRPC transport
-}
-
-type HTTPServiceOptions struct {
+type httpServiceOptions struct {
 	URIPrefix string
 }
 
-type GRPCServiceOptions struct {
+type grpcServiceOptions struct {
 }
 
-type GenerateServiceOptions struct {
+type generateServiceOptions struct {
+	Logger           bool
+	CircuitBreaking  bool
+	RateLimiting     bool
+	Recovering       bool
 	Caching          bool
 	Logging          bool
-	Metrics          bool
 	Tracing          bool
 	ServiceDiscovery bool
 	ProtoBuf         bool
@@ -53,6 +45,13 @@ type GenerateServiceOptions struct {
 	Validators       bool
 	Middleware       bool
 	MethodStubs      bool
+	FrequencyMetric  bool
+	LatencyMetric    bool
+	CounterMetric    bool
+	HTTPServer       bool
+	HTTPClient       bool
+	GRPCServer       bool
+	GRPCClient       bool
 }
 
 type Version struct {
@@ -83,33 +82,45 @@ type Method struct {
 	Arguments []*Argument
 	Results   []*Field
 
-	Options MethodOptions
+	Options methodOptions
 }
 
-type MethodOptions struct {
-	HTTP           HTTPMethodOptions
-	GRPC           GRPCMethodOptions
-	LoggingOptions LoggingMethodOptions
-	Caching        bool
-	Logging        bool
-	Validator      bool
-	Middleware     bool
-	MethodStubs    bool
-	Tracing        bool
-	Metrics        bool
-	Transports     TransportOptions
+type methodOptions struct {
+	HTTP     httpMethodOptions
+	GRPC     grpcMethodOptions
+	Logging  loggingMethodOptions
+	Generate generateMethodOptions
 }
 
-type HTTPMethodOptions struct {
+type generateMethodOptions struct {
+	CircuitBreaking bool
+	RateLimiting    bool
+	Recovering      bool
+	Caching         bool
+	Logging         bool
+	Validator       bool
+	Middleware      bool
+	MethodStubs     bool
+	Tracing         bool
+	FrequencyMetric bool
+	LatencyMetric   bool
+	CounterMetric   bool
+	HTTPServer      bool
+	HTTPClient      bool
+	GRPCServer      bool
+	GRPCClient      bool
+}
+
+type httpMethodOptions struct {
 	Method string
 	URI    string
 	AbsURI string
 }
 
-type GRPCMethodOptions struct {
+type grpcMethodOptions struct {
 }
 
-type LoggingMethodOptions struct {
+type loggingMethodOptions struct {
 	IgnoredArguments []string
 	IgnoredResults   []string
 	LenArguments     []string

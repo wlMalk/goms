@@ -32,15 +32,22 @@ func Parse(ast *astTypes.File) (s *types.Service, err error) {
 			return nil, err
 		}
 		m.Service = s
-		m.Options.Caching = s.Options.Generate.Caching
-		m.Options.Logging = s.Options.Generate.Logging
-		m.Options.MethodStubs = s.Options.Generate.MethodStubs
-		m.Options.Middleware = s.Options.Generate.Middleware
-		m.Options.Validator = s.Options.Generate.Validators
-		m.Options.Transports.HTTP.Server = s.Options.Transports.HTTP.Server
-		m.Options.Transports.HTTP.Client = s.Options.Transports.HTTP.Client
-		m.Options.Transports.GRPC.Server = s.Options.Transports.GRPC.Server
-		m.Options.Transports.GRPC.Server = s.Options.Transports.GRPC.Server
+		m.Options.Generate.Caching = s.Options.Generate.Caching
+		m.Options.Generate.Logging = s.Options.Generate.Logging
+		m.Options.Generate.MethodStubs = s.Options.Generate.MethodStubs
+		m.Options.Generate.Middleware = s.Options.Generate.Middleware
+		m.Options.Generate.Validator = s.Options.Generate.Validators
+		m.Options.Generate.CircuitBreaking = s.Options.Generate.CircuitBreaking
+		m.Options.Generate.RateLimiting = s.Options.Generate.RateLimiting
+		m.Options.Generate.Recovering = s.Options.Generate.Recovering
+		m.Options.Generate.Tracing = s.Options.Generate.Tracing
+		m.Options.Generate.FrequencyMetric = s.Options.Generate.FrequencyMetric
+		m.Options.Generate.LatencyMetric = s.Options.Generate.LatencyMetric
+		m.Options.Generate.CounterMetric = s.Options.Generate.CounterMetric
+		m.Options.Generate.HTTPServer = s.Options.Generate.HTTPServer
+		m.Options.Generate.HTTPClient = s.Options.Generate.HTTPClient
+		m.Options.Generate.GRPCServer = s.Options.Generate.GRPCServer
+		m.Options.Generate.GRPCServer = s.Options.Generate.GRPCServer
 		err = parseMethodTags(m, m.Tags)
 		if err != nil {
 			return nil, err
@@ -139,6 +146,9 @@ func parseArguments(m *types.Method, args []astTypes.Variable) error {
 			if err != nil {
 				return err
 			}
+			if a.Name == "" {
+				return fmt.Errorf("'%s' method has an unnamed argument", m.Name)
+			}
 			if err := validateArgument(a); err != nil {
 				return err
 			}
@@ -159,6 +169,9 @@ func parseResults(m *types.Method, args []astTypes.Variable) error {
 			r, err := parseField(arg)
 			if err != nil {
 				return err
+			}
+			if r.Name == "" {
+				return fmt.Errorf("'%s' method has an unnamed return value", m.Name)
 			}
 			if err := validateField(r); err != nil {
 				return err

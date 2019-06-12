@@ -12,11 +12,13 @@ var serviceTags = []string{
 	"generate-all",
 	"generate",
 	"transports",
+	"metrics",
 	"http-URI-prefix",
 }
 
 var methodTags = []string{
 	"transports",
+	"metrics",
 	"http-method",
 	"http-URI",
 	"http-abs-URI",
@@ -36,11 +38,13 @@ var serviceTagsParsers = map[string]func(service *types.Service, tag string) err
 	"generate-all":    parseServiceGenerateAllTag,
 	"generate":        parseServiceGenerateTag,
 	"transports":      parseServiceTransportsTag,
+	"metrics":         parseServiceMetricsTag,
 	"http-URI-prefix": parseServiceHttpUriPrefixTag,
 }
 
 var methodTagsParsers = map[string]func(method *types.Method, tag string) error{
 	"transports":   parseMethodTransportsTag,
+	"metrics":      parseMethodMetricsTag,
 	"http-method":  parseMethodHttpMethodTag,
 	"http-URI":     parseMethodHttpUriTag,
 	"http-abs-URI": parseMethodHttpAbsUriTag,
@@ -158,6 +162,14 @@ func parseServiceGenerateTag(service *types.Service, tag string) error {
 	generated := strings.SplitS(tag, ",")
 	for _, i := range generated {
 		switch strs.ToLower(i) {
+		case "logger":
+			service.Options.Generate.Logger = true
+		case "circuit-breaking":
+			service.Options.Generate.CircuitBreaking = true
+		case "rate-limiting":
+			service.Options.Generate.RateLimiting = true
+		case "recovering":
+			service.Options.Generate.Recovering = true
 		case "caching":
 			service.Options.Generate.Caching = true
 		case "logging":
@@ -169,7 +181,9 @@ func parseServiceGenerateTag(service *types.Service, tag string) error {
 		case "tracing":
 			service.Options.Generate.Tracing = true
 		case "metrics":
-			service.Options.Generate.Metrics = true
+			service.Options.Generate.FrequencyMetric = true
+			service.Options.Generate.LatencyMetric = true
+			service.Options.Generate.CounterMetric = true
 		case "service-discovery":
 			service.Options.Generate.ServiceDiscovery = true
 		case "validators":
@@ -179,13 +193,19 @@ func parseServiceGenerateTag(service *types.Service, tag string) error {
 		case "method-stubs":
 			service.Options.Generate.MethodStubs = true
 		case "grpc-server":
-			service.Options.Transports.GRPC.Server = true
+			service.Options.Generate.GRPCServer = true
 		case "grpc-client":
-			service.Options.Transports.GRPC.Client = true
+			service.Options.Generate.GRPCClient = true
 		case "http-server":
-			service.Options.Transports.HTTP.Server = true
+			service.Options.Generate.HTTPServer = true
 		case "http-client":
-			service.Options.Transports.HTTP.Client = true
+			service.Options.Generate.HTTPClient = true
+		case "grpc":
+			service.Options.Generate.GRPCServer = true
+			service.Options.Generate.GRPCClient = true
+		case "http":
+			service.Options.Generate.HTTPServer = true
+			service.Options.Generate.HTTPClient = true
 		default:
 			return fmt.Errorf("invalid value '%s' for generate service tag in '%s' service", i, service.Name)
 		}
@@ -195,22 +215,37 @@ func parseServiceGenerateTag(service *types.Service, tag string) error {
 
 func parseServiceGenerateAllTag(service *types.Service, tag string) error {
 	ignored := strings.SplitS(tag, ",")
+	service.Options.Generate.Logger = true
+	service.Options.Generate.CircuitBreaking = true
+	service.Options.Generate.RateLimiting = true
+	service.Options.Generate.Recovering = true
 	service.Options.Generate.Caching = true
 	service.Options.Generate.Logging = true
 	service.Options.Generate.Main = true
 	service.Options.Generate.ProtoBuf = true
 	service.Options.Generate.Tracing = true
-	service.Options.Generate.Metrics = true
+	service.Options.Generate.FrequencyMetric = true
+	service.Options.Generate.LatencyMetric = true
+	service.Options.Generate.CounterMetric = true
 	service.Options.Generate.ServiceDiscovery = true
 	service.Options.Generate.Validators = true
 	service.Options.Generate.Middleware = true
 	service.Options.Generate.MethodStubs = true
-	service.Options.Transports.GRPC.Server = true
-	service.Options.Transports.GRPC.Client = true
-	service.Options.Transports.HTTP.Server = true
-	service.Options.Transports.HTTP.Client = true
+	service.Options.Generate.GRPCServer = true
+	service.Options.Generate.GRPCClient = true
+	service.Options.Generate.HTTPServer = true
+	service.Options.Generate.HTTPClient = true
+
 	for _, i := range ignored {
 		switch strs.ToLower(i) {
+		case "logger":
+			service.Options.Generate.Logger = false
+		case "circuit-breaking":
+			service.Options.Generate.CircuitBreaking = false
+		case "rate-limiting":
+			service.Options.Generate.RateLimiting = false
+		case "recovering":
+			service.Options.Generate.Recovering = false
 		case "caching":
 			service.Options.Generate.Caching = false
 		case "logging":
@@ -222,7 +257,9 @@ func parseServiceGenerateAllTag(service *types.Service, tag string) error {
 		case "tracing":
 			service.Options.Generate.Tracing = false
 		case "metrics":
-			service.Options.Generate.Metrics = false
+			service.Options.Generate.FrequencyMetric = false
+			service.Options.Generate.LatencyMetric = false
+			service.Options.Generate.CounterMetric = false
 		case "service-discovery":
 			service.Options.Generate.ServiceDiscovery = false
 		case "validators":
@@ -232,13 +269,19 @@ func parseServiceGenerateAllTag(service *types.Service, tag string) error {
 		case "method-stubs":
 			service.Options.Generate.MethodStubs = false
 		case "grpc-server":
-			service.Options.Transports.GRPC.Server = false
+			service.Options.Generate.GRPCServer = false
 		case "grpc-client":
-			service.Options.Transports.GRPC.Client = false
+			service.Options.Generate.GRPCClient = false
 		case "http-server":
-			service.Options.Transports.HTTP.Server = false
+			service.Options.Generate.HTTPServer = false
 		case "http-client":
-			service.Options.Transports.HTTP.Client = false
+			service.Options.Generate.HTTPClient = false
+		case "grpc":
+			service.Options.Generate.GRPCServer = false
+			service.Options.Generate.GRPCClient = false
+		case "http":
+			service.Options.Generate.HTTPServer = false
+			service.Options.Generate.HTTPClient = false
 		default:
 			return fmt.Errorf("invalid value '%s' for generate-all service tag in '%s' service", i, service.Name)
 		}
@@ -248,14 +291,18 @@ func parseServiceGenerateAllTag(service *types.Service, tag string) error {
 
 func parseServiceTransportsTag(service *types.Service, tag string) error {
 	transports := strings.SplitS(tag, ",")
+	service.Options.Generate.HTTPServer = false
+	service.Options.Generate.HTTPClient = false
+	service.Options.Generate.GRPCServer = false
+	service.Options.Generate.GRPCClient = false
 	for _, i := range transports {
 		switch strs.ToUpper(i) {
 		case "HTTP":
-			service.Options.Transports.HTTP.Server = true
-			service.Options.Transports.HTTP.Client = true
+			service.Options.Generate.HTTPServer = true
+			service.Options.Generate.HTTPClient = true
 		case "GRPC":
-			service.Options.Transports.GRPC.Server = true
-			service.Options.Transports.GRPC.Client = true
+			service.Options.Generate.GRPCServer = true
+			service.Options.Generate.GRPCClient = true
 		default:
 			return fmt.Errorf("invalid value '%s' for transports service tag in '%s' service", i, service.Name)
 		}
@@ -270,16 +317,60 @@ func parseServiceHttpUriPrefixTag(service *types.Service, tag string) error {
 
 func parseMethodTransportsTag(method *types.Method, tag string) error {
 	transports := strings.SplitS(tag, ",")
+	method.Options.Generate.HTTPServer = false
+	method.Options.Generate.HTTPClient = false
+	method.Options.Generate.GRPCServer = false
+	method.Options.Generate.GRPCClient = false
 	for _, i := range transports {
 		switch strs.ToUpper(i) {
 		case "HTTP":
-			method.Options.Transports.HTTP.Server = true
-			method.Options.Transports.HTTP.Client = true
+			method.Options.Generate.HTTPServer = true
+			method.Options.Generate.HTTPClient = true
 		case "GRPC":
-			method.Options.Transports.GRPC.Server = true
-			method.Options.Transports.GRPC.Client = true
+			method.Options.Generate.GRPCServer = true
+			method.Options.Generate.GRPCClient = true
 		default:
 			return fmt.Errorf("invalid value '%s' for transports method tag in '%s' method", i, method.Name)
+		}
+	}
+	return nil
+}
+
+func parseMethodMetricsTag(method *types.Method, tag string) error {
+	transports := strings.SplitS(tag, ",")
+	method.Options.Generate.FrequencyMetric = false
+	method.Options.Generate.LatencyMetric = false
+	method.Options.Generate.CounterMetric = false
+	for _, i := range transports {
+		switch strs.ToLower(i) {
+		case "frequency":
+			method.Options.Generate.FrequencyMetric = true
+		case "latency":
+			method.Options.Generate.LatencyMetric = true
+		case "counter":
+			method.Options.Generate.CounterMetric = true
+		default:
+			return fmt.Errorf("invalid value '%s' for metrics method tag in '%s' method", i, method.Name)
+		}
+	}
+	return nil
+}
+
+func parseServiceMetricsTag(service *types.Service, tag string) error {
+	transports := strings.SplitS(tag, ",")
+	service.Options.Generate.FrequencyMetric = false
+	service.Options.Generate.LatencyMetric = false
+	service.Options.Generate.CounterMetric = false
+	for _, i := range transports {
+		switch strs.ToLower(i) {
+		case "frequency":
+			service.Options.Generate.FrequencyMetric = true
+		case "latency":
+			service.Options.Generate.LatencyMetric = true
+		case "counter":
+			service.Options.Generate.CounterMetric = true
+		default:
+			return fmt.Errorf("invalid value '%s' for metrics service tag in '%s' service", i, service.Name)
 		}
 	}
 	return nil
@@ -332,22 +423,22 @@ func parseMethodLogsIgnoreTag(method *types.Method, tag string) error {
 paramsLoop:
 	for _, p := range params {
 		param := strs.ToLower(p)
-		if contains(method.Options.LoggingOptions.IgnoredArguments, param) || contains(method.Options.LoggingOptions.IgnoredResults, param) {
+		if contains(method.Options.Logging.IgnoredArguments, param) || contains(method.Options.Logging.IgnoredResults, param) {
 			continue
 		}
 		if param == "err" {
-			method.Options.LoggingOptions.IgnoreError = true
+			method.Options.Logging.IgnoreError = true
 			continue
 		}
 		for _, arg := range method.Arguments {
 			if strs.ToLower(arg.Name) == param || (len(arg.Alias) > 0 && strs.ToLower(arg.Alias) == param) {
-				method.Options.LoggingOptions.IgnoredArguments = append(method.Options.LoggingOptions.IgnoredArguments, param)
+				method.Options.Logging.IgnoredArguments = append(method.Options.Logging.IgnoredArguments, param)
 				continue paramsLoop
 			}
 		}
 		for _, result := range method.Results {
 			if strs.ToLower(result.Name) == param || (len(result.Alias) > 0 && strs.ToLower(result.Alias) == param) {
-				method.Options.LoggingOptions.IgnoredResults = append(method.Options.LoggingOptions.IgnoredResults, param)
+				method.Options.Logging.IgnoredResults = append(method.Options.Logging.IgnoredResults, param)
 				continue paramsLoop
 			}
 		}
@@ -361,20 +452,20 @@ func parseMethodLogsLenTag(method *types.Method, tag string) error {
 paramsLoop:
 	for _, p := range params {
 		param := strs.ToLower(p)
-		if contains(method.Options.LoggingOptions.LenArguments, param) || contains(method.Options.LoggingOptions.LenResults, param) {
+		if contains(method.Options.Logging.LenArguments, param) || contains(method.Options.Logging.LenResults, param) {
 			continue
 		}
 		for _, arg := range method.Arguments {
 			if (arg.Type.IsMap || arg.Type.IsVariadic || arg.Type.IsSlice || arg.Type.IsBytes) &&
 				(strs.ToLower(arg.Name) == param || (len(arg.Alias) > 0 && strs.ToLower(arg.Alias) == param)) {
-				method.Options.LoggingOptions.LenArguments = append(method.Options.LoggingOptions.LenArguments, param)
+				method.Options.Logging.LenArguments = append(method.Options.Logging.LenArguments, param)
 				continue paramsLoop
 			}
 		}
 		for _, result := range method.Results {
 			if (result.Type.IsMap || result.Type.IsVariadic || result.Type.IsSlice || result.Type.IsBytes) &&
 				(strs.ToLower(result.Name) == param || (len(result.Alias) > 0 && strs.ToLower(result.Alias) == param)) {
-				method.Options.LoggingOptions.LenResults = append(method.Options.LoggingOptions.LenResults, param)
+				method.Options.Logging.LenResults = append(method.Options.Logging.LenResults, param)
 				continue paramsLoop
 			}
 		}
@@ -387,28 +478,42 @@ func parseMethodDisableTag(method *types.Method, tag string) error {
 	disabled := strings.SplitS(tag, ",")
 	for _, i := range disabled {
 		switch strs.ToLower(i) {
+		case "circuit-breaking":
+			method.Options.Generate.CircuitBreaking = false
+		case "rate-limiting":
+			method.Options.Generate.RateLimiting = false
+		case "recovering":
+			method.Options.Generate.Recovering = false
 		case "caching":
-			method.Options.Caching = false
+			method.Options.Generate.Caching = false
 		case "logging":
-			method.Options.Logging = false
+			method.Options.Generate.Logging = false
 		case "tracing":
-			method.Options.Tracing = false
+			method.Options.Generate.Tracing = false
 		case "metrics":
-			method.Options.Metrics = false
+			method.Options.Generate.FrequencyMetric = false
+			method.Options.Generate.LatencyMetric = false
+			method.Options.Generate.CounterMetric = false
 		case "validators":
-			method.Options.Validator = false
+			method.Options.Generate.Validator = false
 		case "middleware":
-			method.Options.Middleware = false
+			method.Options.Generate.Middleware = false
 		case "method-stubs":
-			method.Options.MethodStubs = false
+			method.Options.Generate.MethodStubs = false
 		case "grpc-server":
-			method.Options.Transports.GRPC.Server = false
+			method.Options.Generate.GRPCServer = false
 		case "grpc-client":
-			method.Options.Transports.GRPC.Client = false
+			method.Options.Generate.GRPCClient = false
 		case "http-server":
-			method.Options.Transports.HTTP.Server = false
+			method.Options.Generate.HTTPServer = false
 		case "http-client":
-			method.Options.Transports.HTTP.Client = false
+			method.Options.Generate.HTTPClient = false
+		case "grpc":
+			method.Options.Generate.GRPCServer = false
+			method.Options.Generate.GRPCClient = false
+		case "http":
+			method.Options.Generate.HTTPServer = false
+			method.Options.Generate.HTTPClient = false
 		default:
 			return fmt.Errorf("invalid value '%s' for disable method tag in '%s' method", i, method.Name)
 		}
@@ -420,28 +525,43 @@ func parseMethodEnableTag(method *types.Method, tag string) error {
 	enabled := strings.SplitS(tag, ",")
 	for _, i := range enabled {
 		switch strs.ToLower(i) {
+		case "circuit-breaking":
+			method.Options.Generate.CircuitBreaking = true
+		case "rate-limiting":
+			method.Options.Generate.RateLimiting = true
+		case "recovering":
+			method.Options.Generate.Recovering = true
 		case "caching":
-			method.Options.Caching = true
+			method.Options.Generate.Caching = true
 		case "logging":
-			method.Options.Logging = true
+			method.Options.Generate.Logging = true
 		case "tracing":
-			method.Options.Tracing = true
+			method.Options.Generate.Tracing = true
 		case "metrics":
-			method.Options.Metrics = true
+			method.Options.Generate.FrequencyMetric = true
+			method.Options.Generate.LatencyMetric = true
+			method.Options.Generate.CounterMetric = true
 		case "validators":
-			method.Options.Validator = true
+			method.Options.Generate.Validator = true
 		case "middleware":
-			method.Options.Middleware = true
+			method.Options.Generate.Middleware = true
 		case "method-stubs":
-			method.Options.MethodStubs = true
+			method.Options.Generate.MethodStubs = true
 		case "grpc-server":
-			method.Options.Transports.GRPC.Server = true
+			method.Options.Generate.GRPCServer = true
 		case "grpc-client":
-			method.Options.Transports.GRPC.Client = true
+			method.Options.Generate.GRPCClient = true
 		case "http-server":
-			method.Options.Transports.HTTP.Server = true
+			method.Options.Generate.HTTPServer = true
 		case "http-client":
-			method.Options.Transports.HTTP.Client = true
+			method.Options.Generate.HTTPClient = true
+		case "grpc":
+			method.Options.Generate.GRPCServer = true
+			method.Options.Generate.GRPCClient = true
+		case "http":
+			method.Options.Generate.HTTPServer = true
+			method.Options.Generate.HTTPClient = true
+
 		default:
 			return fmt.Errorf("invalid value '%s' for enable method tag in '%s' method", i, method.Name)
 		}
