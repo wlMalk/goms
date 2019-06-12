@@ -110,11 +110,11 @@ type GRPCMethodOptions struct {
 }
 
 type LoggingMethodOptions struct {
-	Logging          bool
 	IgnoredArguments []string
 	IgnoredResults   []string
 	LenArguments     []string
 	LenResults       []string
+	IgnoreError      bool
 }
 
 type Type struct {
@@ -175,6 +175,11 @@ func (t *Type) GoType() string {
 		return "[]" + t.Name
 	}
 	return t.String()
+}
+
+func (t *Type) ProtoBufType() string {
+	// TODO
+	return ""
 }
 
 type ArgumentsGroup struct {
