@@ -146,7 +146,7 @@ func generateMethodHandlerFuncHandlers(file *files.GoFile, method *types.Method)
 	file.Pf("}")
 	file.Pf("")
 	file.Pf("func (f %sEndpointHandlerFunc) %s(ctx context.Context, req interface{}) (res interface{}, err error) {", methodName, methodName)
-	file.Pf("return f(%s)", strs.Join(argsInCall, ", "))
+	file.Pf("return f(ctx, req)")
 	file.Pf("}")
 	file.Pf("")
 }
