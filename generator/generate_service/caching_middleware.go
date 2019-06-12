@@ -21,6 +21,8 @@ func GenerateCachingMiddlewareFile(base string, path string, name string, servic
 
 func generateCachingMiddlewareStruct(file *files.GoFile, service *types.Service) {
 	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", "github.com/wlMalk/goms/goms/cache")
+	file.AddImport("", "hash")
 	file.P("type cachingMiddleware struct {")
 	file.P("cache cache.Cache")
 	file.P("keyer  cacheKeyer")
