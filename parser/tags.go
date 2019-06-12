@@ -332,6 +332,29 @@ func parseMethodLogsIgnoreTag(method *types.Method, tag string) error {
 }
 
 func parseMethodLogsLenTag(method *types.Method, tag string) error {
+	params := strings.SplitS(tag, ",")
+paramsLoop:
+	for _, p := range params {
+		param := strs.ToLower(p)
+		if contains(method.Options.LoggingOptions.LenArguments, param) || contains(method.Options.LoggingOptions.LenResults, param) {
+			continue
+		}
+		for _, arg := range method.Arguments {
+			if (arg.Type.IsMap || arg.Type.IsVariadic || arg.Type.IsSlice || arg.Type.IsBytes) &&
+				(strs.ToLower(arg.Name) == param || (len(arg.Alias) > 0 && strs.ToLower(arg.Alias) == param)) {
+				method.Options.LoggingOptions.LenArguments = append(method.Options.LoggingOptions.LenArguments, param)
+				continue paramsLoop
+			}
+		}
+		for _, result := range method.Results {
+			if (result.Type.IsMap || result.Type.IsVariadic || result.Type.IsSlice || result.Type.IsBytes) &&
+				(strs.ToLower(result.Name) == param || (len(result.Alias) > 0 && strs.ToLower(result.Alias) == param)) {
+				method.Options.LoggingOptions.LenResults = append(method.Options.LoggingOptions.LenResults, param)
+				continue paramsLoop
+			}
+		}
+		return fmt.Errorf("invalid name '%s' given to logs-len method tag in '%s' method", p, method.Name)
+	}
 	return nil
 }
 
