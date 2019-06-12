@@ -85,11 +85,9 @@ func RecoveringMiddleware() endpoint.Middleware {
 		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
 			defer func() {
 				if r := recover(); r != nil {
-					log.Error(ctx, "error", r)
 					err = fmt.Errorf("%v", r)
 				}
 			}()
-
 			return e(ctx, req)
 		}
 	}
