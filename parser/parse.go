@@ -33,7 +33,14 @@ func Parse(ast *astTypes.File) (s *types.Service, err error) {
 		}
 		m.Service = s
 		m.Options.Caching = s.Options.Generate.Caching
-		m.Options.Logging.Logging = s.Options.Generate.Logging
+		m.Options.Logging = s.Options.Generate.Logging
+		m.Options.MethodStubs = s.Options.Generate.MethodStubs
+		m.Options.Middleware = s.Options.Generate.Middleware
+		m.Options.Validator = s.Options.Generate.Validators
+		m.Options.Transports.HTTP.Server = s.Options.Transports.HTTP.Server
+		m.Options.Transports.HTTP.Client = s.Options.Transports.HTTP.Client
+		m.Options.Transports.GRPC.Server = s.Options.Transports.GRPC.Server
+		m.Options.Transports.GRPC.Server = s.Options.Transports.GRPC.Server
 		err = parseMethodTags(m, m.Tags)
 		if err != nil {
 			return nil, err
