@@ -151,6 +151,24 @@ func IsLoggingEnabled(service *types.Service) bool {
 	return false
 }
 
+func HasLoggeds(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.Logging && (HasLoggedArguments(method) || HasLoggedResults(method)) {
+			return true
+		}
+	}
+	return false
+}
+
+func HasLoggedErrors(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.Logging && !method.Options.Logging.IgnoreError {
+			return true
+		}
+	}
+	return false
+}
+
 func IsMethodStubsEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
 		if method.Options.Generate.MethodStubs {
@@ -361,6 +379,16 @@ func GetLoggedResultsLenForMethod(method *types.Method) (fields []*types.Field) 
 	return FilteredFields(method.Results, func(field *types.Field) bool {
 		return (field.Type.IsMap || field.Type.IsVariadic || field.Type.IsSlice || field.Type.IsBytes) && containsNamesAliases(method.Options.Logging.LenResults, field.Name, field.Alias)
 	})
+}
+
+func HasLoggedArguments(method *types.Method) bool {
+	return (len(method.Arguments) > 0 && len(method.Options.Logging.IgnoredArguments) < len(method.Arguments)) ||
+		len(method.Options.Logging.LenArguments) > 0
+}
+
+func HasLoggedResults(method *types.Method) bool {
+	return (len(method.Results) > 0 && len(method.Options.Logging.IgnoredResults) < len(method.Results)) ||
+		len(method.Options.Logging.LenResults) > 0
 }
 
 func containsNamesAliases(ss []string, name string, alias string) bool {
