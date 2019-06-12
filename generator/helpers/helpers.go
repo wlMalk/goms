@@ -241,7 +241,7 @@ func FilteredMethods(methods []*types.Method, filter func(method *types.Method) 
 	return
 }
 
-func FilteredArguments(args []*types.Argument, filter func(method *types.Argument) bool) (as []*types.Argument) {
+func FilteredArguments(args []*types.Argument, filter func(arg *types.Argument) bool) (as []*types.Argument) {
 	for _, arg := range args {
 		if filter(arg) {
 			as = append(as, arg)
@@ -335,4 +335,37 @@ func GetMethodsWithMetricsEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
 		return method.Options.Metrics
 	})
+}
+
+func GetLoggedArgumentsForMethod(method *types.Method) (args []*types.Argument) {
+	return FilteredArguments(method.Arguments, func(arg *types.Argument) bool {
+		return !containsNamesAliases(method.Options.LoggingOptions.IgnoredArguments, arg.Name, arg.Alias)
+	})
+}
+
+func GetLoggedResultsForMethod(method *types.Method) (results []*types.Field) {
+	return FilteredFields(method.Results, func(field *types.Field) bool {
+		return !containsNamesAliases(method.Options.LoggingOptions.IgnoredResults, field.Name, field.Alias)
+	})
+}
+
+func GetLoggedArgumentsLenForMethod(method *types.Method) (args []*types.Argument) {
+	return FilteredArguments(method.Arguments, func(arg *types.Argument) bool {
+		return (arg.Type.IsMap || arg.Type.IsVariadic || arg.Type.IsSlice || arg.Type.IsBytes) && containsNamesAliases(method.Options.LoggingOptions.LenArguments, arg.Name, arg.Alias)
+	})
+}
+
+func GetLoggedResultsLenForMethod(method *types.Method) (fields []*types.Field) {
+	return FilteredFields(method.Results, func(field *types.Field) bool {
+		return (field.Type.IsMap || field.Type.IsVariadic || field.Type.IsSlice || field.Type.IsBytes) && containsNamesAliases(method.Options.LoggingOptions.LenResults, field.Name, field.Alias)
+	})
+}
+
+func containsNamesAliases(ss []string, name string, alias string) bool {
+	for i := range ss {
+		if strings.ToLower(ss[i]) == strings.ToLower(name) || (len(strs.TrimSpace(alias)) > 0 && strings.ToLower(ss[i]) == strings.ToLower(alias)) {
+			return true
+		}
+	}
+	return false
 }
