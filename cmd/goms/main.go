@@ -9,13 +9,23 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/wlMalk/goms"
 	"github.com/wlMalk/goms/generator"
 	"github.com/wlMalk/goms/parser"
+	"github.com/wlMalk/goms/parser/types"
 
 	"github.com/vetcher/go-astra"
 )
 
 func main() {
+	var service *types.Service
+	var err error
+	defer func() {
+		if err == nil {
+			fmt.Printf("GoMS v%s\n", goms.VERSION)
+			fmt.Printf("All files are successfully generated for '%s' service\n", service.Name)
+		}
+	}()
 	currentDir, err := os.Getwd()
 	if err != nil {
 		log.Fatalln(err)
@@ -49,7 +59,7 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	service, err := parser.Parse(file)
+	service, err = parser.Parse(file)
 	if err != nil {
 		log.Fatalln(err)
 	}
