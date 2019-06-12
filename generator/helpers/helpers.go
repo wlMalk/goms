@@ -180,7 +180,16 @@ func IsMethodStubsEnabled(service *types.Service) bool {
 
 func IsValidatorsEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Validator {
+		if method.Options.Generate.Validators {
+			return true
+		}
+	}
+	return false
+}
+
+func IsValidatingEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.Validating {
 			return true
 		}
 	}
@@ -193,7 +202,16 @@ func IsMiddlewareEnabled(service *types.Service) bool {
 			return true
 		}
 	}
-	return service.Options.Generate.Middleware
+	return false
+}
+
+func IsRecoveringEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.Recovering {
+			return true
+		}
+	}
+	return false
 }
 
 func IsHTTPServerEnabled(service *types.Service) bool {
@@ -297,9 +315,15 @@ func GetMethodsWithMethodStubsEnabled(service *types.Service) (ms []*types.Metho
 	})
 }
 
-func GetMethodsWithValidatorEnabled(service *types.Service) (ms []*types.Method) {
+func GetMethodsWithValidatorsEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Generate.Validator
+		return method.Options.Generate.Validators
+	})
+}
+
+func GetMethodsWithValidatingEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Generate.Validating
 	})
 }
 
@@ -389,6 +413,24 @@ func HasLoggedArguments(method *types.Method) bool {
 func HasLoggedResults(method *types.Method) bool {
 	return (len(method.Results) > 0 && len(method.Options.Logging.IgnoredResults) < len(method.Results)) ||
 		len(method.Options.Logging.LenResults) > 0
+}
+
+func IsCachaeble(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if len(method.Arguments) > 0 && len(method.Results) > 0 && method.Options.Generate.Caching {
+			return true
+		}
+	}
+	return false
+}
+
+func IsValidatable(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if len(method.Arguments) > 0 && method.Options.Generate.Validating {
+			return true
+		}
+	}
+	return false
 }
 
 func containsNamesAliases(ss []string, name string, alias string) bool {
