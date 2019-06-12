@@ -135,7 +135,7 @@ func GetName(name string, alias string) string {
 
 func IsCachingEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Caching {
+		if method.Options.Generate.Caching {
 			return true
 		}
 	}
@@ -144,7 +144,7 @@ func IsCachingEnabled(service *types.Service) bool {
 
 func IsLoggingEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Logging {
+		if method.Options.Generate.Logging {
 			return true
 		}
 	}
@@ -153,7 +153,7 @@ func IsLoggingEnabled(service *types.Service) bool {
 
 func IsMethodStubsEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.MethodStubs {
+		if method.Options.Generate.MethodStubs {
 			return true
 		}
 	}
@@ -162,7 +162,7 @@ func IsMethodStubsEnabled(service *types.Service) bool {
 
 func IsValidatorsEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Validator {
+		if method.Options.Generate.Validator {
 			return true
 		}
 	}
@@ -171,7 +171,7 @@ func IsValidatorsEnabled(service *types.Service) bool {
 
 func IsMiddlewareEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Middleware {
+		if method.Options.Generate.Middleware {
 			return true
 		}
 	}
@@ -180,7 +180,7 @@ func IsMiddlewareEnabled(service *types.Service) bool {
 
 func IsHTTPServerEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Transports.HTTP.Server {
+		if method.Options.Generate.HTTPServer {
 			return true
 		}
 	}
@@ -189,7 +189,7 @@ func IsHTTPServerEnabled(service *types.Service) bool {
 
 func IsHTTPClientEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Transports.HTTP.Client {
+		if method.Options.Generate.HTTPClient {
 			return true
 		}
 	}
@@ -198,7 +198,7 @@ func IsHTTPClientEnabled(service *types.Service) bool {
 
 func IsGRPCServerEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Transports.GRPC.Server {
+		if method.Options.Generate.GRPCServer {
 			return true
 		}
 	}
@@ -207,7 +207,7 @@ func IsGRPCServerEnabled(service *types.Service) bool {
 
 func IsGRPCClientEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Transports.GRPC.Client {
+		if method.Options.Generate.GRPCClient {
 			return true
 		}
 	}
@@ -216,7 +216,7 @@ func IsGRPCClientEnabled(service *types.Service) bool {
 
 func IsTracingEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Tracing {
+		if method.Options.Generate.Tracing {
 			return true
 		}
 	}
@@ -225,7 +225,9 @@ func IsTracingEnabled(service *types.Service) bool {
 
 func IsMetricsEnabled(service *types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Metrics {
+		if method.Options.Generate.FrequencyMetric ||
+			method.Options.Generate.LatencyMetric ||
+			method.Options.Generate.CounterMetric {
 			return true
 		}
 	}
@@ -261,103 +263,103 @@ func FilteredFields(fields []*types.Field, filter func(field *types.Field) bool)
 
 func GetMethodsWithCachingEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Caching
+		return method.Options.Generate.Caching
 	})
 }
 
 func GetMethodsWithLoggingEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Logging
+		return method.Options.Generate.Logging
 	})
 }
 
 func GetMethodsWithMethodStubsEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.MethodStubs
+		return method.Options.Generate.MethodStubs
 	})
 }
 
 func GetMethodsWithValidatorEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Validator
+		return method.Options.Generate.Validator
 	})
 }
 
 func GetMethodsWithMiddlewareEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Middleware
+		return method.Options.Generate.Middleware
 	})
 }
 
 func GetMethodsWithHTTPServerEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Transports.HTTP.Server
+		return method.Options.Generate.HTTPServer
 	})
 }
 
 func GetMethodsWithHTTPClientEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Transports.HTTP.Server
+		return method.Options.Generate.HTTPServer
 	})
 }
 
 func GetMethodsWithHTTPEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Transports.HTTP.Server || method.Options.Transports.HTTP.Client
+		return method.Options.Generate.HTTPServer || method.Options.Generate.HTTPClient
 	})
 }
 
 func GetMethodsWithGRPCServerEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Transports.GRPC.Server
+		return method.Options.Generate.GRPCServer
 	})
 }
 
 func GetMethodsWithGRPCClientEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Transports.GRPC.Server
+		return method.Options.Generate.GRPCServer
 	})
 }
 
 func GetMethodsWithGRPCEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Transports.GRPC.Server || method.Options.Transports.GRPC.Client
+		return method.Options.Generate.GRPCServer || method.Options.Generate.GRPCClient
 	})
 }
 
 func GetMethodsWithTracingEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Tracing
+		return method.Options.Generate.Tracing
 	})
 }
 
 func GetMethodsWithMetricsEnabled(service *types.Service) (ms []*types.Method) {
 	return FilteredMethods(service.Methods, func(method *types.Method) bool {
-		return method.Options.Metrics
+		return method.Options.Generate.FrequencyMetric || method.Options.Generate.LatencyMetric || method.Options.Generate.CounterMetric
 	})
 }
 
 func GetLoggedArgumentsForMethod(method *types.Method) (args []*types.Argument) {
 	return FilteredArguments(method.Arguments, func(arg *types.Argument) bool {
-		return !containsNamesAliases(method.Options.LoggingOptions.IgnoredArguments, arg.Name, arg.Alias)
+		return !containsNamesAliases(method.Options.Logging.IgnoredArguments, arg.Name, arg.Alias)
 	})
 }
 
 func GetLoggedResultsForMethod(method *types.Method) (results []*types.Field) {
 	return FilteredFields(method.Results, func(field *types.Field) bool {
-		return !containsNamesAliases(method.Options.LoggingOptions.IgnoredResults, field.Name, field.Alias)
+		return !containsNamesAliases(method.Options.Logging.IgnoredResults, field.Name, field.Alias)
 	})
 }
 
 func GetLoggedArgumentsLenForMethod(method *types.Method) (args []*types.Argument) {
 	return FilteredArguments(method.Arguments, func(arg *types.Argument) bool {
-		return (arg.Type.IsMap || arg.Type.IsVariadic || arg.Type.IsSlice || arg.Type.IsBytes) && containsNamesAliases(method.Options.LoggingOptions.LenArguments, arg.Name, arg.Alias)
+		return (arg.Type.IsMap || arg.Type.IsVariadic || arg.Type.IsSlice || arg.Type.IsBytes) && containsNamesAliases(method.Options.Logging.LenArguments, arg.Name, arg.Alias)
 	})
 }
 
 func GetLoggedResultsLenForMethod(method *types.Method) (fields []*types.Field) {
 	return FilteredFields(method.Results, func(field *types.Field) bool {
-		return (field.Type.IsMap || field.Type.IsVariadic || field.Type.IsSlice || field.Type.IsBytes) && containsNamesAliases(method.Options.LoggingOptions.LenResults, field.Name, field.Alias)
+		return (field.Type.IsMap || field.Type.IsVariadic || field.Type.IsSlice || field.Type.IsBytes) && containsNamesAliases(method.Options.Logging.LenResults, field.Name, field.Alias)
 	})
 }
 
