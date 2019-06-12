@@ -49,7 +49,7 @@ func generateServiceStructTypeNewFunc(file *files.GoFile, service *types.Service
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	serviceName := strings.ToUpperFirst(service.Name)
 	lowerServiceName := strings.ToLowerFirst(service.Name)
-	file.Pf("func Endpoints(h interface{}, validatorsGetter interface{}, middlewareGetter interface{}) %s {", serviceName)
+	file.Pf("func Endpoints(h interface{}, middlewareGetter interface{}) %s {", serviceName)
 	file.Pf("handler := &endpointsHandler{")
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
@@ -72,9 +72,6 @@ func generateServiceStructTypeNewFunc(file *files.GoFile, service *types.Service
 func generateServiceMethodsRegisteration(file *files.GoFile, service *types.Service) {
 	for _, method := range service.Methods {
 		generateTypeSwitchForMethodHandler(file, method)
-		if len(method.Arguments) > 0 && method.Options.Generate.Validator {
-			generateMethodRequestValidatorMiddleware(file, method)
-		}
 		if method.Options.Generate.Middleware {
 			generateMiddlewareCheckerForEndpoint(file, method)
 		}
@@ -100,25 +97,6 @@ func generateTypeSwitchForMethodHandler(file *files.GoFile, method *types.Method
 	file.Pf("s.endpoints.%s = converters.%sRequestResponseHandlerToEndpoint(handlers.%sRequestResponseHandlerFunc(t.%s))", lowerMethodName, methodName, methodName, methodName)
 	file.Pf("case handlers.%sEndpointHandler:", methodName)
 	file.Pf("s.endpoints.%s = t.%s", lowerMethodName, methodName)
-	file.Pf("}")
-	file.Pf("")
-}
-
-func generateMethodRequestValidatorMiddleware(file *files.GoFile, method *types.Method) {
-	methodName := strings.ToUpperFirst(method.Name)
-	lowerMethodName := strings.ToLowerFirst(method.Name)
-	file.AddImport("", method.Service.ImportPath, "/service/requests")
-	file.Pf("if t, ok := validatorsGetter.(interface {")
-	file.Pf("Validate%s(ctx context.Context, req *requests.%sRequest) error", methodName, methodName)
-	file.Pf("}); ok {")
-	file.Pf("s.endpoints.%s = endpoint.Middleware(func(next endpoint.Endpoint) endpoint.Endpoint {", lowerMethodName)
-	file.Pf("return endpoint.Endpoint(func(ctx context.Context, req interface{}) (interface{}, error) {")
-	file.Pf("if err := t.Validate%s(ctx, req.(*requests.%sRequest)); err != nil {", methodName, methodName)
-	file.Pf("return nil, err")
-	file.Pf("}")
-	file.Pf("return next(ctx, req)")
-	file.Pf("})")
-	file.Pf("})(s.endpoints.%s)", lowerMethodName)
 	file.Pf("}")
 	file.Pf("")
 }
