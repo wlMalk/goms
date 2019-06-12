@@ -141,3 +141,198 @@ func IsCachingEnabled(service *types.Service) bool {
 	}
 	return false
 }
+
+func IsLoggingEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Logging {
+			return true
+		}
+	}
+	return false
+}
+
+func IsMethodStubsEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.MethodStubs {
+			return true
+		}
+	}
+	return false
+}
+
+func IsValidatorsEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Validator {
+			return true
+		}
+	}
+	return false
+}
+
+func IsMiddlewareEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Middleware {
+			return true
+		}
+	}
+	return service.Options.Generate.Middleware
+}
+
+func IsHTTPServerEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Transports.HTTP.Server {
+			return true
+		}
+	}
+	return false
+}
+
+func IsHTTPClientEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Transports.HTTP.Client {
+			return true
+		}
+	}
+	return false
+}
+
+func IsGRPCServerEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Transports.GRPC.Server {
+			return true
+		}
+	}
+	return false
+}
+
+func IsGRPCClientEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Transports.GRPC.Client {
+			return true
+		}
+	}
+	return false
+}
+
+func IsTracingEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Tracing {
+			return true
+		}
+	}
+	return false
+}
+
+func IsMetricsEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Metrics {
+			return true
+		}
+	}
+	return false
+}
+
+func FilteredMethods(methods []*types.Method, filter func(method *types.Method) bool) (ms []*types.Method) {
+	for _, method := range methods {
+		if filter(method) {
+			ms = append(ms, method)
+		}
+	}
+	return
+}
+
+func FilteredArguments(args []*types.Argument, filter func(method *types.Argument) bool) (as []*types.Argument) {
+	for _, arg := range args {
+		if filter(arg) {
+			as = append(as, arg)
+		}
+	}
+	return
+}
+
+func FilteredFields(fields []*types.Field, filter func(field *types.Field) bool) (fs []*types.Field) {
+	for _, field := range fields {
+		if filter(field) {
+			fs = append(fs, field)
+		}
+	}
+	return
+}
+
+func GetMethodsWithCachingEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Caching
+	})
+}
+
+func GetMethodsWithLoggingEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Logging
+	})
+}
+
+func GetMethodsWithMethodStubsEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.MethodStubs
+	})
+}
+
+func GetMethodsWithValidatorEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Validator
+	})
+}
+
+func GetMethodsWithMiddlewareEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Middleware
+	})
+}
+
+func GetMethodsWithHTTPServerEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Transports.HTTP.Server
+	})
+}
+
+func GetMethodsWithHTTPClientEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Transports.HTTP.Server
+	})
+}
+
+func GetMethodsWithHTTPEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Transports.HTTP.Server || method.Options.Transports.HTTP.Client
+	})
+}
+
+func GetMethodsWithGRPCServerEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Transports.GRPC.Server
+	})
+}
+
+func GetMethodsWithGRPCClientEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Transports.GRPC.Server
+	})
+}
+
+func GetMethodsWithGRPCEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Transports.GRPC.Server || method.Options.Transports.GRPC.Client
+	})
+}
+
+func GetMethodsWithTracingEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Tracing
+	})
+}
+
+func GetMethodsWithMetricsEnabled(service *types.Service) (ms []*types.Method) {
+	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+		return method.Options.Metrics
+	})
+}
