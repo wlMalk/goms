@@ -18,29 +18,34 @@ func GenerateService(s *types.Service) (files files.Files, err error) {
 	files = append(files, generate_service.GenerateConvertersFile(s.Path, filepath.Join("service", "handlers", "converters"), "converters.goms", s))
 	files = append(files, generate_service.GenerateServiceTransportEndpointsFile(s.Path, filepath.Join("service", "transport"), "endpoints.goms", s))
 
-	if helpers.IsMiddlewareEnabled(s) || helpers.IsLoggingEnabled(s) || helpers.IsCachingEnabled(s) {
+	if helpers.IsMiddlewareEnabled(s) || s.Options.Generate.Middleware {
 		files = append(files, generate_service.GenerateServiceMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "middleware.goms", s))
 	}
 
-	if helpers.IsLoggingEnabled(s) {
+	if helpers.IsMiddlewareEnabled(s) && helpers.IsRecoveringEnabled(s) {
+		files = append(files, generate_service.GenerateRecoveringMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "recovering_middleware.goms", s))
+	}
+
+	if helpers.IsMiddlewareEnabled(s) && helpers.IsLoggingEnabled(s) {
 		files = append(files, generate_service.GenerateLoggingMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "logging_middleware.goms", s))
 	}
 
-	if helpers.IsCachingEnabled(s) {
+	if helpers.IsMiddlewareEnabled(s) && helpers.IsCachingEnabled(s) && helpers.IsCachaeble(s) {
 		files = append(files, generate_service.GenerateCachingMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "caching_middleware.goms", s))
 		files = append(files, generate_service.GenerateCachingKeyerFile(s.Path, strings.ToLowerFirst(s.Name), "caching_keyer", s))
 	}
 
-	if helpers.IsMethodStubsEnabled(s) {
-		files = append(files, generate_service.GenerateServiceImplementationFile(s.Path, strings.ToLowerFirst(s.Name), strings.ToLowerFirst(s.Name), s))
-	}
-
-	if helpers.IsValidatorsEnabled(s) {
-		files = append(files, generate_service.GenerateServiceImplementationValidatorsFile(s.Path, strings.ToLowerFirst(s.Name), "validators", s))
+	if helpers.IsMiddlewareEnabled(s) && helpers.IsValidatingEnabled(s) && helpers.IsValidatable(s) {
+		files = append(files, generate_service.GenerateValidatingMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "validating_middleware.goms", s))
+		files = append(files, generate_service.GenerateServiceImplementationValidatorFile(s.Path, strings.ToLowerFirst(s.Name), "validator", s))
 	}
 
 	if helpers.IsMiddlewareEnabled(s) {
 		files = append(files, generate_service.GenerateServiceImplementationMiddlewareFile(s.Path, strings.ToLowerFirst(s.Name), "middleware", s))
+	}
+
+	if helpers.IsMethodStubsEnabled(s) {
+		files = append(files, generate_service.GenerateServiceImplementationFile(s.Path, strings.ToLowerFirst(s.Name), strings.ToLowerFirst(s.Name), s))
 	}
 
 	if helpers.IsHTTPServerEnabled(s) {
