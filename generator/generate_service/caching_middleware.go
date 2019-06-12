@@ -33,7 +33,7 @@ func generateCachingMiddlewareStruct(file *files.GoFile, service *types.Service)
 func generateCachingMiddlewareCacheKeyerInterface(file *files.GoFile, service *types.Service) {
 	file.Pf("type cacheKeyer interface {")
 	for _, method := range service.Methods {
-		if len(method.Arguments) > 0 && len(method.Results) > 0 && method.Options.Caching {
+		if len(method.Arguments) > 0 && len(method.Results) > 0 && method.Options.Generate.Caching {
 			methodName := strings.ToUpperFirst(method.Name)
 			file.Pf("%s(ctx context.Context, req *requests.%sRequest) (keys []interface{}, ok bool)", methodName, methodName)
 		}
@@ -73,8 +73,8 @@ func generateCachingMiddlewareMethodFunc(file *files.GoFile, method *types.Metho
 		file.AddImport("", method.Service.ImportPath, "/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
-	file.Pf("func (m cachingMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
-	if len(method.Arguments) > 0 && len(method.Results) > 0 && method.Options.Caching {
+	file.Pf("func (m *cachingMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
+	if len(method.Arguments) > 0 && len(method.Results) > 0 && method.Options.Generate.Caching {
 		file.Pf("keys, ok := m.keyer.%s(ctx, req)", methodName)
 		file.Pf("if ok {")
 		file.Pf("key, err := cache.Key(m.hasher, keys...)")
