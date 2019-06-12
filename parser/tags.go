@@ -9,6 +9,7 @@ import (
 )
 
 var serviceTags = []string{
+	"name",
 	"generate-all",
 	"generate",
 	"transports",
@@ -17,6 +18,7 @@ var serviceTags = []string{
 }
 
 var methodTags = []string{
+	"name",
 	"transports",
 	"metrics",
 	"http-method",
@@ -35,6 +37,7 @@ var paramTags = []string{
 }
 
 var serviceTagsParsers = map[string]func(service *types.Service, tag string) error{
+	"name":            parseServiceNameTag,
 	"generate-all":    parseServiceGenerateAllTag,
 	"generate":        parseServiceGenerateTag,
 	"transports":      parseServiceTransportsTag,
@@ -43,6 +46,7 @@ var serviceTagsParsers = map[string]func(service *types.Service, tag string) err
 }
 
 var methodTagsParsers = map[string]func(method *types.Method, tag string) error{
+	"name":         parseMethodNameTag,
 	"transports":   parseMethodTransportsTag,
 	"metrics":      parseMethodMetricsTag,
 	"http-method":  parseMethodHttpMethodTag,
@@ -599,6 +603,24 @@ func parseMethodAliasTag(method *types.Method, tag string) error {
 		}
 	}
 	return fmt.Errorf("invalid name '%s' for alias tag in '%s' method", params[0], method.Name)
+}
+
+func parseMethodNameTag(method *types.Method, tag string) error {
+	tag = strs.TrimSpace(tag)
+	if len(tag) == 0 {
+		return fmt.Errorf("invalid name '%s' for name tag in '%s' method", tag, method.Name)
+	}
+	method.Alias = tag
+	return nil
+}
+
+func parseServiceNameTag(service *types.Service, tag string) error {
+	tag = strs.TrimSpace(tag)
+	if len(tag) == 0 {
+		return fmt.Errorf("invalid name '%s' for name tag in '%s' service", tag, service.Name)
+	}
+	service.Alias = tag
+	return nil
 }
 
 func parseMethodValidateTag(method *types.Method, tag string) error {

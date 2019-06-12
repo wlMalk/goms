@@ -6,6 +6,7 @@ import (
 
 type Service struct {
 	Name       string
+	Alias      string
 	Docs       []string
 	Tags       []string
 	Path       string
@@ -78,6 +79,7 @@ func (v *Version) String() string {
 type Method struct {
 	Service   *Service
 	Name      string
+	Alias     string
 	Docs      []string
 	Tags      []string
 	Arguments []*Argument
