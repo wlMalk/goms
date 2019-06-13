@@ -11,6 +11,7 @@ import (
 )
 
 func GenerateService(s *types.Service) (files files.Files, err error) {
+	serviceNameKebab := strings.ToLower(strings.ToKebabCase(s.Name))
 
 	files = append(files, generate_service.GenerateRequestsFile(s.Path, filepath.Join("service", "requests"), "requests.goms", s.Methods))
 	files = append(files, generate_service.GenerateResponseFile(s.Path, filepath.Join("service", "responses"), "responses.goms", s.Methods))
@@ -32,20 +33,20 @@ func GenerateService(s *types.Service) (files files.Files, err error) {
 
 	if helpers.IsMiddlewareEnabled(s) && helpers.IsCachingEnabled(s) && helpers.IsCachaeble(s) {
 		files = append(files, generate_service.GenerateCachingMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "caching_middleware.goms", s))
-		files = append(files, generate_service.GenerateCachingKeyerFile(s.Path, strings.ToLowerFirst(s.Name), "caching_keyer", s))
+		files = append(files, generate_service.GenerateCachingKeyerFile(s.Path, serviceNameKebab, "caching_keyer", s))
 	}
 
 	if helpers.IsMiddlewareEnabled(s) && helpers.IsValidatingEnabled(s) && helpers.IsValidatable(s) {
 		files = append(files, generate_service.GenerateValidatingMiddlewareFile(s.Path, filepath.Join("service", "middleware"), "validating_middleware.goms", s))
-		files = append(files, generate_service.GenerateServiceImplementationValidatorFile(s.Path, strings.ToLowerFirst(s.Name), "validator", s))
+		files = append(files, generate_service.GenerateServiceImplementationValidatorFile(s.Path, serviceNameKebab, "validator", s))
 	}
 
 	if helpers.IsMiddlewareEnabled(s) {
-		files = append(files, generate_service.GenerateServiceImplementationMiddlewareFile(s.Path, strings.ToLowerFirst(s.Name), "middleware", s))
+		files = append(files, generate_service.GenerateServiceImplementationMiddlewareFile(s.Path, serviceNameKebab, "middleware", s))
 	}
 
 	if helpers.IsMethodStubsEnabled(s) {
-		files = append(files, generate_service.GenerateServiceImplementationFile(s.Path, strings.ToLowerFirst(s.Name), strings.ToLowerFirst(s.Name), s))
+		files = append(files, generate_service.GenerateServiceImplementationFile(s.Path, serviceNameKebab, serviceNameKebab, s))
 	}
 
 	if helpers.IsHTTPServerEnabled(s) {
@@ -63,7 +64,12 @@ func GenerateService(s *types.Service) (files files.Files, err error) {
 	}
 
 	if s.Options.Generate.Main {
-		files = append(files, generate_service.GenerateServiceMainFile(s.Path, filepath.Join("cmd", strings.ToLowerFirst(s.Name)), "main", s))
+		files = append(files, generate_service.GenerateServiceMainFile(s.Path, filepath.Join("cmd", serviceNameKebab), "main", s))
 	}
+
+	if s.Options.Generate.Dockerfile {
+		files = append(files, generate_service.GenerateDockerFile(s.Path, s))
+	}
+
 	return
 }

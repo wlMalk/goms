@@ -54,6 +54,7 @@ type generateServiceOptions struct {
 	HTTPClient       bool
 	GRPCServer       bool
 	GRPCClient       bool
+	Dockerfile       bool
 }
 
 type Version struct {
@@ -74,6 +75,10 @@ func (v *Version) String() string {
 	} else {
 		return fmt.Sprintf("%d", v.Major)
 	}
+}
+
+func (v *Version) FullString() string {
+	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
 type Method struct {

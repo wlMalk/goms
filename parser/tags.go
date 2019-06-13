@@ -117,6 +117,8 @@ var serviceGenerateOptions = serviceGenerateOptionsHandler{
 	}, "http": func(service *types.Service, v bool) {
 		service.Options.Generate.HTTPServer = true
 		service.Options.Generate.HTTPClient = true
+	}, "dockerfile": func(service *types.Service, v bool) {
+		service.Options.Generate.Dockerfile = true
 	},
 }
 
@@ -317,7 +319,7 @@ func parseServiceGenerateTag(service *types.Service, tag string) error {
 
 func parseServiceGenerateAllTag(service *types.Service, tag string) error {
 	options := strings.SplitS(tag, ",")
-	return serviceGenerateOptions.only(service, true, "generate-all", options...)
+	return serviceGenerateOptions.allBut(service, true, "generate-all", options...)
 }
 
 func parseServiceTransportsTag(service *types.Service, tag string) error {
