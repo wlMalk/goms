@@ -8,10 +8,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/wlMalk/goms"
 	"github.com/wlMalk/goms/generator"
 	"github.com/wlMalk/goms/parser"
 	"github.com/wlMalk/goms/parser/types"
+	"github.com/wlMalk/goms/version"
 
 	"github.com/gookit/color"
 	"github.com/vetcher/go-astra"
@@ -19,7 +19,7 @@ import (
 
 func main() {
 	color.New(color.FgBlack, color.BgWhite, color.Bold).Printf("  GoMS  ")
-	fmt.Printf(" v%s", goms.VERSION)
+	fmt.Printf(" v%s", version.VERSION)
 	fmt.Println("")
 	var service *types.Service
 	var err error
