@@ -30,7 +30,7 @@ func (s *Server) RegisterMethod(method string, uri string, handler http.Handler)
 }
 
 func NewServer(router Router) *Server {
-	return &Server{router: router}
+	return &Server{router: router, Server: http.Server{Handler: router}}
 }
 
 type Router interface {
