@@ -61,7 +61,7 @@ func hasArgumentsOfOrigin(args []*types.Argument, origin string) bool {
 func generateHTTPRequestArguments(file *files.GoFile, args []*types.Argument) {
 	for _, arg := range args {
 		argName := strings.ToUpperFirst(arg.Name)
-		argSpecialName := helpers.GetName(arg.Name, arg.Alias)
+		argSpecialName := helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias)
 		file.Pf("%s %s `json:\"%s\"`", argName, arg.Type.GoType(), argSpecialName)
 	}
 	file.Pf("")
@@ -161,7 +161,7 @@ func generateHTTPRequestToHTTPArgFunc(file *files.GoFile, method *types.Method) 
 			file.Pf("query := req.URL.Query()")
 			for _, arg := range getArgumentsOfOrigin(method.Arguments, "QUERY") {
 				argName := strings.ToUpperFirst(arg.Name)
-				argSpecialName := helpers.GetName(arg.Name, arg.Alias)
+				argSpecialName := helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias)
 				if arg.Type.IsSlice || arg.Type.IsVariadic {
 					file.Pf("for i := range r.%s {", argName)
 					file.Pf("value, err = goms_util.ToString(r.%s[i])", argName)
@@ -183,7 +183,7 @@ func generateHTTPRequestToHTTPArgFunc(file *files.GoFile, method *types.Method) 
 			file.Pf("header := req.Header")
 			for _, arg := range getArgumentsOfOrigin(method.Arguments, "HEADER") {
 				argName := strings.ToUpperFirst(arg.Name)
-				argSpecialName := strings.ToKebabCase(helpers.GetName(arg.Name, arg.Alias))
+				argSpecialName := strings.ToKebabCase(helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias))
 				if arg.Type.IsSlice || arg.Type.IsVariadic {
 					file.Pf("for i := range r.%s {", argName)
 					file.Pf("value, err = goms_util.ToString(r.%s[i])", argName)
@@ -213,7 +213,7 @@ func generateHTTPRequestToHTTPArgFunc(file *files.GoFile, method *types.Method) 
 			}
 			file.Pf("goms_http.FormatURI(\"%s\",", getMethodURI(method))
 			for _, arg := range getArgumentsOfOrigin(method.Arguments, "PATH") {
-				argSpecialName := helpers.GetName(arg.Name, arg.Alias)
+				argSpecialName := helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias)
 				lowerArgName := strings.ToLowerFirst(arg.Name)
 				file.Pf("\"%s\", %s,", argSpecialName, lowerArgName)
 			}
@@ -270,7 +270,7 @@ func generateHTTPRequestExtractors(file *files.GoFile, args []*types.Argument) {
 func generateQueryExtractor(file *files.GoFile, arg *types.Argument) {
 	argName := strings.ToUpperFirst(arg.Name)
 	lowerArgName := strings.ToLowerFirst(arg.Name)
-	argNameSnake := strings.ToSnakeCase(helpers.GetName(arg.Name, arg.Alias))
+	argNameSnake := strings.ToSnakeCase(helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias))
 	if arg.Type.IsVariadic || arg.Type.IsSlice {
 		file.Pf("%ss := query[\"%s\"]", lowerArgName, argNameSnake)
 		file.Pf("if len(%ss)>0 {", lowerArgName)
@@ -295,7 +295,7 @@ func generateQueryExtractor(file *files.GoFile, arg *types.Argument) {
 func generateHeaderExtractor(file *files.GoFile, arg *types.Argument) {
 	argName := strings.ToUpperFirst(arg.Name)
 	lowerArgName := strings.ToLowerFirst(arg.Name)
-	argNameKebabCase := strings.ToKebabCase(helpers.GetName(arg.Name, arg.Alias))
+	argNameKebabCase := strings.ToKebabCase(helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias))
 	if arg.Type.IsVariadic || arg.Type.IsSlice {
 		file.Pf("%ss := header[\"%s\"]", lowerArgName, argNameKebabCase)
 		file.Pf("if len(%ss)>0 {", lowerArgName)

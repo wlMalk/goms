@@ -2,6 +2,7 @@ package generate_service
 
 import (
 	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
@@ -165,9 +166,9 @@ func generateServiceMainPrepareEndpointsFunc(file *files.GoFile, service *types.
 	file.Pf("mw = append(mw, goms_middleware.LoggingMiddleware())")
 	file.Pf("mw = append(mw, opentracing.TraceServer(tracer, \"%s.\"+method))", serviceName)
 	file.Pf("mw = append(mw, goms_middleware.InstrumentingMiddleware(")
-	file.Pf("counterMetric.With(\"service\", \"%s\", \"method\", method),", serviceName)
-	file.Pf("latencyMetric.With(\"service\", \"%s\", \"method\", method),", serviceName)
-	file.Pf("frequencyMetric.With(\"service\", \"%s\", \"method\", method),", serviceName)
+	file.Pf("counterMetric.With(\"service\", \"%s\", \"method\", method),", helpers.GetName(serviceName, service.Alias))
+	file.Pf("latencyMetric.With(\"service\", \"%s\", \"method\", method),", helpers.GetName(serviceName, service.Alias))
+	file.Pf("frequencyMetric.With(\"service\", \"%s\", \"method\", method),", helpers.GetName(serviceName, service.Alias))
 	file.Pf("))")
 	file.Pf("return")
 	file.Pf("},")
@@ -206,7 +207,7 @@ func generateServiceMainServeHTTPFunc(file *files.GoFile, service *types.Service
 	file.Pf("opts = append(")
 	file.Pf("opts, kit_http.ServerBefore(")
 	file.Pf("opentracing.HTTPToContext(tracer, method, logger),")
-	file.Pf("goms_http.MethodInjector(\"%s\", method),", serviceName)
+	file.Pf("goms_http.MethodInjector(\"%s\", method),", helpers.GetName(serviceName, service.Alias))
 	file.Pf("goms_http.RequestIDCreator(),")
 	file.Pf("goms_http.CorrelationIDExtractor(),")
 	file.Pf("goms_http.LoggerInjector(logger),")

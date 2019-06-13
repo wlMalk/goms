@@ -71,7 +71,7 @@ func GenerateStruct(file *files.GoFile, name string, fields []*types.Field) {
 	}
 	file.Pf("type %s struct {", name)
 	for _, f := range fields {
-		jsonName := GetName(f.Name, f.Alias)
+		jsonName := GetName(strings.ToLowerFirst(f.Name), f.Alias)
 		if len(f.Tags) == 0 {
 			f.Tags = map[string]string{"json": strings.ToLowerFirst(jsonName)}
 		} else {
@@ -130,7 +130,7 @@ func GetName(name string, alias string) string {
 	if alias != "" {
 		n = alias
 	}
-	return strings.ToLowerFirst(n)
+	return n
 }
 
 func IsCachingEnabled(service *types.Service) bool {

@@ -55,7 +55,7 @@ func generateServiceStructTypeNewFunc(file *files.GoFile, service *types.Service
 		methodName := strings.ToUpperFirst(method.Name)
 		lowerMethodName := strings.ToLowerFirst(method.Name)
 		file.Pf("%s: endpoint.Endpoint(func(ctx context.Context, req interface{}) (res interface{}, err error) {", lowerMethodName)
-		file.Pf("return nil, errors.ErrMethodNotImplemented(\"%s\", \"%s\")", serviceName, methodName)
+		file.Pf("return nil, errors.ErrMethodNotImplemented(\"%s\", \"%s\")", helpers.GetName(serviceName, service.Alias), helpers.GetName(methodName, method.Alias))
 		file.Pf("}),")
 	}
 	file.Pf("}")

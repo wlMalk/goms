@@ -85,8 +85,8 @@ func generateLoggingMiddlewareMethodHandler(file *files.GoFile, method *types.Me
 		file.Pf("defer func() {")
 		file.Pf("if err == nil {")
 		file.Pf("log.Info(ctx,")
-		file.Pf("\"service\", \"%s\",", serviceName)
-		file.Pf("\"method\", \"%s\",", methodName)
+		file.Pf("\"service\", \"%s\",", helpers.GetName(serviceName, method.Service.Alias))
+		file.Pf("\"method\", \"%s\",", helpers.GetName(methodName, method.Alias))
 		if helpers.HasLoggedArguments(method) {
 			file.Pf("\"request\", log%sRequest{", methodName)
 			for _, arg := range helpers.GetLoggedArgumentsForMethod(method) {
@@ -166,12 +166,12 @@ func generateLoggingMiddlewareTypes(file *files.GoFile, service *types.Service) 
 					file.Pf("log%sRequest struct {", methodName)
 					for _, arg := range helpers.GetLoggedArgumentsForMethod(method) {
 						argName := strings.ToUpperFirst(arg.Name)
-						argSpecialName := helpers.GetName(arg.Name, arg.Alias)
+						argSpecialName := helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias)
 						file.Pf("%s %s `json:\"%s\"`", argName, arg.Type.GoType(), argSpecialName)
 					}
 					for _, arg := range helpers.GetLoggedArgumentsLenForMethod(method) {
 						argName := strings.ToUpperFirst(arg.Name)
-						argSpecialName := helpers.GetName(arg.Name, arg.Alias)
+						argSpecialName := helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias)
 						file.Pf("Len%s %s `json:\"len(%s)\"`", argName, arg.Type.GoType(), argSpecialName)
 					}
 					file.Pf("}")
@@ -180,12 +180,12 @@ func generateLoggingMiddlewareTypes(file *files.GoFile, service *types.Service) 
 					file.Pf("log%sResponse struct {", methodName)
 					for _, field := range helpers.GetLoggedResultsForMethod(method) {
 						fieldName := strings.ToUpperFirst(field.Name)
-						fieldSpecialName := helpers.GetName(field.Name, field.Alias)
+						fieldSpecialName := helpers.GetName(strings.ToLowerFirst(field.Name), field.Alias)
 						file.Pf("%s %s `json:\"%s\"`", fieldName, field.Type.GoType(), fieldSpecialName)
 					}
 					for _, field := range helpers.GetLoggedResultsLenForMethod(method) {
 						fieldName := strings.ToUpperFirst(field.Name)
-						fieldSpecialName := helpers.GetName(field.Name, field.Alias)
+						fieldSpecialName := helpers.GetName(strings.ToLowerFirst(field.Name), field.Alias)
 						file.Pf("Len%s %s `json:\"len(%s)\"`", fieldName, field.Type.GoType(), fieldSpecialName)
 					}
 					file.Pf("}")

@@ -2,6 +2,7 @@ package generate_service
 
 import (
 	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
@@ -90,7 +91,7 @@ func generateServiceApplyMiddlewareSpecialFunc(file *files.GoFile, service *type
 	file.Pf("")
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
-		file.Pf("endpoints.%s = goms_endpoint.Chain(middlewareFunc(\"%s\")...)(endpoints.%s)", methodName, methodName, methodName)
+		file.Pf("endpoints.%s = goms_endpoint.Chain(middlewareFunc(\"%s\")...)(endpoints.%s)", methodName, helpers.GetName(methodName, method.Alias), methodName)
 	}
 	file.Pf("")
 	file.Pf("return endpoints")
@@ -116,7 +117,7 @@ func generateServiceApplyMiddlewareConditionalFunc(file *files.GoFile, service *
 	file.Pf("")
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
-		file.Pf("endpoints.%s = fun(\"%s\", endpoints.%s)", methodName, methodName, methodName)
+		file.Pf("endpoints.%s = fun(\"%s\", endpoints.%s)", methodName, helpers.GetName(methodName, method.Alias), methodName)
 	}
 	file.Pf("return endpoints")
 	file.Pf("}")

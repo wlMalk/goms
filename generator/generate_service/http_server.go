@@ -55,7 +55,7 @@ func generateHTTPTransportServerRegisterSpecialFunc(file *files.GoFile, service 
 		file.Pf("endpoints.%s,", methodName)
 		file.Pf("%s_http.Decode%sRequest,", serviceNameSnake, methodName)
 		file.Pf("%s_http.Encode%sResponse,", serviceNameSnake, methodName)
-		file.Pf("optionsFunc(\"%s\")...),", methodName)
+		file.Pf("optionsFunc(\"%s\")...),", helpers.GetName(methodName, method.Alias))
 		file.Pf(")")
 	}
 	file.Pf("}")
