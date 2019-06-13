@@ -197,10 +197,6 @@ func (f *GoFile) I(path string) string {
 	return i.alias
 }
 
-func (f *GoFile) P(s string) {
-	f.lines = append(f.lines, s)
-}
-
 func (f *GoFile) C(s string) {
 	f.Pf("// %s", s)
 }
@@ -213,6 +209,10 @@ func (f *GoFile) Cs(s ...string) {
 
 func (f *GoFile) Cf(format string, args ...interface{}) {
 	f.Pf("// "+format, args...)
+}
+
+func (f *GoFile) P(s string) {
+	f.lines = append(f.lines, s)
 }
 
 func (f *GoFile) Pf(format string, args ...interface{}) {
@@ -228,6 +228,34 @@ func NewGoFile(base string, path string, name string, overwrite bool, merge bool
 	f.Pkg = strings.ToSnakeCase(filepath.Base(path))
 	f.imports = make([][]*goImportDef, 3)
 	f.overwrite = overwrite
+	f.merge = merge
+	return f
+}
+
+type TextFile struct {
+	file
+}
+
+func (f *TextFile) WriteTo(w io.Writer) (int64, error) {
+	return f.writeLines(w)
+}
+
+func (f *TextFile) P(s string) {
+	f.lines = append(f.lines, s)
+}
+
+func (f *TextFile) Pf(format string, args ...interface{}) {
+	f.P(fmt.Sprintf(format, args...))
+}
+
+func NewTextFile(base string, path string, name string, ext string, overwrite bool, merge bool) *TextFile {
+	f := &TextFile{}
+	f.base = base
+	f.path = path
+	f.name = name
+	f.extension = ext
+	f.overwrite = overwrite
+	f.merge = merge
 	return f
 }
 
@@ -249,7 +277,13 @@ func (fs Files) Save() error {
 				return err
 			}
 		}
-		filePath := filepath.Join(fileDir, f.Name()+"."+f.Extension())
+		fileName := ""
+		if f.Extension() != "" {
+			fileName = f.Name() + "." + f.Extension()
+		} else {
+			fileName = f.Name()
+		}
+		filePath := filepath.Join(fileDir, fileName)
 		_, err := os.Stat(filePath)
 		if (err != nil && os.IsNotExist(err)) || (err == nil && f.Overwrite()) {
 			file, err := os.Create(filePath)
