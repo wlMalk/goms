@@ -63,7 +63,7 @@ func GenerateService(s *types.Service) (files files.Files, err error) {
 		files = append(files, generate_service.GenerateHTTPEncodersFile(s.Path, filepath.Join("service", "transport", "http"), "encoders.goms", s))
 	}
 
-	if s.Options.Generate.Main {
+	if s.Options.Generate.Main && helpers.IsServerEnabled(s) {
 		files = append(files, generate_service.GenerateServiceMainFile(s.Path, filepath.Join("cmd", serviceNameKebab), "main", s))
 	}
 

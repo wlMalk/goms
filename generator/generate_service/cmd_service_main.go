@@ -11,15 +11,29 @@ func GenerateServiceMainFile(base string, path string, name string, service *typ
 	file := files.NewGoFile(base, path, name, false, false)
 	file.Pkg = "main"
 	generateServiceMainFunc(file, service)
-	generateServiceMainInitLoggerFunc(file, service)
-	generateServiceMainInitTracerFunc(file, service)
-	generateServiceMainInitCounterFunc(file, service)
-	generateServiceMainInitLatencyFunc(file, service)
-	generateServiceMainInitFrequencyFunc(file, service)
+	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+		generateServiceMainInitLoggerFunc(file, service)
+	}
+	if helpers.IsTracingEnabled(service) {
+		generateServiceMainInitTracerFunc(file, service)
+	}
+	if helpers.IsFrequencyMetricEnabled(service) {
+		generateServiceMainInitFrequencyFunc(file, service)
+	}
+	if helpers.IsLatencyMetricEnabled(service) {
+		generateServiceMainInitLatencyFunc(file, service)
+	}
+	if helpers.IsCounterMetricEnabled(service) {
+		generateServiceMainInitCounterFunc(file, service)
+	}
 	generateServiceMainInitEndpointsFunc(file, service)
 	generateServiceMainPrepareEndpointsFunc(file, service)
-	generateServiceMainInterruptHandlerFunc(file, service)
-	generateServiceMainServeHTTPFunc(file, service)
+	if helpers.IsServerEnabled(service) {
+		generateServiceMainInterruptHandlerFunc(file, service)
+	}
+	if helpers.IsHTTPServerEnabled(service) {
+		generateServiceMainServeHTTPFunc(file, service)
+	}
 	return file
 }
 
@@ -62,38 +76,83 @@ func generateServiceMainFunc(file *files.GoFile, service *types.Service) {
 	file.AddImport("", "github.com/sony/gobreaker")
 
 	file.Pf("func main() {")
-	file.Pf("logger := InitLogger(os.Stderr)")
-	file.Pf("tracer := InitTracer()")
-	file.Pf("counterMetric := InitRequestCounterMetric()")
-	file.Pf("latencyMetric := InitRequestLatencyMetric()")
-	file.Pf("frequencyMetric := InitRequestFrequencyMetric()")
-	file.Pf("")
-	file.Pf("logger.Log(\"message\", \"Hello, I am alive\")")
-	file.Pf("defer logger.Log(\"message\", \"goodbye, good luck\")")
-	file.Pf("")
-	file.Pf("g, ctx := errgroup.WithContext(context.Background())")
-	file.Pf("g.Go(func() error {")
-	file.Pf("return InterruptHandler(ctx)")
-	file.Pf("})")
-	file.Pf("")
+	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+		file.Pf("logger := InitLogger(os.Stderr)")
+		file.Pf("")
+	}
+	if helpers.IsTracingEnabled(service) {
+		file.Pf("tracer := InitTracer()")
+		file.Pf("")
+	}
+	if helpers.IsFrequencyMetricEnabled(service) {
+		file.Pf("frequencyMetric := InitRequestFrequencyMetric()")
+		file.Pf("")
+	}
+	if helpers.IsLatencyMetricEnabled(service) {
+		file.Pf("latencyMetric := InitRequestLatencyMetric()")
+		file.Pf("")
+	}
+	if helpers.IsCounterMetricEnabled(service) {
+		file.Pf("counterMetric := InitRequestCounterMetric()")
+		file.Pf("")
+	}
+	if service.Options.Generate.Logger {
+		file.Pf("logger.Log(\"message\", \"Hello, I am alive\")")
+		file.Pf("defer logger.Log(\"message\", \"goodbye, good luck\")")
+		file.Pf("")
+	}
+
+	if helpers.IsServerEnabled(service) {
+		file.Pf("g, ctx := errgroup.WithContext(context.Background())")
+		file.Pf("g.Go(func() error {")
+		file.Pf("return InterruptHandler(ctx)")
+		file.Pf("})")
+		file.Pf("")
+	}
 	file.Pf("s := %s.New()", serviceNameSnake)
 	file.Pf("endpoints := InitEndpoints(s)")
 	file.Pf("endpoints = PrepareEndpoints(")
 	file.Pf("endpoints,")
-	file.Pf("tracer,")
-	file.Pf("counterMetric,")
-	file.Pf("latencyMetric,")
-	file.Pf("frequencyMetric,")
+	if helpers.IsTracingEnabled(service) {
+		file.Pf("tracer,")
+	}
+	if helpers.IsFrequencyMetricEnabled(service) {
+		file.Pf("frequencyMetric,")
+	}
+	if helpers.IsLatencyMetricEnabled(service) {
+		file.Pf("latencyMetric,")
+	}
+	if helpers.IsCounterMetricEnabled(service) {
+		file.Pf("counterMetric,")
+	}
 	file.Pf(")")
-	file.Pf("")
-	file.Pf("httpAddr := \":8080\" // TODO: use normal address")
-	file.Pf("g.Go(func() error {")
-	file.Pf("return ServeHTTP(ctx, &endpoints, httpAddr, log.With(logger, \"transport\", \"HTTP\"), tracer)")
-	file.Pf("})")
-	file.Pf("")
-	file.Pf("if err := g.Wait(); err != nil {")
-	file.Pf("logger.Log(\"error\", err)")
-	file.Pf("}")
+	if helpers.IsHTTPServerEnabled(service) {
+		file.Pf("")
+		file.Pf("httpAddr := \":8080\" // TODO: use normal address")
+		file.Pf("g.Go(func() error {")
+		file.Pf("return ServeHTTP(")
+		file.Pf("ctx,")
+		file.Pf("&endpoints,")
+		file.Pf("httpAddr,")
+		if service.Options.Generate.Logger {
+			file.Pf("log.With(logger, \"transport\", \"HTTP\"),")
+		}
+		if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+			file.Pf("tracer,")
+		}
+		file.Pf(")")
+		file.Pf("})")
+	}
+	if helpers.IsServerEnabled(service) {
+		file.Pf("")
+		if service.Options.Generate.Logger {
+			file.Pf("if err := g.Wait(); err != nil {")
+			file.Pf("logger.Log(\"error\", err)")
+			file.Pf("}")
+		} else {
+			file.Pf("g.Wait()")
+		}
+	}
 	file.Pf("}")
 	file.Pf("")
 }
@@ -158,27 +217,61 @@ func generateServiceMainPrepareEndpointsFunc(file *files.GoFile, service *types.
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func PrepareEndpoints(")
 	file.Pf("endpoints transport.%s,", serviceName)
-	file.Pf("tracer opentracinggo.Tracer,")
-	file.Pf("counterMetric metrics.Counter,")
-	file.Pf("latencyMetric metrics.Histogram,")
-	file.Pf("frequencyMetric metrics.Gauge,")
+	if helpers.IsTracingEnabled(service) {
+		file.Pf("tracer opentracinggo.Tracer,")
+	}
+	if helpers.IsFrequencyMetricEnabled(service) {
+		file.Pf("frequencyMetric metrics.Gauge,")
+	}
+	if helpers.IsLatencyMetricEnabled(service) {
+		file.Pf("latencyMetric metrics.Histogram,")
+	}
+	if helpers.IsCounterMetricEnabled(service) {
+		file.Pf("counterMetric metrics.Counter,")
+	}
 	file.Pf(") transport.%s {", serviceName)
 	file.Pf("")
-	file.Pf("endpoints = middleware.ApplyMiddlewareSpecial(endpoints,")
-	file.Pf("func(method string) (mw []endpoint.Middleware) {")
-	file.Pf("mw = append(mw, ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1)))")
-	file.Pf("mw = append(mw, circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{})))")
-	file.Pf("mw = append(mw, goms_middleware.RecoveringMiddleware())")
-	file.Pf("mw = append(mw, goms_middleware.LoggingMiddleware())")
-	file.Pf("mw = append(mw, opentracing.TraceServer(tracer, \"%s.\"+method))", serviceName)
-	file.Pf("mw = append(mw, goms_middleware.InstrumentingMiddleware(")
-	file.Pf("counterMetric.With(\"service\", \"%s\", \"method\", method),", helpers.GetName(serviceName, service.Alias))
-	file.Pf("latencyMetric.With(\"service\", \"%s\", \"method\", method),", helpers.GetName(serviceName, service.Alias))
-	file.Pf("frequencyMetric.With(\"service\", \"%s\", \"method\", method),", helpers.GetName(serviceName, service.Alias))
-	file.Pf("))")
-	file.Pf("return")
-	file.Pf("},")
-	file.Pf(")")
+	if helpers.IsRateLimitingEnabled(service) ||
+		helpers.IsCircuitBreakingEnabled(service) ||
+		helpers.IsRecoveringEnabled(service) ||
+		helpers.IsLoggingEnabled(service) ||
+		helpers.IsTracingEnabled(service) ||
+		helpers.IsMetricsEnabled(service) {
+		file.Pf("endpoints = middleware.ApplyMiddlewareSpecial(endpoints,")
+		file.Pf("func(method string) (mw []endpoint.Middleware) {")
+		if helpers.IsRateLimitingEnabled(service) {
+			file.Pf("mw = append(mw, ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1)))")
+		}
+		if helpers.IsCircuitBreakingEnabled(service) {
+			file.Pf("mw = append(mw, circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{})))")
+		}
+		if helpers.IsRecoveringEnabled(service) {
+			file.Pf("mw = append(mw, goms_middleware.RecoveringMiddleware())")
+		}
+		if helpers.IsLoggingEnabled(service) {
+			file.Pf("mw = append(mw, goms_middleware.LoggingMiddleware())")
+		}
+		if helpers.IsTracingEnabled(service) {
+			file.Pf("mw = append(mw, opentracing.TraceServer(tracer, \"%s.\"+method))", serviceName)
+		}
+		if helpers.IsMetricsEnabled(service) {
+			file.Pf("mw = append(mw, goms_middleware.InstrumentingMiddleware(")
+			if helpers.IsFrequencyMetricEnabled(service) {
+				file.Pf("frequencyMetric.With(\"service\", \"%s\", \"method\", method),", helpers.GetName(serviceName, service.Alias))
+			}
+			if helpers.IsLatencyMetricEnabled(service) {
+				file.Pf("latencyMetric.With(\"service\", \"%s\", \"method\", method),", helpers.GetName(serviceName, service.Alias))
+			}
+			if helpers.IsCounterMetricEnabled(service) {
+				file.Pf("counterMetric.With(\"service\", \"%s\", \"method\", method),", helpers.GetName(serviceName, service.Alias))
+			}
+			file.Pf("))")
+		}
+
+		file.Pf("return")
+		file.Pf("},")
+		file.Pf(")")
+	}
 	file.Pf("return endpoints")
 	file.Pf("}")
 	file.Pf("")
@@ -201,7 +294,17 @@ func generateServiceMainInterruptHandlerFunc(file *files.GoFile, service *types.
 func generateServiceMainServeHTTPFunc(file *files.GoFile, service *types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
-	file.Pf("func ServeHTTP(ctx context.Context, endpoints *transport.%s, addr string, logger log.Logger, tracer opentracinggo.Tracer) error {", serviceName)
+	file.Pf("func ServeHTTP(")
+	file.Pf("ctx context.Context,")
+	file.Pf("endpoints *transport.Strings,")
+	file.Pf("addr string,")
+	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+		file.Pf("logger log.Logger,")
+	}
+	if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+		file.Pf("tracer opentracinggo.Tracer,")
+	}
+	file.Pf(") error {")
 	file.Pf("r := httprouter.New()")
 	file.Pf("router := goms_router.New(r)")
 	file.Pf("")
@@ -212,18 +315,24 @@ func generateServiceMainServeHTTPFunc(file *files.GoFile, service *types.Service
 	file.Pf("func(method string) (opts []kit_http.ServerOption) {")
 	file.Pf("opts = append(")
 	file.Pf("opts, kit_http.ServerBefore(")
-	file.Pf("opentracing.HTTPToContext(tracer, method, logger),")
+	if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+		file.Pf("opentracing.HTTPToContext(tracer, method, logger),")
+	}
 	file.Pf("goms_http.MethodInjector(\"%s\", method),", helpers.GetName(serviceName, service.Alias))
 	file.Pf("goms_http.RequestIDCreator(),")
 	file.Pf("goms_http.CorrelationIDExtractor(),")
-	file.Pf("goms_http.LoggerInjector(logger),")
+	if helpers.IsLoggingEnabled(service) {
+		file.Pf("goms_http.LoggerInjector(logger),")
+	}
 	file.Pf("),")
 	file.Pf(")")
 	file.Pf("return")
 	file.Pf("},")
 	file.Pf(")")
 	file.Pf("")
-	file.Pf("logger.Log(\"listening on\", addr)")
+	if service.Options.Generate.Logger {
+		file.Pf("logger.Log(\"listening on\", addr)")
+	}
 	file.Pf("ch := make(chan error)")
 	file.Pf("go func() {")
 	file.Pf("ch <- server.ListenAndServe()")

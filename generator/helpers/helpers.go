@@ -151,6 +151,33 @@ func IsLoggingEnabled(service *types.Service) bool {
 	return false
 }
 
+func IsServerEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.HTTPServer || method.Options.Generate.GRPCServer {
+			return true
+		}
+	}
+	return false
+}
+
+func IsRateLimitingEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.RateLimiting {
+			return true
+		}
+	}
+	return false
+}
+
+func IsCircuitBreakingEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.CircuitBreaking {
+			return true
+		}
+	}
+	return false
+}
+
 func HasLoggeds(service *types.Service) bool {
 	for _, method := range service.Methods {
 		if method.Options.Generate.Logging && (HasLoggedArguments(method) || HasLoggedResults(method)) {
@@ -264,6 +291,33 @@ func IsMetricsEnabled(service *types.Service) bool {
 		if method.Options.Generate.FrequencyMetric ||
 			method.Options.Generate.LatencyMetric ||
 			method.Options.Generate.CounterMetric {
+			return true
+		}
+	}
+	return false
+}
+
+func IsFrequencyMetricEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.FrequencyMetric {
+			return true
+		}
+	}
+	return false
+}
+
+func IsLatencyMetricEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.LatencyMetric {
+			return true
+		}
+	}
+	return false
+}
+
+func IsCounterMetricEnabled(service *types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.CounterMetric {
 			return true
 		}
 	}
