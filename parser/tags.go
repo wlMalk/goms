@@ -27,6 +27,8 @@ var methodTags = []string{
 	"params",
 	"logs-ignore",
 	"logs-len",
+	"disable-all",
+	"enable-all",
 	"disable",
 	"enable",
 	"alias",
@@ -42,26 +44,168 @@ var serviceTagsParsers = map[string]func(service *types.Service, tag string) err
 	"generate":        parseServiceGenerateTag,
 	"transports":      parseServiceTransportsTag,
 	"metrics":         parseServiceMetricsTag,
-	"http-URI-prefix": parseServiceHttpUriPrefixTag,
+	"http-URI-prefix": parseServiceHTTPUriPrefixTag,
 }
 
 var methodTagsParsers = map[string]func(method *types.Method, tag string) error{
 	"name":         parseMethodNameTag,
 	"transports":   parseMethodTransportsTag,
 	"metrics":      parseMethodMetricsTag,
-	"http-method":  parseMethodHttpMethodTag,
-	"http-URI":     parseMethodHttpUriTag,
-	"http-abs-URI": parseMethodHttpAbsUriTag,
+	"http-method":  parseMethodHTTPMethodTag,
+	"http-URI":     parseMethodHTTPUriTag,
+	"http-abs-URI": parseMethodHTTPAbsUriTag,
 	"params":       parseMethodParamsTag,
 	"logs-ignore":  parseMethodLogsIgnoreTag,
 	"logs-len":     parseMethodLogsLenTag,
 	"disable":      parseMethodDisableTag,
 	"enable":       parseMethodEnableTag,
+	"disable-all":  parseMethodDisableAllTag,
+	"enable-all":   parseMethodEnableAllTag,
 	"alias":        parseMethodAliasTag,
 }
 
 var paramTagsParsers = map[string]func(argument *types.Argument, tag string) error{
-	"http-origin": parseParamHttpOriginTag,
+	"http-origin": parseParamHTTPOriginTag,
+}
+
+type serviceGenerateOptionsHandler map[string]func(service *types.Service, v bool)
+
+var serviceGenerateOptions = serviceGenerateOptionsHandler{
+	"logger": func(service *types.Service, v bool) {
+		service.Options.Generate.Logger = true
+	}, "circuit-breaking": func(service *types.Service, v bool) {
+		service.Options.Generate.CircuitBreaking = true
+	}, "rate-limiting": func(service *types.Service, v bool) {
+		service.Options.Generate.RateLimiting = true
+	}, "recovering": func(service *types.Service, v bool) {
+		service.Options.Generate.Recovering = true
+	}, "caching": func(service *types.Service, v bool) {
+		service.Options.Generate.Caching = true
+	}, "logging": func(service *types.Service, v bool) {
+		service.Options.Generate.Logging = true
+	}, "main": func(service *types.Service, v bool) {
+		service.Options.Generate.Main = true
+	}, "protobuf": func(service *types.Service, v bool) {
+		service.Options.Generate.ProtoBuf = true
+	}, "tracing": func(service *types.Service, v bool) {
+		service.Options.Generate.Tracing = true
+	}, "metrics": func(service *types.Service, v bool) {
+		service.Options.Generate.FrequencyMetric = true
+		service.Options.Generate.LatencyMetric = true
+		service.Options.Generate.CounterMetric = true
+	}, "service-discovery": func(service *types.Service, v bool) {
+		service.Options.Generate.ServiceDiscovery = true
+	}, "validators": func(service *types.Service, v bool) {
+		service.Options.Generate.Validators = true
+	}, "validating": func(service *types.Service, v bool) {
+		service.Options.Generate.Validating = true
+	}, "middleware": func(service *types.Service, v bool) {
+		service.Options.Generate.Middleware = true
+	}, "method-stubs": func(service *types.Service, v bool) {
+		service.Options.Generate.MethodStubs = true
+	}, "grpc-server": func(service *types.Service, v bool) {
+		service.Options.Generate.GRPCServer = true
+	}, "grpc-client": func(service *types.Service, v bool) {
+		service.Options.Generate.GRPCClient = true
+	}, "http-server": func(service *types.Service, v bool) {
+		service.Options.Generate.HTTPServer = true
+	}, "http-client": func(service *types.Service, v bool) {
+		service.Options.Generate.HTTPClient = true
+	}, "grpc": func(service *types.Service, v bool) {
+		service.Options.Generate.GRPCServer = true
+		service.Options.Generate.GRPCClient = true
+	}, "http": func(service *types.Service, v bool) {
+		service.Options.Generate.HTTPServer = true
+		service.Options.Generate.HTTPClient = true
+	},
+}
+
+func (m serviceGenerateOptionsHandler) all(service *types.Service, v bool, tagName string) {
+	for _, f := range m {
+		f(service, v)
+	}
+}
+
+func (m serviceGenerateOptionsHandler) allBut(service *types.Service, v bool, tagName string, options ...string) error {
+	m.all(service, v, tagName)
+	return m.only(service, !v, tagName, options...)
+}
+
+func (m serviceGenerateOptionsHandler) only(service *types.Service, v bool, tagName string, options ...string) error {
+	for _, option := range options {
+		f, ok := m[strs.ToLower(option)]
+		if !ok {
+			return fmt.Errorf("invalid value '%s' for %s service tag in '%s' service", option, tagName, service.Name)
+		}
+		f(service, v)
+	}
+	return nil
+}
+
+type methodGenerateOptionsHandler map[string]func(method *types.Method, v bool)
+
+var methodGenerateOptions = methodGenerateOptionsHandler{
+	"circuit-breaking": func(method *types.Method, v bool) {
+		method.Options.Generate.CircuitBreaking = v
+	}, "rate-limiting": func(method *types.Method, v bool) {
+		method.Options.Generate.RateLimiting = v
+	}, "recovering": func(method *types.Method, v bool) {
+		method.Options.Generate.Recovering = v
+	}, "caching": func(method *types.Method, v bool) {
+		method.Options.Generate.Caching = v
+	}, "logging": func(method *types.Method, v bool) {
+		method.Options.Generate.Logging = v
+	}, "tracing": func(method *types.Method, v bool) {
+		method.Options.Generate.Tracing = v
+	}, "metrics": func(method *types.Method, v bool) {
+		method.Options.Generate.FrequencyMetric = v
+		method.Options.Generate.LatencyMetric = v
+		method.Options.Generate.CounterMetric = v
+	}, "validators": func(method *types.Method, v bool) {
+		method.Options.Generate.Validators = v
+	}, "validating": func(method *types.Method, v bool) {
+		method.Options.Generate.Validating = v
+	}, "middleware": func(method *types.Method, v bool) {
+		method.Options.Generate.Middleware = v
+	}, "method-stubs": func(method *types.Method, v bool) {
+		method.Options.Generate.MethodStubs = v
+	}, "grpc-server": func(method *types.Method, v bool) {
+		method.Options.Generate.GRPCServer = v
+	}, "grpc-client": func(method *types.Method, v bool) {
+		method.Options.Generate.GRPCClient = v
+	}, "http-server": func(method *types.Method, v bool) {
+		method.Options.Generate.HTTPServer = v
+	}, "http-client": func(method *types.Method, v bool) {
+		method.Options.Generate.HTTPClient = v
+	}, "grpc": func(method *types.Method, v bool) {
+		method.Options.Generate.GRPCServer = v
+		method.Options.Generate.GRPCClient = v
+	}, "http": func(method *types.Method, v bool) {
+		method.Options.Generate.HTTPServer = v
+		method.Options.Generate.HTTPClient = v
+	},
+}
+
+func (m methodGenerateOptionsHandler) all(method *types.Method, v bool, tagName string) {
+	for _, f := range m {
+		f(method, v)
+	}
+}
+
+func (m methodGenerateOptionsHandler) allBut(method *types.Method, v bool, tagName string, options ...string) error {
+	m.all(method, v, tagName)
+	return m.only(method, !v, tagName, options...)
+}
+
+func (m methodGenerateOptionsHandler) only(method *types.Method, v bool, tagName string, options ...string) error {
+	for _, option := range options {
+		f, ok := m[strs.ToLower(option)]
+		if !ok {
+			return fmt.Errorf("invalid value '%s' for %s method tag in '%s' method", option, tagName, method.Name)
+		}
+		f(method, v)
+	}
+	return nil
 }
 
 func limitLineLength(str string, length int) []string {
@@ -87,7 +231,11 @@ func limitLineLength(str string, length int) []string {
 
 func cleanComments(comments []string) (tags []string, docs []string) {
 	for i := range comments {
-		comments[i] = strs.TrimSpace(strs.TrimPrefix(strs.TrimSpace(comments[i]), "//"))
+		comments[i] = strs.TrimSpace(comments[i])
+		comments[i] = strs.Replace(comments[i], "\n", "", -1)
+		comments[i] = strs.Replace(comments[i], "\t", " ", -1)
+		comments[i] = strs.TrimPrefix(strs.TrimPrefix(strs.TrimSuffix(comments[i], "*/"), "/*"), "//")
+		comments[i] = strs.TrimSpace(comments[i])
 	}
 	comments = strings.SplitS(strs.Join(comments, " "), " ")
 	for i := range comments {
@@ -163,139 +311,13 @@ func cleanTag(tag string) string {
 }
 
 func parseServiceGenerateTag(service *types.Service, tag string) error {
-	generated := strings.SplitS(tag, ",")
-	for _, i := range generated {
-		switch strs.ToLower(i) {
-		case "logger":
-			service.Options.Generate.Logger = true
-		case "circuit-breaking":
-			service.Options.Generate.CircuitBreaking = true
-		case "rate-limiting":
-			service.Options.Generate.RateLimiting = true
-		case "recovering":
-			service.Options.Generate.Recovering = true
-		case "caching":
-			service.Options.Generate.Caching = true
-		case "logging":
-			service.Options.Generate.Logging = true
-		case "main":
-			service.Options.Generate.Main = true
-		case "protobuf":
-			service.Options.Generate.ProtoBuf = true
-		case "tracing":
-			service.Options.Generate.Tracing = true
-		case "metrics":
-			service.Options.Generate.FrequencyMetric = true
-			service.Options.Generate.LatencyMetric = true
-			service.Options.Generate.CounterMetric = true
-		case "service-discovery":
-			service.Options.Generate.ServiceDiscovery = true
-		case "validators":
-			service.Options.Generate.Validators = true
-		case "validating":
-			service.Options.Generate.Validating = true
-		case "middleware":
-			service.Options.Generate.Middleware = true
-		case "method-stubs":
-			service.Options.Generate.MethodStubs = true
-		case "grpc-server":
-			service.Options.Generate.GRPCServer = true
-		case "grpc-client":
-			service.Options.Generate.GRPCClient = true
-		case "http-server":
-			service.Options.Generate.HTTPServer = true
-		case "http-client":
-			service.Options.Generate.HTTPClient = true
-		case "grpc":
-			service.Options.Generate.GRPCServer = true
-			service.Options.Generate.GRPCClient = true
-		case "http":
-			service.Options.Generate.HTTPServer = true
-			service.Options.Generate.HTTPClient = true
-		default:
-			return fmt.Errorf("invalid value '%s' for generate service tag in '%s' service", i, service.Name)
-		}
-	}
-	return nil
+	options := strings.SplitS(tag, ",")
+	return serviceGenerateOptions.only(service, true, "generate", options...)
 }
 
 func parseServiceGenerateAllTag(service *types.Service, tag string) error {
-	ignored := strings.SplitS(tag, ",")
-	service.Options.Generate.Logger = true
-	service.Options.Generate.CircuitBreaking = true
-	service.Options.Generate.RateLimiting = true
-	service.Options.Generate.Recovering = true
-	service.Options.Generate.Caching = true
-	service.Options.Generate.Logging = true
-	service.Options.Generate.Main = true
-	service.Options.Generate.ProtoBuf = true
-	service.Options.Generate.Tracing = true
-	service.Options.Generate.FrequencyMetric = true
-	service.Options.Generate.LatencyMetric = true
-	service.Options.Generate.CounterMetric = true
-	service.Options.Generate.ServiceDiscovery = true
-	service.Options.Generate.Validators = true
-	service.Options.Generate.Validating = true
-	service.Options.Generate.Middleware = true
-	service.Options.Generate.MethodStubs = true
-	service.Options.Generate.GRPCServer = true
-	service.Options.Generate.GRPCClient = true
-	service.Options.Generate.HTTPServer = true
-	service.Options.Generate.HTTPClient = true
-
-	for _, i := range ignored {
-		switch strs.ToLower(i) {
-		case "logger":
-			service.Options.Generate.Logger = false
-		case "circuit-breaking":
-			service.Options.Generate.CircuitBreaking = false
-		case "rate-limiting":
-			service.Options.Generate.RateLimiting = false
-		case "recovering":
-			service.Options.Generate.Recovering = false
-		case "caching":
-			service.Options.Generate.Caching = false
-		case "logging":
-			service.Options.Generate.Logging = false
-		case "main":
-			service.Options.Generate.Main = false
-		case "protobuf":
-			service.Options.Generate.ProtoBuf = false
-		case "tracing":
-			service.Options.Generate.Tracing = false
-		case "metrics":
-			service.Options.Generate.FrequencyMetric = false
-			service.Options.Generate.LatencyMetric = false
-			service.Options.Generate.CounterMetric = false
-		case "service-discovery":
-			service.Options.Generate.ServiceDiscovery = false
-		case "validators":
-			service.Options.Generate.Validators = false
-		case "validating":
-			service.Options.Generate.Validating = false
-		case "middleware":
-			service.Options.Generate.Middleware = false
-		case "method-stubs":
-			service.Options.Generate.MethodStubs = false
-		case "grpc-server":
-			service.Options.Generate.GRPCServer = false
-		case "grpc-client":
-			service.Options.Generate.GRPCClient = false
-		case "http-server":
-			service.Options.Generate.HTTPServer = false
-		case "http-client":
-			service.Options.Generate.HTTPClient = false
-		case "grpc":
-			service.Options.Generate.GRPCServer = false
-			service.Options.Generate.GRPCClient = false
-		case "http":
-			service.Options.Generate.HTTPServer = false
-			service.Options.Generate.HTTPClient = false
-		default:
-			return fmt.Errorf("invalid value '%s' for generate-all service tag in '%s' service", i, service.Name)
-		}
-	}
-	return nil
+	options := strings.SplitS(tag, ",")
+	return serviceGenerateOptions.only(service, true, "generate-all", options...)
 }
 
 func parseServiceTransportsTag(service *types.Service, tag string) error {
@@ -319,7 +341,7 @@ func parseServiceTransportsTag(service *types.Service, tag string) error {
 	return nil
 }
 
-func parseServiceHttpUriPrefixTag(service *types.Service, tag string) error {
+func parseServiceHTTPUriPrefixTag(service *types.Service, tag string) error {
 	service.Options.HTTP.URIPrefix = tag
 	return nil
 }
@@ -385,7 +407,7 @@ func parseServiceMetricsTag(service *types.Service, tag string) error {
 	return nil
 }
 
-func parseMethodHttpMethodTag(method *types.Method, tag string) error {
+func parseMethodHTTPMethodTag(method *types.Method, tag string) error {
 	httpMethod := strs.ToUpper(tag)
 	if httpMethod != "POST" && httpMethod != "GET" && httpMethod != "PUT" && httpMethod != "DELETE" && httpMethod != "OPTIONS" && httpMethod != "HEAD" {
 		return fmt.Errorf("invalid http-method value '%s'", tag)
@@ -394,12 +416,12 @@ func parseMethodHttpMethodTag(method *types.Method, tag string) error {
 	return nil
 }
 
-func parseMethodHttpUriTag(method *types.Method, tag string) error {
+func parseMethodHTTPUriTag(method *types.Method, tag string) error {
 	method.Options.HTTP.URI = tag
 	return nil
 }
 
-func parseMethodHttpAbsUriTag(method *types.Method, tag string) error {
+func parseMethodHTTPAbsUriTag(method *types.Method, tag string) error {
 	method.Options.HTTP.AbsURI = tag
 	return nil
 }
@@ -486,103 +508,24 @@ paramsLoop:
 	return nil
 }
 
-func parseMethodDisableTag(method *types.Method, tag string) error {
-	disabled := strings.SplitS(tag, ",")
-	for _, i := range disabled {
-		switch strs.ToLower(i) {
-		case "circuit-breaking":
-			method.Options.Generate.CircuitBreaking = false
-		case "rate-limiting":
-			method.Options.Generate.RateLimiting = false
-		case "recovering":
-			method.Options.Generate.Recovering = false
-		case "caching":
-			method.Options.Generate.Caching = false
-		case "logging":
-			method.Options.Generate.Logging = false
-		case "tracing":
-			method.Options.Generate.Tracing = false
-		case "metrics":
-			method.Options.Generate.FrequencyMetric = false
-			method.Options.Generate.LatencyMetric = false
-			method.Options.Generate.CounterMetric = false
-		case "validators":
-			method.Options.Generate.Validators = false
-		case "validating":
-			method.Options.Generate.Validating = false
-		case "middleware":
-			method.Options.Generate.Middleware = false
-		case "method-stubs":
-			method.Options.Generate.MethodStubs = false
-		case "grpc-server":
-			method.Options.Generate.GRPCServer = false
-		case "grpc-client":
-			method.Options.Generate.GRPCClient = false
-		case "http-server":
-			method.Options.Generate.HTTPServer = false
-		case "http-client":
-			method.Options.Generate.HTTPClient = false
-		case "grpc":
-			method.Options.Generate.GRPCServer = false
-			method.Options.Generate.GRPCClient = false
-		case "http":
-			method.Options.Generate.HTTPServer = false
-			method.Options.Generate.HTTPClient = false
-		default:
-			return fmt.Errorf("invalid value '%s' for disable method tag in '%s' method", i, method.Name)
-		}
-	}
-	return nil
+func parseMethodEnableTag(method *types.Method, tag string) error {
+	options := strings.SplitS(tag, ",")
+	return methodGenerateOptions.only(method, true, "enable", options...)
 }
 
-func parseMethodEnableTag(method *types.Method, tag string) error {
-	enabled := strings.SplitS(tag, ",")
-	for _, i := range enabled {
-		switch strs.ToLower(i) {
-		case "circuit-breaking":
-			method.Options.Generate.CircuitBreaking = true
-		case "rate-limiting":
-			method.Options.Generate.RateLimiting = true
-		case "recovering":
-			method.Options.Generate.Recovering = true
-		case "caching":
-			method.Options.Generate.Caching = true
-		case "logging":
-			method.Options.Generate.Logging = true
-		case "tracing":
-			method.Options.Generate.Tracing = true
-		case "metrics":
-			method.Options.Generate.FrequencyMetric = true
-			method.Options.Generate.LatencyMetric = true
-			method.Options.Generate.CounterMetric = true
-		case "validators":
-			method.Options.Generate.Validators = true
-		case "validating":
-			method.Options.Generate.Validating = true
-		case "middleware":
-			method.Options.Generate.Middleware = true
-		case "method-stubs":
-			method.Options.Generate.MethodStubs = true
-		case "grpc-server":
-			method.Options.Generate.GRPCServer = true
-		case "grpc-client":
-			method.Options.Generate.GRPCClient = true
-		case "http-server":
-			method.Options.Generate.HTTPServer = true
-		case "http-client":
-			method.Options.Generate.HTTPClient = true
-		case "grpc":
-			method.Options.Generate.GRPCServer = true
-			method.Options.Generate.GRPCClient = true
-		case "http":
-			method.Options.Generate.HTTPServer = true
-			method.Options.Generate.HTTPClient = true
+func parseMethodDisableTag(method *types.Method, tag string) error {
+	options := strings.SplitS(tag, ",")
+	return methodGenerateOptions.only(method, false, "disable", options...)
+}
 
-		default:
-			return fmt.Errorf("invalid value '%s' for enable method tag in '%s' method", i, method.Name)
-		}
-	}
-	return nil
+func parseMethodEnableAllTag(method *types.Method, tag string) error {
+	options := strings.SplitS(tag, ",")
+	return methodGenerateOptions.allBut(method, true, "enable-all", options...)
+}
+
+func parseMethodDisableAllTag(method *types.Method, tag string) error {
+	options := strings.SplitS(tag, ",")
+	return methodGenerateOptions.allBut(method, false, "disable-all", options...)
 }
 
 func parseMethodAliasTag(method *types.Method, tag string) error {
@@ -627,7 +570,7 @@ func parseMethodValidateTag(method *types.Method, tag string) error {
 	return nil
 }
 
-func parseParamHttpOriginTag(arg *types.Argument, tag string) error {
+func parseParamHTTPOriginTag(arg *types.Argument, tag string) error {
 	origin := strs.ToUpper(tag)
 	if origin != "BODY" && origin != "HEADER" && origin != "QUERY" && origin != "PATH" {
 		return fmt.Errorf("invalid http-origin value '%s'", tag)
