@@ -38,7 +38,7 @@ func generateValidatingMiddlewareStruct(file *files.GoFile, service *types.Servi
 	for _, method := range helpers.GetMethodsWithValidatingEnabled(service) {
 		methodName := strings.ToUpperFirst(method.Name)
 		lowerMethodName := strings.ToLowerFirst(method.Name)
-		file.Pf("%sValidator func(ctx context.Context, req requests.%sRequest) (err error)", lowerMethodName, methodName)
+		file.Pf("%sValidator func(ctx context.Context, req *requests.%sRequest) (err error)", lowerMethodName, methodName)
 	}
 	file.P("")
 	file.P("next handlers.RequestResponseHandler")
@@ -66,7 +66,6 @@ func generateValidatingMiddlewareNewFunc(file *files.GoFile, service *types.Serv
 
 func generateValidatingMiddlewareMethodFunc(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
-	file.AddImport("", "fmt")
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	args := []string{"ctx context.Context"}
