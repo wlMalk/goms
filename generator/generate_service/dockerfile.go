@@ -12,6 +12,7 @@ import (
 func GenerateDockerFile(base string, service *types.Service) *files.TextFile {
 	serviceNameKebab := strings.ToLower(strings.ToKebabCase(service.Name))
 	file := files.NewTextFile(base, "", "Dockerfile", "", false, false)
+	file.CommentFormat("# %s")
 	path := "/go" + strs.TrimPrefix(file.Base(), os.Getenv("GOPATH"))
 	file.Pf("FROM golang:1.12 as builder")
 	file.Pf("ADD . %s", path)
