@@ -7,7 +7,7 @@ import (
 // Service is the interface describing the strings service
 // @http-URI-prefix(/strings)
 // @name(com.goms.strings.v0.5.0)
-// @generate-all(grpc)
+// @generate-all
 type Strings_v0_5 interface {
 	/*
 		@name(upper)
