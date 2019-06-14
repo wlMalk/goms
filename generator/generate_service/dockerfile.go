@@ -15,13 +15,13 @@ func GenerateDockerFile(base string, service *types.Service) *files.TextFile {
 	path := "/go" + strs.TrimPrefix(file.Base(), os.Getenv("GOPATH"))
 	file.Pf("FROM golang:1.12 as builder")
 	file.Pf("ADD . %s", path)
-	file.Pf("WORKDIR %s/cmd/%s", path, serviceNameKebab)
+	file.Pf("WORKDIR %s", path)
 	file.Pf("RUN go get -d -v ./...")
-	file.Pf("RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags \"-static\"' -o %s .", serviceNameKebab)
+	file.Pf("RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags \"-static\"' -o bin/%s .", serviceNameKebab)
 	file.Pf("FROM scratch")
-	file.Pf("COPY --from=builder %s/cmd/%s/%s /%s/", path, serviceNameKebab, serviceNameKebab, serviceNameKebab)
+	file.Pf("COPY --from=builder %s/bin/%s /%s/", path, serviceNameKebab, serviceNameKebab)
 	file.Pf("WORKDIR /%s", serviceNameKebab)
 	file.Pf("EXPOSE 8080")
-	file.Pf("ENTRYPOINT [\"./%s\"]", serviceNameKebab)
+	file.Pf("ENTRYPOINT [\"./%s\", \"start\"]", serviceNameKebab)
 	return file
 }
