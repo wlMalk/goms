@@ -46,7 +46,7 @@ func FrequencyMiddleware(frequency metrics.Gauge) endpoint.Middleware {
 	}
 }
 
-func InstrumentingMiddleware(counter metrics.Counter, latency metrics.Histogram, frequency metrics.Gauge) endpoint.Middleware {
+func InstrumentingMiddleware(frequency metrics.Gauge, latency metrics.Histogram, counter metrics.Counter) endpoint.Middleware {
 	return func(e endpoint.Endpoint) endpoint.Endpoint {
 		return func(ctx context.Context, req interface{}) (res interface{}, err error) {
 			defer func(begin time.Time) {
