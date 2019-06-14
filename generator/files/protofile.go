@@ -1,6 +1,7 @@
 package files
 
 import (
+	"io"
 	"path/filepath"
 
 	"github.com/wlMalk/goms/generator/strings"
@@ -28,4 +29,17 @@ func NewProtoFile(base string, path string, name string, overwrite bool, merge b
 	f.merge = merge
 	f.CommentFormat("// %s")
 	return f
+}
+
+func (f *ProtoFile) WriteTo(w io.Writer) (int64, error) {
+	lines := f.lines
+	f.lines = nil
+	f.Cs(generateFileHeader(f.Overwrite())...)
+	f.Pf("syntax = \"proto3\";")
+	f.Pf("package %s;", f.Pkg)
+	f.P("")
+	f.lines = append(f.lines, lines...)
+	lines = nil
+	return f.writeLines(w)
+
 }

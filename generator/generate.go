@@ -62,7 +62,9 @@ func GenerateService(s *types.Service) (files files.Files, err error) {
 		files = append(files, generate_service.GenerateHTTPDecodersFile(s.Path, filepath.Join("pkg", "service", "transport", "http"), "decoders.goms", s))
 		files = append(files, generate_service.GenerateHTTPEncodersFile(s.Path, filepath.Join("pkg", "service", "transport", "http"), "encoders.goms", s))
 	}
-
+	if s.Options.Generate.ProtoBuf && (helpers.IsGRPCServerEnabled(s) || helpers.IsGRPCClientEnabled(s)) {
+		files = append(files, generate_service.GenerateProtoBufServiceDefinitionsFile(s.Path, "proto", "service.goms", s))
+	}
 	if s.Options.Generate.Main {
 		files = append(files, generate_service.GenerateServiceMainFile(s.Path, "", "main", s))
 		if helpers.IsServerEnabled(s) {

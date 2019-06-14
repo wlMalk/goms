@@ -203,9 +203,33 @@ func (t *Type) GoType() string {
 	return t.String()
 }
 
-func (t *Type) ProtoBufType() string {
-	// TODO
-	return ""
+func (t *Type) ProtoBufType() (s string) {
+	if t.IsBytes {
+		return "bytes"
+	}
+	if t.IsMap {
+		return "map<" + toProtoBufType(t.Name) + ", " + t.Value.ProtoBufType() + ">"
+	}
+	if t.IsSlice || t.IsVariadic {
+		s += "repeated "
+	}
+	s += toProtoBufType(t.Name)
+	return
+}
+
+func toProtoBufType(name string) string {
+	switch name {
+	case "int", "int8", "int16", "int32":
+		return "int32"
+	case "uint", "uint8", "uint16", "uint32":
+		return "uint32"
+	case "float64":
+		return "double"
+	case "float32":
+		return "float"
+	default:
+		return name
+	}
 }
 
 type ArgumentsGroup struct {
