@@ -18,7 +18,7 @@ func GenerateServiceTransportEndpointsFile(base string, path string, name string
 }
 
 func generateServiceStructType(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	serviceName := strings.ToUpperFirst(service.Name)
 	lowerServiceName := strings.ToLowerFirst(service.Name)
@@ -84,8 +84,8 @@ func generateServiceMethodsRegisteration(file *files.GoFile, service *types.Serv
 
 func generateTypeSwitchForMethodHandler(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
-	file.AddImport("", method.Service.ImportPath, "/service/handlers")
-	file.AddImport("", method.Service.ImportPath, "/service/handlers/converters")
+	file.AddImport("", method.Service.ImportPath, "/pkg/service/handlers")
+	file.AddImport("", method.Service.ImportPath, "/pkg/service/handlers/converters")
 	file.Pf("switch t := h.(type) {")
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)

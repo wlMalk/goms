@@ -42,7 +42,7 @@ func generateHTTPResponseNewFunc(file *files.GoFile, method *types.Method) {
 		return
 	}
 	methodName := strings.ToUpperFirst(method.Name)
-	file.AddImport("", method.Service.ImportPath, "service/responses")
+	file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 	file.Pf("func %s(res *responses.%sResponse) *%sResponse {", methodName, methodName, methodName)
 	file.Pf("resp := &%sResponse{}", methodName)
 	for _, res := range method.Results {
@@ -76,7 +76,7 @@ func generateHTTPResponseToResponseFunc(file *files.GoFile, method *types.Method
 	if len(method.Results) == 0 {
 		return
 	}
-	file.AddImport("", method.Service.ImportPath, "service/responses")
+	file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func (r *%sResponse) Response() *responses.%sResponse {", methodName, methodName)
 	file.Pf("resp := &responses.%sResponse{}", methodName)

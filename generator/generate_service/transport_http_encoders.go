@@ -22,8 +22,8 @@ func generateHTTPRequestEncoder(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func Encode%sRequest(ctx context.Context, r *http.Request, request interface{}) error {", methodName)
 	if len(method.Arguments) > 0 {
-		file.AddImport("http_requests", method.Service.ImportPath, "/service/transport/http/requests")
-		file.AddImport("", method.Service.ImportPath, "service/requests")
+		file.AddImport("http_requests", method.Service.ImportPath, "/pkg/service/transport/http/requests")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		file.Pf("return http_requests.%s(request.(*requests.%sRequest)).ToHTTP(r)", methodName, methodName)
 	} else {
 		file.Pf("return nil")
@@ -39,8 +39,8 @@ func generateHTTPResponseEncoder(file *files.GoFile, method *types.Method) {
 	file.Pf("func Encode%sResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {", methodName)
 	if len(method.Results) > 0 {
 		file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
-		file.AddImport("http_responses", method.Service.ImportPath, "/service/transport/http/responses")
-		file.AddImport("", method.Service.ImportPath, "service/responses")
+		file.AddImport("http_responses", method.Service.ImportPath, "/pkg/service/transport/http/responses")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 		file.Pf("return goms_http.HTTPResponseEncoder(ctx, w, http_responses.%s(response.(*responses.%sResponse)))", methodName, methodName)
 	} else {
 		file.Pf("return nil")

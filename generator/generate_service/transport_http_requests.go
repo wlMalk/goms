@@ -81,7 +81,7 @@ func generateHTTPRequestNewFunc(file *files.GoFile, method *types.Method) {
 		return
 	}
 	methodName := strings.ToUpperFirst(method.Name)
-	file.AddImport("", method.Service.ImportPath, "service/requests")
+	file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 	file.Pf("func %s(req *requests.%sRequest) *%sRequest {", methodName, methodName, methodName)
 	file.Pf("r := &%sRequest{}", methodName)
 	for _, arg := range method.Arguments {
@@ -113,7 +113,7 @@ func generateHTTPRequestToRequestFunc(file *files.GoFile, method *types.Method) 
 	if len(method.Arguments) == 0 {
 		return
 	}
-	file.AddImport("", method.Service.ImportPath, "service/requests")
+	file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func (r *%sRequest) Request() *requests.%sRequest {", methodName, methodName)
 	file.Pf("req := &requests.%sRequest{}", methodName)
@@ -135,7 +135,7 @@ func generateHTTPRequestToHTTPArgFunc(file *files.GoFile, method *types.Method) 
 		return
 	}
 	file.AddImport("", "net/http")
-	file.AddImport("", method.Service.ImportPath, "service/requests")
+	file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func (r *%sRequest) ToHTTP(req *http.Request) error {", methodName)
 	file.Pf("var err error")

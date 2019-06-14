@@ -109,7 +109,7 @@ func generateServiceMethodImplementationOuterMiddleware(file *files.GoFile, meth
 
 func generateServiceMethodImplementationValidateFunc(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
-	file.AddImport("", method.Service.ImportPath, "/service/requests")
+	file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
 	serviceName := strings.ToUpperFirst(method.Service.Name)
 	file.Pf("func (v *%sValidator) Validate%s(ctx context.Context, req requests.%sRequest) error {", serviceName, methodName, methodName)
@@ -120,7 +120,7 @@ func generateServiceMethodImplementationValidateFunc(file *files.GoFile, method 
 }
 
 func generateServiceImplementationMiddleware(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func (s *%s) Middleware(h handlers.RequestResponseHandler) handlers.RequestResponseHandler {", serviceName)
 	file.Cf("TODO: Wrap %s middleware around h", serviceName)
@@ -144,7 +144,7 @@ func generateCachingMiddlewareKeyerNewFunc(file *files.GoFile, service *types.Se
 
 func generateCachingMiddlewareKeyerMethodFunc(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
-	file.AddImport("", method.Service.ImportPath, "/service/requests")
+	file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func (ck *CacheKeyer) %s(ctx context.Context, req *requests.%sRequest) (keys []interface{}, ok bool) {", methodName, methodName)
 	file.Cf("TODO: Implement %s cache keyer method", methodName)

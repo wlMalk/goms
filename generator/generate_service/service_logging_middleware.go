@@ -30,7 +30,7 @@ func GenerateLoggingMiddlewareFile(base string, path string, name string, servic
 }
 
 func generateLoggingMiddlewareStructs(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	if helpers.HasLoggeds(service) {
 		file.Pf("type loggingMiddleware struct {")
 		file.Pf("next handlers.RequestResponseHandler")
@@ -46,7 +46,7 @@ func generateLoggingMiddlewareStructs(file *files.GoFile, service *types.Service
 }
 
 func generateLoggingMiddlewareNewFunc(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	if helpers.HasLoggeds(service) {
 		file.Pf("func LoggingMiddleware() RequestResponseMiddleware {")
 		file.Pf("return func(next handlers.RequestResponseHandler) handlers.RequestResponseHandler {")
@@ -72,12 +72,12 @@ func generateLoggingMiddlewareMethodHandler(file *files.GoFile, method *types.Me
 	serviceName := strings.ToUpperFirst(method.Service.Name)
 	args := []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/requests")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	results := []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/responses")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (m *loggingMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
@@ -130,12 +130,12 @@ func generateErrorLoggingMiddlewareMethodHandler(file *files.GoFile, method *typ
 	methodName := strings.ToUpperFirst(method.Name)
 	args := []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/requests")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	results := []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/responses")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (m *errorLoggingMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))

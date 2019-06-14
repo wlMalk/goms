@@ -19,7 +19,7 @@ func GenerateRecoveringMiddlewareFile(base string, path string, name string, ser
 }
 
 func generateRecoveringMiddlewareStruct(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("type recoveringMiddleware struct {")
 	file.P("next  handlers.RequestResponseHandler")
 	file.P("}")
@@ -27,7 +27,7 @@ func generateRecoveringMiddlewareStruct(file *files.GoFile, service *types.Servi
 }
 
 func generateRecoveringMiddlewareNewFunc(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func RecoveringMiddleware() RequestResponseMiddleware {")
 	file.P("return func(next handlers.RequestResponseHandler) handlers.RequestResponseHandler {")
 	file.P("return &recoveringMiddleware{")
@@ -44,12 +44,12 @@ func generateRecoveringMiddlewareMethodFunc(file *files.GoFile, method *types.Me
 	methodName := strings.ToUpperFirst(method.Name)
 	args := []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/requests")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	results := []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/responses")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (m *recoveringMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))

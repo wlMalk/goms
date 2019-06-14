@@ -22,7 +22,7 @@ func generateHTTPRequestDecoder(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func Decode%sRequest(ctx context.Context, req *http.Request) (interface{}, error) {", methodName)
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "service/transport/http/requests")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/transport/http/requests")
 		file.Pf("r, err := requests.%sFromHTTP(req)", methodName)
 		file.Pf("if err!=nil{")
 		file.Pf("return nil, err")
@@ -41,7 +41,7 @@ func generateHTTPResponseDecoder(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func Decode%sResponse(ctx context.Context, res *http.Response) (interface{}, error) {", methodName)
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "service/transport/http/responses")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/transport/http/responses")
 		file.Pf("resp, err := responses.%sFromHTTP(res)", methodName)
 		file.Pf("if err!=nil{")
 		file.Pf("return nil, err")

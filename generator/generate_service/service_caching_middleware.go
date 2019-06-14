@@ -20,7 +20,7 @@ func GenerateCachingMiddlewareFile(base string, path string, name string, servic
 }
 
 func generateCachingMiddlewareStruct(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", "github.com/wlMalk/goms/goms/cache")
 	file.AddImport("", "hash")
 	file.P("type cachingMiddleware struct {")
@@ -44,7 +44,7 @@ func generateCachingMiddlewareCacheKeyerInterface(file *files.GoFile, service *t
 }
 
 func generateCachingMiddlewareNewFunc(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", "github.com/wlMalk/goms/goms/cache")
 	file.AddImport("", "hash")
 	file.P("func CachingMiddleware(cache cache.Cache, keyer cacheKeyer, hasher func() hash.Hash) RequestResponseMiddleware {")
@@ -67,12 +67,12 @@ func generateCachingMiddlewareMethodFunc(file *files.GoFile, method *types.Metho
 	methodName := strings.ToUpperFirst(method.Name)
 	args := []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/requests")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	results := []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/responses")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (m *cachingMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))

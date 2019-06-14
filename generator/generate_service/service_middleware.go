@@ -20,7 +20,7 @@ func GenerateServiceMiddlewareFile(base string, path string, name string, servic
 }
 
 func generateServiceMiddlewareTypes(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("type (")
 	file.P("Middleware                func(handlers.Handler) handlers.Handler")
 	file.P("RequestMiddleware         func(handlers.RequestHandler) handlers.RequestHandler")
@@ -30,7 +30,7 @@ func generateServiceMiddlewareTypes(file *files.GoFile, service *types.Service) 
 }
 
 func generateServiceMiddlewareChainFunc(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func Chain(outer Middleware, others ...Middleware) Middleware {")
 	file.P("return func(next handlers.Handler) handlers.Handler {")
 	file.P("for i := len(others) - 1; i >= 0; i-- {")
@@ -43,7 +43,7 @@ func generateServiceMiddlewareChainFunc(file *files.GoFile, service *types.Servi
 }
 
 func generateServiceRequestMiddlewareChainFunc(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func ChainRequest(outer RequestMiddleware, others ...RequestMiddleware) RequestMiddleware {")
 	file.P("return func(next handlers.RequestHandler) handlers.RequestHandler {")
 	file.P("for i := len(others) - 1; i >= 0; i-- {")
@@ -56,7 +56,7 @@ func generateServiceRequestMiddlewareChainFunc(file *files.GoFile, service *type
 }
 
 func generateServiceRequestResponseMiddlewareChainFunc(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func ChainRequestResponse(outer RequestResponseMiddleware, others ...RequestResponseMiddleware) RequestResponseMiddleware {")
 	file.P("return func(next handlers.RequestResponseHandler) handlers.RequestResponseHandler {")
 	file.P("for i := len(others) - 1; i >= 0; i-- {")
@@ -70,7 +70,7 @@ func generateServiceRequestResponseMiddlewareChainFunc(file *files.GoFile, servi
 
 func generateServiceApplyMiddlewareFunc(file *files.GoFile, service *types.Service) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
-	file.AddImport("", service.ImportPath, "/service/transport")
+	file.AddImport("", service.ImportPath, "/pkg/service/transport")
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func ApplyMiddleware(endpoints transport.%s, mw ...endpoint.Middleware) transport.%s {", serviceName, serviceName)
 	file.Pf("return ApplyMiddlewareConditional(endpoints, func(method string) bool {")
@@ -82,7 +82,7 @@ func generateServiceApplyMiddlewareFunc(file *files.GoFile, service *types.Servi
 
 func generateServiceApplyMiddlewareSpecialFunc(file *files.GoFile, service *types.Service) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
-	file.AddImport("", service.ImportPath, "/service/transport")
+	file.AddImport("", service.ImportPath, "/pkg/service/transport")
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func ApplyMiddlewareSpecial(endpoints transport.%s, middlewareFunc func(method string) (mw []endpoint.Middleware)) transport.%s {", serviceName, serviceName)
 	file.Pf("if middlewareFunc == nil {")
@@ -100,7 +100,7 @@ func generateServiceApplyMiddlewareSpecialFunc(file *files.GoFile, service *type
 }
 func generateServiceApplyMiddlewareConditionalFunc(file *files.GoFile, service *types.Service) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
-	file.AddImport("", service.ImportPath, "/service/transport")
+	file.AddImport("", service.ImportPath, "/pkg/service/transport")
 	file.AddImport("goms_endpoint", "github.com/wlMalk/goms/goms/endpoint")
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func ApplyMiddlewareConditional(endpoints transport.%s, f func(method string) bool, mw ...endpoint.Middleware) transport.%s {", serviceName, serviceName)

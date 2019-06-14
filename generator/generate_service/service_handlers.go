@@ -65,7 +65,7 @@ func generateMethodHandlerTypes(file *files.GoFile, method *types.Method) {
 	file.Pf("}")
 	args = []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/requests")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	file.Pf("%sRequestHandler interface {", methodName)
@@ -73,7 +73,7 @@ func generateMethodHandlerTypes(file *files.GoFile, method *types.Method) {
 	file.Pf("}")
 	results = []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/responses")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("%sRequestResponseHandler interface {", methodName)
@@ -97,14 +97,14 @@ func generateMethodHandlerFuncTypes(file *files.GoFile, method *types.Method) {
 
 	args = []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/requests")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	file.Pf("%sRequestHandlerFunc func(%s) (%s)", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
 
 	results = []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/responses")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("%sRequestResponseHandlerFunc func(%s) (%s)", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
@@ -128,7 +128,7 @@ func generateMethodHandlerFuncHandlers(file *files.GoFile, method *types.Method)
 	args = []string{"ctx context.Context"}
 	argsInCall = []string{"ctx"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/requests")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 		argsInCall = append(argsInCall, "req")
 	}
@@ -138,7 +138,7 @@ func generateMethodHandlerFuncHandlers(file *files.GoFile, method *types.Method)
 	file.Pf("")
 	results = []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/responses")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (f %sRequestResponseHandlerFunc) %s(%s) (%s) {", methodName, methodName, strs.Join(args, ", "), strs.Join(results, ", "))

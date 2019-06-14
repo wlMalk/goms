@@ -33,7 +33,7 @@ func generateValidatingValidatorsTypes(file *files.GoFile, service *types.Servic
 }
 
 func generateValidatingMiddlewareStruct(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("type validatingMiddleware struct {")
 	for _, method := range helpers.GetMethodsWithValidatingEnabled(service) {
 		methodName := strings.ToUpperFirst(method.Name)
@@ -47,7 +47,7 @@ func generateValidatingMiddlewareStruct(file *files.GoFile, service *types.Servi
 }
 
 func generateValidatingMiddlewareNewFunc(file *files.GoFile, service *types.Service) {
-	file.AddImport("", service.ImportPath, "/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func ValidatingMiddleware(validator interface{}) RequestResponseMiddleware {")
 	file.P("return func(next handlers.RequestResponseHandler) handlers.RequestResponseHandler {")
 	file.Pf("m := &validatingMiddleware{next: next}")
@@ -70,12 +70,12 @@ func generateValidatingMiddlewareMethodFunc(file *files.GoFile, method *types.Me
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	args := []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/requests")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	results := []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/service/responses")
+		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (m *validatingMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
