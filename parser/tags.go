@@ -72,53 +72,53 @@ type serviceGenerateOptionsHandler map[string]func(service *types.Service, v boo
 
 var serviceGenerateOptions = serviceGenerateOptionsHandler{
 	"logger": func(service *types.Service, v bool) {
-		service.Options.Generate.Logger = true
+		service.Options.Generate.Logger = v
 	}, "circuit-breaking": func(service *types.Service, v bool) {
-		service.Options.Generate.CircuitBreaking = true
+		service.Options.Generate.CircuitBreaking = v
 	}, "rate-limiting": func(service *types.Service, v bool) {
-		service.Options.Generate.RateLimiting = true
+		service.Options.Generate.RateLimiting = v
 	}, "recovering": func(service *types.Service, v bool) {
-		service.Options.Generate.Recovering = true
+		service.Options.Generate.Recovering = v
 	}, "caching": func(service *types.Service, v bool) {
-		service.Options.Generate.Caching = true
+		service.Options.Generate.Caching = v
 	}, "logging": func(service *types.Service, v bool) {
-		service.Options.Generate.Logging = true
+		service.Options.Generate.Logging = v
 	}, "main": func(service *types.Service, v bool) {
-		service.Options.Generate.Main = true
+		service.Options.Generate.Main = v
 	}, "protobuf": func(service *types.Service, v bool) {
-		service.Options.Generate.ProtoBuf = true
+		service.Options.Generate.ProtoBuf = v
 	}, "tracing": func(service *types.Service, v bool) {
-		service.Options.Generate.Tracing = true
+		service.Options.Generate.Tracing = v
 	}, "metrics": func(service *types.Service, v bool) {
-		service.Options.Generate.FrequencyMetric = true
-		service.Options.Generate.LatencyMetric = true
-		service.Options.Generate.CounterMetric = true
+		service.Options.Generate.FrequencyMetric = v
+		service.Options.Generate.LatencyMetric = v
+		service.Options.Generate.CounterMetric = v
 	}, "service-discovery": func(service *types.Service, v bool) {
-		service.Options.Generate.ServiceDiscovery = true
+		service.Options.Generate.ServiceDiscovery = v
 	}, "validators": func(service *types.Service, v bool) {
-		service.Options.Generate.Validators = true
+		service.Options.Generate.Validators = v
 	}, "validating": func(service *types.Service, v bool) {
-		service.Options.Generate.Validating = true
+		service.Options.Generate.Validating = v
 	}, "middleware": func(service *types.Service, v bool) {
-		service.Options.Generate.Middleware = true
+		service.Options.Generate.Middleware = v
 	}, "method-stubs": func(service *types.Service, v bool) {
-		service.Options.Generate.MethodStubs = true
+		service.Options.Generate.MethodStubs = v
 	}, "grpc-server": func(service *types.Service, v bool) {
-		service.Options.Generate.GRPCServer = true
+		service.Options.Generate.GRPCServer = v
 	}, "grpc-client": func(service *types.Service, v bool) {
-		service.Options.Generate.GRPCClient = true
+		service.Options.Generate.GRPCClient = v
 	}, "http-server": func(service *types.Service, v bool) {
-		service.Options.Generate.HTTPServer = true
+		service.Options.Generate.HTTPServer = v
 	}, "http-client": func(service *types.Service, v bool) {
-		service.Options.Generate.HTTPClient = true
+		service.Options.Generate.HTTPClient = v
 	}, "grpc": func(service *types.Service, v bool) {
-		service.Options.Generate.GRPCServer = true
-		service.Options.Generate.GRPCClient = true
+		service.Options.Generate.GRPCServer = v
+		service.Options.Generate.GRPCClient = v
 	}, "http": func(service *types.Service, v bool) {
-		service.Options.Generate.HTTPServer = true
-		service.Options.Generate.HTTPClient = true
+		service.Options.Generate.HTTPServer = v
+		service.Options.Generate.HTTPClient = v
 	}, "dockerfile": func(service *types.Service, v bool) {
-		service.Options.Generate.Dockerfile = true
+		service.Options.Generate.Dockerfile = v
 	},
 }
 
