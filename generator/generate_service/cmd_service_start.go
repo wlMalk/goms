@@ -7,25 +7,9 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateServiceMainFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, false, false)
-	file.Pkg = "main"
-	generateServiceMainFunc(file, service)
-	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
-		generateServiceMainInitLoggerFunc(file, service)
-	}
-	if helpers.IsTracingEnabled(service) {
-		generateServiceMainInitTracerFunc(file, service)
-	}
-	if helpers.IsFrequencyMetricEnabled(service) {
-		generateServiceMainInitFrequencyFunc(file, service)
-	}
-	if helpers.IsLatencyMetricEnabled(service) {
-		generateServiceMainInitLatencyFunc(file, service)
-	}
-	if helpers.IsCounterMetricEnabled(service) {
-		generateServiceMainInitCounterFunc(file, service)
-	}
+func GenerateServiceStartCMDFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, true, false)
+	generateServiceStartCMDFunc(file, service)
 	generateServiceMainInitEndpointsFunc(file, service)
 	generateServiceMainPrepareEndpointsFunc(file, service)
 	if helpers.IsServerEnabled(service) {
@@ -37,65 +21,82 @@ func GenerateServiceMainFile(base string, path string, name string, service *typ
 	return file
 }
 
-func generateServiceMainFunc(file *files.GoFile, service *types.Service) {
+func generateServiceStartCMDFunc(file *files.GoFile, service *types.Service) {
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
-
 	file.AddImport("", "context")
 	file.AddImport("", "errors")
 	file.AddImport("", "fmt")
-	file.AddImport("", "io")
 	file.AddImport("", "net/http")
 	file.AddImport("", "os")
 	file.AddImport("", "os/signal")
 	file.AddImport("", "syscall")
 	file.AddImport("", "time")
 
-	file.AddImport("", "golang.org/x/sync/errgroup")
-	file.AddImport("", "golang.org/x/time/rate")
-
-	file.AddImport("", "github.com/go-kit/kit/circuitbreaker")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
-	file.AddImport("", "github.com/go-kit/kit/log")
-	file.AddImport("", "github.com/go-kit/kit/metrics")
-	file.AddImport("", "github.com/go-kit/kit/ratelimit")
-	file.AddImport("", "github.com/go-kit/kit/tracing/opentracing")
-	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
 
-	file.AddImport("", service.ImportPath, "/service/handlers/converters")
-	file.AddImport("", service.ImportPath, "/service/middleware")
-	file.AddImport("", service.ImportPath, "/service/transport")
-	file.AddImport(strings.ToSnakeCase(service.Name)+"_http_server", service.ImportPath, "/service/transport/http/server")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers/converters")
+	file.AddImport("", service.ImportPath, "/pkg/service/transport")
 	file.AddImport("", service.ImportPath, "/"+strings.ToSnakeCase(service.Name))
 
-	file.AddImport("goms_middleware", "github.com/wlMalk/goms/goms/middleware")
-	file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
-	file.AddImport("goms_router", "github.com/wlMalk/goms/goms/transport/http/httprouter")
-
-	file.AddImport("", "github.com/julienschmidt/httprouter")
-	file.AddImport("opentracinggo", "github.com/opentracing/opentracing-go")
-	file.AddImport("", "github.com/sony/gobreaker")
-
-	file.Pf("func main() {")
+	if helpers.IsServerEnabled(service) {
+		file.AddImport("", "golang.org/x/sync/errgroup")
+	}
+	if helpers.IsRateLimitingEnabled(service) ||
+		helpers.IsCircuitBreakingEnabled(service) ||
+		helpers.IsRecoveringEnabled(service) ||
+		helpers.IsLoggingEnabled(service) ||
+		helpers.IsTracingEnabled(service) ||
+		helpers.IsMetricsEnabled(service) {
+		file.AddImport("", service.ImportPath, "/pkg/service/middleware")
+	}
+	if helpers.IsRecoveringEnabled(service) ||
+		helpers.IsLoggingEnabled(service) ||
+		helpers.IsMetricsEnabled(service) {
+		file.AddImport("goms_middleware", "github.com/wlMalk/goms/goms/middleware")
+	}
 	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
-		file.Pf("logger := InitLogger(os.Stderr)")
-		file.Pf("")
+		file.AddImport("", "github.com/go-kit/kit/log")
+	}
+	if helpers.IsMetricsEnabled(service) {
+		file.AddImport("", "github.com/go-kit/kit/metrics")
 	}
 	if helpers.IsTracingEnabled(service) {
-		file.Pf("tracer := InitTracer()")
-		file.Pf("")
+		file.AddImport("", "github.com/go-kit/kit/tracing/opentracing")
+		file.AddImport("opentracinggo", "github.com/opentracing/opentracing-go")
+	}
+	if helpers.IsRateLimitingEnabled(service) {
+		file.AddImport("", "golang.org/x/time/rate")
+		file.AddImport("", "github.com/go-kit/kit/ratelimit")
+	}
+	if helpers.IsCircuitBreakingEnabled(service) {
+		file.AddImport("", "github.com/go-kit/kit/circuitbreaker")
+		file.AddImport("", "github.com/sony/gobreaker")
+	}
+	if helpers.IsHTTPServerEnabled(service) {
+		file.AddImport(strings.ToSnakeCase(service.Name)+"_http_server", service.ImportPath, "/pkg/service/transport/http/server")
+		file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
+		file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
+		file.AddImport("goms_router", "github.com/wlMalk/goms/goms/transport/http/httprouter")
+		file.AddImport("", "github.com/julienschmidt/httprouter")
+	}
+
+	file.Pf("func Start(")
+	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+		file.Pf("logger log.Logger,")
+	}
+	if helpers.IsTracingEnabled(service) {
+		file.Pf("tracer opentracinggo.Tracer,")
 	}
 	if helpers.IsFrequencyMetricEnabled(service) {
-		file.Pf("frequencyMetric := InitRequestFrequencyMetric()")
-		file.Pf("")
+		file.Pf("frequencyMetric metrics.Gauge,")
 	}
 	if helpers.IsLatencyMetricEnabled(service) {
-		file.Pf("latencyMetric := InitRequestLatencyMetric()")
-		file.Pf("")
+		file.Pf("latencyMetric metrics.Histogram,")
 	}
 	if helpers.IsCounterMetricEnabled(service) {
-		file.Pf("counterMetric := InitRequestCounterMetric()")
-		file.Pf("")
+		file.Pf("counterMetric metrics.Counter,")
 	}
+	file.Pf(") {")
 	if service.Options.Generate.Logger {
 		file.Pf("logger.Log(\"message\", \"Hello, I am alive\")")
 		file.Pf("defer logger.Log(\"message\", \"goodbye, good luck\")")
@@ -105,13 +106,13 @@ func generateServiceMainFunc(file *files.GoFile, service *types.Service) {
 	if helpers.IsServerEnabled(service) {
 		file.Pf("g, ctx := errgroup.WithContext(context.Background())")
 		file.Pf("g.Go(func() error {")
-		file.Pf("return InterruptHandler(ctx)")
+		file.Pf("return interruptHandler(ctx)")
 		file.Pf("})")
 		file.Pf("")
 	}
 	file.Pf("s := %s.New()", serviceNameSnake)
-	file.Pf("endpoints := InitEndpoints(s)")
-	file.Pf("endpoints = PrepareEndpoints(")
+	file.Pf("endpoints := initEndpoints(s)")
+	file.Pf("endpoints = prepareEndpoints(")
 	file.Pf("endpoints,")
 	if helpers.IsTracingEnabled(service) {
 		file.Pf("tracer,")
@@ -130,7 +131,7 @@ func generateServiceMainFunc(file *files.GoFile, service *types.Service) {
 		file.Pf("")
 		file.Pf("httpAddr := \":8080\" // TODO: use normal address")
 		file.Pf("g.Go(func() error {")
-		file.Pf("return ServeHTTP(")
+		file.Pf("return serveHTTP(")
 		file.Pf("ctx,")
 		file.Pf("&endpoints,")
 		file.Pf("httpAddr,")
@@ -157,52 +158,10 @@ func generateServiceMainFunc(file *files.GoFile, service *types.Service) {
 	file.Pf("")
 }
 
-func generateServiceMainInitLoggerFunc(file *files.GoFile, service *types.Service) {
-	file.Pf("func InitLogger(writer io.Writer) log.Logger {")
-	file.Pf("logger := log.NewJSONLogger(writer)")
-	file.Pf("logger = log.With(logger, \"@timestamp\", log.DefaultTimestampUTC)")
-	file.Pf("logger = log.With(logger, \"caller\", log.DefaultCaller)")
-	file.Pf("return logger")
-	file.Pf("}")
-	file.Pf("")
-}
-
-func generateServiceMainInitTracerFunc(file *files.GoFile, service *types.Service) {
-	file.Pf("func InitTracer() opentracinggo.Tracer {")
-	file.Pf("// TODO: Initialize tracer")
-	file.Pf("return nil")
-	file.Pf("}")
-	file.Pf("")
-}
-
-func generateServiceMainInitCounterFunc(file *files.GoFile, service *types.Service) {
-	file.Pf("func InitRequestCounterMetric() metrics.Counter {")
-	file.Pf("// TODO: Initialize counterMetric")
-	file.Pf("return nil")
-	file.Pf("}")
-	file.Pf("")
-}
-
-func generateServiceMainInitLatencyFunc(file *files.GoFile, service *types.Service) {
-	file.Pf("func InitRequestLatencyMetric() metrics.Histogram {")
-	file.Pf("// TODO: Initialize latencyMetric")
-	file.Pf("return nil")
-	file.Pf("}")
-	file.Pf("")
-}
-
-func generateServiceMainInitFrequencyFunc(file *files.GoFile, service *types.Service) {
-	file.Pf("func InitRequestFrequencyMetric() metrics.Gauge {")
-	file.Pf("// TODO: Initialize frequencyMetric")
-	file.Pf("return nil")
-	file.Pf("}")
-	file.Pf("")
-}
-
 func generateServiceMainInitEndpointsFunc(file *files.GoFile, service *types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
-	file.Pf("func InitEndpoints(s *%s.%s) transport.%s {", serviceNameSnake, serviceName, serviceName)
+	file.Pf("func initEndpoints(s *%s.%s) transport.%s {", serviceNameSnake, serviceName, serviceName)
 	file.Pf("return transport.Endpoints(")
 	file.Pf("converters.RequestResponseHandlerToEndpointHandler(")
 	file.Pf("converters.RequestHandlerToRequestResponseHandler(")
@@ -215,7 +174,7 @@ func generateServiceMainInitEndpointsFunc(file *files.GoFile, service *types.Ser
 
 func generateServiceMainPrepareEndpointsFunc(file *files.GoFile, service *types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
-	file.Pf("func PrepareEndpoints(")
+	file.Pf("func prepareEndpoints(")
 	file.Pf("endpoints transport.%s,", serviceName)
 	if helpers.IsTracingEnabled(service) {
 		file.Pf("tracer opentracinggo.Tracer,")
@@ -278,7 +237,7 @@ func generateServiceMainPrepareEndpointsFunc(file *files.GoFile, service *types.
 }
 
 func generateServiceMainInterruptHandlerFunc(file *files.GoFile, service *types.Service) {
-	file.Pf("func InterruptHandler(ctx context.Context) error {")
+	file.Pf("func interruptHandler(ctx context.Context) error {")
 	file.Pf("interruptHandler := make(chan os.Signal, 1)")
 	file.Pf("signal.Notify(interruptHandler, syscall.SIGINT, syscall.SIGTERM)")
 	file.Pf("select {")
@@ -294,9 +253,9 @@ func generateServiceMainInterruptHandlerFunc(file *files.GoFile, service *types.
 func generateServiceMainServeHTTPFunc(file *files.GoFile, service *types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
-	file.Pf("func ServeHTTP(")
+	file.Pf("func serveHTTP(")
 	file.Pf("ctx context.Context,")
-	file.Pf("endpoints *transport.Strings,")
+	file.Pf("endpoints *transport.%s,", serviceName)
 	file.Pf("addr string,")
 	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
 		file.Pf("logger log.Logger,")
