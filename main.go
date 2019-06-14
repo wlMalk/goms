@@ -10,7 +10,6 @@ import (
 
 	"github.com/wlMalk/goms/generator"
 	"github.com/wlMalk/goms/parser"
-	"github.com/wlMalk/goms/parser/types"
 	"github.com/wlMalk/goms/version"
 
 	"github.com/gookit/color"
@@ -21,11 +20,10 @@ func main() {
 	color.New(color.FgBlack, color.BgWhite, color.Bold).Printf("  GoMS  ")
 	fmt.Printf(" v%s", version.VERSION)
 	fmt.Println("")
-	var service *types.Service
 	var err error
 	defer func() {
 		if err == nil {
-			success(fmt.Sprintf("All files are successfully generated for '%s' service", service.Name))
+			success(fmt.Sprintf("All files are successfully generated"))
 		}
 	}()
 	defer func() {
@@ -34,10 +32,6 @@ func main() {
 		}
 	}()
 	currentDir, err := os.Getwd()
-	if err != nil {
-		fail(err)
-	}
-	version, err := parser.ParseVersion(filepath.Base(currentDir))
 	if err != nil {
 		fail(err)
 	}
@@ -66,20 +60,21 @@ func main() {
 		fail(err)
 	}
 
-	service, err = parser.Parse(file)
+	services, err := parser.Parse(file)
 	if err != nil {
 		fail(err)
 	}
-	service.Version = *version
-	service.Path = currentDir
-	service.ImportPath = importPath
-	files, err := generator.GenerateService(service)
-	if err != nil {
-		fail(err)
-	}
-	err = files.Save()
-	if err != nil {
-		fail(err)
+	for _, service := range services {
+		service.Path = filepath.Join(currentDir, "v"+service.Version.FullStringSpecial("."))
+		service.ImportPath = filepath.ToSlash(filepath.Join(importPath, "v"+service.Version.FullStringSpecial(".")))
+		files, err := generator.GenerateService(service)
+		if err != nil {
+			fail(err)
+		}
+		err = files.Save()
+		if err != nil {
+			fail(err)
+		}
 	}
 }
 

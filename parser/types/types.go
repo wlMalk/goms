@@ -8,7 +8,6 @@ type Service struct {
 	Name       string
 	Alias      string
 	Docs       []string
-	Tags       []string
 	Path       string
 	ImportPath string
 	Version    Version
@@ -68,17 +67,25 @@ func (v *Version) MarshalJSON() ([]byte, error) {
 }
 
 func (v *Version) String() string {
+	return v.StringSpecial(".")
+}
+
+func (v *Version) StringSpecial(sep string) string {
 	if v.Patch != 0 {
-		return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
+		return v.FullStringSpecial(sep)
 	} else if v.Minor != 0 {
-		return fmt.Sprintf("%d.%d", v.Major, v.Minor)
+		return fmt.Sprintf("%d%s%d", v.Major, sep, v.Minor)
 	} else {
 		return fmt.Sprintf("%d", v.Major)
 	}
 }
 
 func (v *Version) FullString() string {
-	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
+	return v.FullStringSpecial(".")
+}
+
+func (v *Version) FullStringSpecial(sep string) string {
+	return fmt.Sprintf("%d%s%d%s%d", v.Major, sep, v.Minor, sep, v.Patch)
 }
 
 type Method struct {
@@ -86,7 +93,6 @@ type Method struct {
 	Name      string
 	Alias     string
 	Docs      []string
-	Tags      []string
 	Arguments []*Argument
 	Results   []*Field
 
