@@ -286,6 +286,11 @@ func (fs Files) Save() error {
 		filePath := filepath.Join(fileDir, fileName)
 		_, err := os.Stat(filePath)
 		if (err != nil && os.IsNotExist(err)) || (err == nil && f.Overwrite()) {
+			buf := new(bytes.Buffer)
+			_, err = f.WriteTo(buf)
+			if err != nil {
+				return err
+			}
 			file, err := os.Create(filePath)
 			if err != nil && os.IsExist(err) {
 				err = os.Remove(filePath)
@@ -305,7 +310,7 @@ func (fs Files) Save() error {
 					panic(err)
 				}
 			}()
-			_, err = f.WriteTo(file)
+			_, err = io.Copy(file, buf)
 			if err != nil {
 				return err
 			}
