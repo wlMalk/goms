@@ -1,6 +1,8 @@
 package generate_service
 
 import (
+	"strings"
+
 	"github.com/wlMalk/goms/generator/files"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/parser/types"
@@ -9,6 +11,12 @@ import (
 func GenerateServiceMainFile(base string, path string, name string, service *types.Service) *files.GoFile {
 	file := files.NewGoFile(base, path, name, false, false)
 	file.Pkg = "main"
+
+	if service.Options.Generate.ProtoBuf && (helpers.IsGRPCServerEnabled(service) || helpers.IsGRPCClientEnabled(service)) {
+		file.Pf("//go:generate protoc --go_out=plugins=grpc:%s --proto_path=%s proto/service.goms.proto", strings.TrimSuffix(base, service.ImportPath), base)
+		file.P("")
+	}
+
 	generateServiceMainFunc(file, service)
 	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
 		generateServiceMainInitLoggerFunc(file, service)
