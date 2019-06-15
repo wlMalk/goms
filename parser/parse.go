@@ -57,7 +57,7 @@ func Parse(ast *astTypes.File) (services []*types.Service, err error) {
 			m.Options.Generate.HTTPServer = s.Options.Generate.HTTPServer
 			m.Options.Generate.HTTPClient = s.Options.Generate.HTTPClient
 			m.Options.Generate.GRPCServer = s.Options.Generate.GRPCServer
-			m.Options.Generate.GRPCServer = s.Options.Generate.GRPCServer
+			m.Options.Generate.GRPCClient = s.Options.Generate.GRPCClient
 			err = parseMethodTags(m, tags)
 			if err != nil {
 				return nil, err
