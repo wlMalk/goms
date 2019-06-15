@@ -40,6 +40,7 @@ func generateGRPCTransportServerRegisterSpecialFunc(file *files.GoFile, service 
 	file.AddImport("", service.ImportPath, "/pkg/transport")
 	file.AddImport(serviceNameSnake+"_grpc", service.ImportPath, "/pkg/transport/grpc")
 	file.AddImport("goms_grpc", "github.com/wlMalk/goms/goms/transport/grpc")
+	file.AddImport("pb", service.ImportPath, "/pkg/protobuf/", strings.ToLower(strings.ToSnakeCase(service.Name)))
 	file.Pf("func RegisterSpecial(server *goms_grpc.Server, endpoints *transport.%s, optionsFunc func(method string) (opts []kit_grpc.ServerOption)) {", serviceName)
 	file.Pf("handler := &serverHandler{")
 	for _, method := range helpers.GetMethodsWithGRPCServerEnabled(service) {
