@@ -24,17 +24,9 @@ func generateHTTPTransportServerRegisterFunc(file *files.GoFile, service *types.
 	file.AddImport(serviceNameSnake+"_http", service.ImportPath, "/pkg/service/transport/http")
 	file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
 	file.Pf("func Register(server *goms_http.Server, endpoints *transport.%s, opts ...kit_http.ServerOption) {", serviceName)
-	for _, method := range helpers.GetMethodsWithHTTPServerEnabled(service) {
-		methodName := strings.ToUpperFirst(method.Name)
-		methodHTTPMethod := method.Options.HTTP.Method
-		methodURI := getMethodURI(method)
-		file.Pf("server.RegisterMethod(\"%s\", \"%s\", kit_http.NewServer(", methodHTTPMethod, methodURI)
-		file.Pf("endpoints.%s,", methodName)
-		file.Pf("%s_http.Decode%sRequest,", serviceNameSnake, methodName)
-		file.Pf("%s_http.Encode%sResponse,", serviceNameSnake, methodName)
-		file.Pf("opts...),")
-		file.Pf(")")
-	}
+	file.Pf("RegisterSpecial(server, endpoints, func(_ string) []kit_http.ServerOption {")
+	file.Pf("return opts")
+	file.Pf("})")
 	file.Pf("}")
 	file.Pf("")
 }
