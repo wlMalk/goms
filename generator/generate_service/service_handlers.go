@@ -32,12 +32,6 @@ func generateServiceHandlerTypes(file *files.GoFile, service *types.Service) {
 		file.Pf("%sHandler", methodName)
 	}
 	file.Pf("}")
-	file.Pf("RequestHandler interface {")
-	for _, method := range service.Methods {
-		methodName := strings.ToUpperFirst(method.Name)
-		file.Pf("%sRequestHandler", methodName)
-	}
-	file.Pf("}")
 	file.Pf("RequestResponseHandler interface {")
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
@@ -47,7 +41,7 @@ func generateServiceHandlerTypes(file *files.GoFile, service *types.Service) {
 	file.Pf("EndpointHandler interface {")
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
-		file.Pf("%s(ctx context.Context, req interface{}) (res interface{}, err error)", methodName)
+		file.Pf("%sEndpointHandler", methodName)
 	}
 	file.Pf("}")
 	file.Pf(")")
@@ -68,9 +62,6 @@ func generateMethodHandlerTypes(file *files.GoFile, method *types.Method) {
 		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
-	file.Pf("%sRequestHandler interface {", methodName)
-	file.Pf("%s(%s) (%s)", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
-	file.Pf("}")
 	results = []string{"err error"}
 	if len(method.Results) > 0 {
 		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
@@ -100,8 +91,6 @@ func generateMethodHandlerFuncTypes(file *files.GoFile, method *types.Method) {
 		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
-	file.Pf("%sRequestHandlerFunc func(%s) (%s)", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
-
 	results = []string{"err error"}
 	if len(method.Results) > 0 {
 		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
@@ -132,10 +121,6 @@ func generateMethodHandlerFuncHandlers(file *files.GoFile, method *types.Method)
 		args = append(args, "req *requests."+methodName+"Request")
 		argsInCall = append(argsInCall, "req")
 	}
-	file.Pf("func (f %sRequestHandlerFunc) %s(%s) (%s) {", methodName, methodName, strs.Join(args, ", "), strs.Join(results, ", "))
-	file.Pf("return f(%s)", strs.Join(argsInCall, ", "))
-	file.Pf("}")
-	file.Pf("")
 	results = []string{"err error"}
 	if len(method.Results) > 0 {
 		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
