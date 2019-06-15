@@ -19,9 +19,14 @@ func GenerateHTTPEncodersFile(base string, path string, name string, service *ty
 func generateHTTPRequestEncoder(file *files.GoFile, method *types.Method) {
 	file.AddImport("", "context")
 	file.AddImport("", "net/http")
+	file.AddImport("", "path")
 	serviceName := strings.ToUpperFirst(method.Service.Name)
 	methodName := strings.ToUpperFirst(method.Name)
+	methodHTTPMethod := method.Options.HTTP.Method
+	methodURI := getMethodURI(method)
 	file.Pf("func Encode%sRequest(ctx context.Context, r *http.Request, request interface{}) error {", methodName)
+	file.Pf("r.Method = \"%s\"", methodHTTPMethod)
+	file.Pf("r.URL.Path = path.Join(r.URL.Path, \"%s\")", methodURI)
 	if len(method.Arguments) > 0 {
 		file.AddImport("http_requests", method.Service.ImportPath, "/pkg/transport/http/requests")
 		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
