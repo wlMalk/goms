@@ -15,6 +15,9 @@ func GenerateServiceStartCMDFile(base string, path string, name string, service 
 	if helpers.IsServerEnabled(service) {
 		generateServiceMainInterruptHandlerFunc(file, service)
 	}
+	if helpers.IsGRPCServerEnabled(service) {
+		generateServiceMainServeGRPCFunc(file, service)
+	}
 	if helpers.IsHTTPServerEnabled(service) {
 		generateServiceMainServeHTTPFunc(file, service)
 	}
@@ -79,6 +82,11 @@ func generateServiceStartCMDFunc(file *files.GoFile, service *types.Service) {
 		file.AddImport("goms_router", "github.com/wlMalk/goms/goms/transport/http/httprouter")
 		file.AddImport("", "github.com/julienschmidt/httprouter")
 	}
+	if helpers.IsGRPCServerEnabled(service) {
+		file.AddImport(strings.ToSnakeCase(service.Name)+"_grpc_server", service.ImportPath, "/pkg/service/transport/grpc/server")
+		file.AddImport("kit_grpc", "github.com/go-kit/kit/transport/grpc")
+		file.AddImport("goms_grpc", "github.com/wlMalk/goms/goms/transport/grpc")
+	}
 
 	file.Pf("func Start(")
 	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
@@ -127,6 +135,23 @@ func generateServiceStartCMDFunc(file *files.GoFile, service *types.Service) {
 		file.Pf("counterMetric,")
 	}
 	file.Pf(")")
+	if helpers.IsGRPCServerEnabled(service) {
+		file.Pf("")
+		file.Pf("grpcAddr := \":8081\" // TODO: use normal address")
+		file.Pf("g.Go(func() error {")
+		file.Pf("return serveGRPC(")
+		file.Pf("ctx,")
+		file.Pf("&endpoints,")
+		file.Pf("grpcAddr,")
+		if service.Options.Generate.Logger {
+			file.Pf("log.With(logger, \"transport\", \"GRPC\"),")
+		}
+		if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+			file.Pf("tracer,")
+		}
+		file.Pf(")")
+		file.Pf("})")
+	}
 	if helpers.IsHTTPServerEnabled(service) {
 		file.Pf("")
 		file.Pf("httpAddr := \":8080\" // TODO: use normal address")
@@ -245,6 +270,64 @@ func generateServiceMainInterruptHandlerFunc(file *files.GoFile, service *types.
 	file.Pf("return fmt.Errorf(\"signal received: %%v\", sig.String())")
 	file.Pf("case <-ctx.Done():")
 	file.Pf("return errors.New(\"signal listener: context canceled\")")
+	file.Pf("}")
+	file.Pf("}")
+	file.Pf("")
+}
+
+func generateServiceMainServeGRPCFunc(file *files.GoFile, service *types.Service) {
+	serviceName := strings.ToUpperFirst(service.Name)
+	serviceNameSnake := strings.ToSnakeCase(service.Name)
+	file.Pf("func serveGRPC(")
+	file.Pf("ctx context.Context,")
+	file.Pf("endpoints *transport.%s,", serviceName)
+	file.Pf("addr string,")
+	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+		file.Pf("logger log.Logger,")
+	}
+	if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+		file.Pf("tracer opentracinggo.Tracer,")
+	}
+	file.Pf(") error {")
+	file.Pf("listener, err := net.Listen(\"tcp\", addr)")
+	file.Pf("if err != nil {")
+	file.Pf("return err")
+	file.Pf("}")
+	file.Pf("")
+	file.Pf("server := goms_grpc.NewServer(listener)")
+	file.Pf("")
+	file.Pf("%s_grpc_server.RegisterSpecial(server, endpoints,", serviceNameSnake)
+	file.Pf("func(method string) (opts []kit_grpc.ServerOption) {")
+	file.Pf("opts = append(")
+	file.Pf("opts, kit_grpc.ServerBefore(")
+	if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+		file.Pf("opentracing.GRPCToContext(tracer, method, logger),")
+	}
+	file.Pf("goms_grpc.MethodInjector(\"%s\", method),", helpers.GetName(serviceName, service.Alias))
+	file.Pf("goms_grpc.RequestIDCreator(),")
+	file.Pf("goms_grpc.CorrelationIDExtractor(),")
+	if helpers.IsLoggingEnabled(service) {
+		file.Pf("goms_grpc.LoggerInjector(logger),")
+	}
+	file.Pf("),")
+	file.Pf(")")
+	file.Pf("return")
+	file.Pf("},")
+	file.Pf(")")
+	file.Pf("")
+	if service.Options.Generate.Logger {
+		file.Pf("logger.Log(\"listening on\", addr)")
+	}
+	file.Pf("ch := make(chan error)")
+	file.Pf("go func() {")
+	file.Pf("ch <- server.Serve()")
+	file.Pf("}()")
+	file.Pf("select {")
+	file.Pf("case err := <-ch:")
+	file.Pf("return fmt.Errorf(\"grpc server: serve: %%v\", err)")
+	file.Pf("case <-ctx.Done():")
+	file.Pf("server.GracefulStop()")
+	file.Pf("return errors.New(\"grpc server: context canceled\")")
 	file.Pf("}")
 	file.Pf("}")
 	file.Pf("")
