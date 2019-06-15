@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"net"
 	"strings"
 
 	"github.com/wlMalk/goms/goms/correlation"
@@ -11,14 +12,20 @@ import (
 
 	"github.com/go-kit/kit/log"
 	kit_grpc "github.com/go-kit/kit/transport/grpc"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
 type Server struct {
+	Listener net.Listener
+	Server   *grpc.Server
 }
 
-func NewServer() *Server {
-	return &Server{}
+func NewServer(listener net.Listener, opts ...grpc.ServerOption) *Server {
+	return &Server{
+		Listener: listener,
+		Server:   grpc.NewServer(opts...),
+	}
 }
 
 func LoggerInjector(logger log.Logger) kit_grpc.ServerRequestFunc {
