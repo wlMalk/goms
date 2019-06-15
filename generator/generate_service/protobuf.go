@@ -10,6 +10,8 @@ import (
 func GenerateProtoBufServiceDefinitionsFile(base string, path string, name string, service *types.Service) *files.ProtoFile {
 	file := files.NewProtoFile(base, path, name, true, false)
 	file.Pkg = strings.ToLower(strings.ToSnakeCase(service.Name))
+	file.Pf("option go_package = \"%s/pkg/protobuf/%s\";", service.ImportPath, file.Pkg)
+	file.P("")
 	for _, method := range helpers.GetMethodsWithGRPCEnabled(service) {
 		if len(method.Arguments) > 0 {
 			generateProtoBufMethodRequestDefinition(file, method)
@@ -27,7 +29,7 @@ func generateProtoBufMethodRequestDefinition(file *files.ProtoFile, method *type
 	file.Pf("message %sRequest {", methodName)
 	for i, arg := range method.Arguments {
 		argName := strings.ToUpperFirst(arg.Name)
-		file.Pf("\t%s %s = %d", arg.Type.ProtoBufType(), argName, i+1)
+		file.Pf("\t%s %s = %d;", arg.Type.ProtoBufType(), argName, i+1)
 	}
 	file.Pf("}")
 	file.Pf("")
@@ -38,7 +40,7 @@ func generateProtoBufMethodResponseDefinition(file *files.ProtoFile, method *typ
 	file.Pf("message %sResponse {", methodName)
 	for i, field := range method.Results {
 		fieldName := strings.ToUpperFirst(field.Name)
-		file.Pf("\t%s %s = %d", field.Type.ProtoBufType(), fieldName, i+1)
+		file.Pf("\t%s %s = %d;", field.Type.ProtoBufType(), fieldName, i+1)
 	}
 	file.Pf("}")
 	file.Pf("")
