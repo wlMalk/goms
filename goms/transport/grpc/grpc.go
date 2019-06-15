@@ -28,6 +28,14 @@ func NewServer(listener net.Listener, opts ...grpc.ServerOption) *Server {
 	}
 }
 
+func (s *Server) Serve() error {
+	return s.Server.Serve(s.Listener)
+}
+
+func (s *Server) GracefulStop() {
+	s.Server.GracefulStop()
+}
+
 func LoggerInjector(logger log.Logger) kit_grpc.ServerRequestFunc {
 	return func(ctx context.Context, md metadata.MD) context.Context {
 		requestID := request.GetRequestID(ctx)
