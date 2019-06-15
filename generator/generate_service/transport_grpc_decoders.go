@@ -48,7 +48,7 @@ func generateGRPCResponseDecoder(file *files.GoFile, method *types.Method) {
 		file.Pf("if res == nil {")
 		file.Pf("return nil, errors.InvalidResponse(\"%s\", \"%s\")", helpers.GetName(serviceName, method.Service.Alias), helpers.GetName(methodName, method.Alias))
 		file.Pf("}")
-		file.Pf("responses.%sFromProto(req.(*pb.%sResponse))", methodName, methodName)
+		file.Pf("return responses.%sFromProto(res.(*pb.%sResponse))", methodName, methodName)
 	} else {
 		file.Pf("return nil, nil")
 	}
