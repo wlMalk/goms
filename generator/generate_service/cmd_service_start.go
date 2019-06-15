@@ -38,7 +38,7 @@ func generateServiceStartCMDFunc(file *files.GoFile, service *types.Service) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers/converters")
-	file.AddImport("", service.ImportPath, "/pkg/service/transport")
+	file.AddImport("", service.ImportPath, "/pkg/transport")
 	file.AddImport("", service.ImportPath, "/"+strings.ToSnakeCase(service.Name))
 
 	if helpers.IsServerEnabled(service) {
@@ -76,14 +76,15 @@ func generateServiceStartCMDFunc(file *files.GoFile, service *types.Service) {
 		file.AddImport("", "github.com/sony/gobreaker")
 	}
 	if helpers.IsHTTPServerEnabled(service) {
-		file.AddImport(strings.ToSnakeCase(service.Name)+"_http_server", service.ImportPath, "/pkg/service/transport/http/server")
+		file.AddImport(strings.ToSnakeCase(service.Name)+"_http_server", service.ImportPath, "/pkg/transport/http/server")
 		file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
 		file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
 		file.AddImport("goms_router", "github.com/wlMalk/goms/goms/transport/http/httprouter")
 		file.AddImport("", "github.com/julienschmidt/httprouter")
 	}
 	if helpers.IsGRPCServerEnabled(service) {
-		file.AddImport(strings.ToSnakeCase(service.Name)+"_grpc_server", service.ImportPath, "/pkg/service/transport/grpc/server")
+		file.AddImport("", "net")
+		file.AddImport(strings.ToSnakeCase(service.Name)+"_grpc_server", service.ImportPath, "/pkg/transport/grpc/server")
 		file.AddImport("kit_grpc", "github.com/go-kit/kit/transport/grpc")
 		file.AddImport("goms_grpc", "github.com/wlMalk/goms/goms/transport/grpc")
 	}

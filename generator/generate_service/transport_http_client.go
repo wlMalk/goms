@@ -41,7 +41,7 @@ func generateHTTPTransportClientNewFunc(file *files.GoFile, service *types.Servi
 	file.AddImport("", "net/url")
 	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers/converters")
-	file.AddImport(serviceNameSnake+"_http", service.ImportPath, "/pkg/service/transport/http")
+	file.AddImport(serviceNameSnake+"_http", service.ImportPath, "/pkg/transport/http")
 	file.Pf("func New(u *url.URL, opts ...kit_http.ClientOption) *Client {")
 	file.Pf("return &Client{")
 	for _, method := range service.Methods {
