@@ -61,6 +61,7 @@ func GenerateService(s *types.Service) (files files.Files, err error) {
 	}
 	if helpers.IsGRPCClientEnabled(s) {
 		files = append(files, generate_service.GenerateGRPCClientFile(s.Path, filepath.Join("pkg", "transport", "grpc", "client"), "client.goms", s))
+		files = append(files, generate_service.GenerateGlobalGRPCClientFile(s.Path, filepath.Join("clients", "grpc", serviceNameSnake), "client.goms", s))
 	}
 
 	if helpers.IsHTTPServerEnabled(s) || helpers.IsHTTPClientEnabled(s) {
