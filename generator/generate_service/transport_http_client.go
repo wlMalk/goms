@@ -16,6 +16,11 @@ func GenerateHTTPClientFile(base string, path string, name string, service *type
 	for _, method := range helpers.GetMethodsWithHTTPClientEnabled(service) {
 		generateHTTPTransportClientMethodFunc(file, method)
 	}
+	return file
+}
+
+func GenerateGlobalHTTPClientFile(base string, path string, name string, service *types.Service) *files.GoFile {
+	file := files.NewGoFile(base, path, name, false, false)
 	generateHTTPTransportClientGlobalVar(file, service)
 	for _, method := range helpers.GetMethodsWithHTTPClientEnabled(service) {
 		generateHTTPTransportClientGlobalFunc(file, method)
@@ -74,18 +79,19 @@ func generateHTTPTransportClientMethodFunc(file *files.GoFile, method *types.Met
 }
 
 func generateHTTPTransportClientGlobalVar(file *files.GoFile, service *types.Service) {
-	file.Pf("var client *Client = New(nil)")
+	file.AddImport("", service.ImportPath, "/pkg/transport/http/client")
+	file.Pf("var c *client.Client = client.New(nil)")
 	file.Pf("")
 }
 
 func generateHTTPTransportClientGlobalFunc(file *files.GoFile, method *types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
-	lowerMethodName := strings.ToLowerFirst(method.Name)
+	file.AddImport("", "context")
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
 	results := append(helpers.GetMethodResults(method.Results), "err error")
 	argsInCall := append([]string{"ctx"}, helpers.GetMethodArgumentsInCall(method.Arguments)...)
 	file.Pf("func %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
-	file.Pf("return client.%s.%s(%s)", lowerMethodName, methodName, strs.Join(argsInCall, ", "))
+	file.Pf("return c.%s(%s)", methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
 }

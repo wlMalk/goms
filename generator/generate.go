@@ -54,6 +54,7 @@ func GenerateService(s *types.Service) (files files.Files, err error) {
 	}
 	if helpers.IsHTTPClientEnabled(s) {
 		files = append(files, generate_service.GenerateHTTPClientFile(s.Path, filepath.Join("pkg", "transport", "http", "client"), "client.goms", s))
+		files = append(files, generate_service.GenerateGlobalHTTPClientFile(s.Path, filepath.Join("clients", "http", serviceNameSnake), "client.goms", s))
 	}
 
 	if helpers.IsGRPCServerEnabled(s) {
