@@ -240,13 +240,19 @@ func cleanComments(comments []string) (tags []string, docs []string) {
 		comments[i] = strs.TrimSpace(comments[i])
 	}
 	comments = strings.SplitS(strs.Join(comments, " "), " ")
+	ignoring := false
 	for i := range comments {
 		comments[i] = strs.TrimSpace(comments[i])
-		if comments[i][0] == '@' {
+		if comments[i] == "##" {
+			ignoring = true
+			continue
+		}
+		if comments[i][0] == '@' && !ignoring {
 			tags = append(tags, comments[i])
-		} else {
+		} else if !ignoring && !strs.HasPrefix(comments[i], "##@") {
 			docs = append(docs, comments[i])
 		}
+		ignoring = false
 	}
 	return strings.SplitS(strs.Join(tags, " "), " "), limitLineLength(strs.Join(docs, " "), 80)
 }
