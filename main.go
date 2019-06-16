@@ -60,7 +60,9 @@ func main() {
 		fail(err)
 	}
 
-	services, err := parser.Parse(file)
+	p := parser.Default()
+
+	services, err := p.Parse(file)
 	if err != nil {
 		fail(err)
 	}
