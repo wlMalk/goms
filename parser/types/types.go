@@ -4,6 +4,10 @@ import (
 	"fmt"
 )
 
+type TagOptions map[string]interface{}
+
+type TagsOptions map[string]TagOptions
+
 type Service struct {
 	Name       string
 	Alias      string
@@ -15,7 +19,8 @@ type Service struct {
 	Structs    []*Struct
 	Enums      []*Enum
 
-	Options ServiceOptions
+	Options      ServiceOptions
+	OtherOptions TagsOptions
 }
 
 type ServiceOptions struct {
@@ -96,7 +101,8 @@ type Method struct {
 	Arguments []*Argument
 	Results   []*Field
 
-	Options methodOptions
+	Options      methodOptions
+	OtherOptions TagsOptions
 }
 
 type methodOptions struct {
@@ -258,7 +264,8 @@ type Argument struct {
 	IsOptional   bool
 	DefaultValue string
 
-	Options ArgumentOptions
+	Options      ArgumentOptions
+	OtherOptions TagsOptions
 }
 
 type ArgumentOptions struct {
