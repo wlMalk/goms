@@ -4,10 +4,6 @@ import (
 	"fmt"
 )
 
-type TagOptions map[string]interface{}
-
-type TagsOptions map[string]TagOptions
-
 type Service struct {
 	Name       string
 	Alias      string
@@ -21,44 +17,6 @@ type Service struct {
 
 	Options      ServiceOptions
 	OtherOptions TagsOptions
-}
-
-type ServiceOptions struct {
-	HTTP     httpServiceOptions
-	GRPC     grpcServiceOptions
-	Generate generateServiceOptions
-}
-
-type httpServiceOptions struct {
-	URIPrefix string
-}
-
-type grpcServiceOptions struct {
-}
-
-type generateServiceOptions struct {
-	Logger           bool
-	CircuitBreaking  bool
-	RateLimiting     bool
-	Recovering       bool
-	Caching          bool
-	Logging          bool
-	Tracing          bool
-	ServiceDiscovery bool
-	ProtoBuf         bool
-	Main             bool
-	Validators       bool
-	Validating       bool
-	Middleware       bool
-	MethodStubs      bool
-	FrequencyMetric  bool
-	LatencyMetric    bool
-	CounterMetric    bool
-	HTTPServer       bool
-	HTTPClient       bool
-	GRPCServer       bool
-	GRPCClient       bool
-	Dockerfile       bool
 }
 
 type Version struct {
@@ -94,59 +52,14 @@ func (v *Version) FullStringSpecial(sep string) string {
 }
 
 type Method struct {
-	Service   *Service
 	Name      string
 	Alias     string
 	Docs      []string
 	Arguments []*Argument
 	Results   []*Field
 
-	Options      methodOptions
+	Options      MethodOptions
 	OtherOptions TagsOptions
-}
-
-type methodOptions struct {
-	HTTP     httpMethodOptions
-	GRPC     grpcMethodOptions
-	Logging  loggingMethodOptions
-	Generate generateMethodOptions
-}
-
-type generateMethodOptions struct {
-	CircuitBreaking bool
-	RateLimiting    bool
-	Recovering      bool
-	Caching         bool
-	Logging         bool
-	Validators      bool
-	Validating      bool
-	Middleware      bool
-	MethodStubs     bool
-	Tracing         bool
-	FrequencyMetric bool
-	LatencyMetric   bool
-	CounterMetric   bool
-	HTTPServer      bool
-	HTTPClient      bool
-	GRPCServer      bool
-	GRPCClient      bool
-}
-
-type httpMethodOptions struct {
-	Method string
-	URI    string
-	AbsURI string
-}
-
-type grpcMethodOptions struct {
-}
-
-type loggingMethodOptions struct {
-	IgnoredArguments []string
-	IgnoredResults   []string
-	LenArguments     []string
-	LenResults       []string
-	IgnoreError      bool
 }
 
 type Type struct {
@@ -266,14 +179,6 @@ type Argument struct {
 
 	Options      ArgumentOptions
 	OtherOptions TagsOptions
-}
-
-type ArgumentOptions struct {
-	HTTP HTTPArgumentOptions
-}
-
-type HTTPArgumentOptions struct {
-	Origin string
 }
 
 type Field struct {

@@ -11,7 +11,6 @@ import (
 )
 
 func setUpMethodFromService(s *types.Service, m *types.Method) {
-	m.Service = s
 	m.Options.Generate.Caching = s.Options.Generate.Caching
 	m.Options.Generate.Logging = s.Options.Generate.Logging
 	m.Options.Generate.MethodStubs = s.Options.Generate.MethodStubs
