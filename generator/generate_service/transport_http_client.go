@@ -3,32 +3,13 @@ package generate_service
 import (
 	strs "strings"
 
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateHTTPClientFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, true, false)
-	generateHTTPTransportClientStruct(file, service)
-	generateHTTPTransportClientNewFunc(file, service)
-	for _, method := range helpers.GetMethodsWithHTTPClientEnabled(service) {
-		generateHTTPTransportClientMethodFunc(file, method)
-	}
-	return file
-}
-
-func GenerateGlobalHTTPClientFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, false, false)
-	generateHTTPTransportClientGlobalVar(file, service)
-	for _, method := range helpers.GetMethodsWithHTTPClientEnabled(service) {
-		generateHTTPTransportClientGlobalFunc(file, method)
-	}
-	return file
-}
-
-func generateHTTPTransportClientStruct(file *files.GoFile, service *types.Service) {
+func HTTPTransportClientStruct(file file.File, service types.Service) {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.Pf("type Client struct {")
@@ -41,7 +22,7 @@ func generateHTTPTransportClientStruct(file *files.GoFile, service *types.Servic
 	file.Pf("")
 }
 
-func generateHTTPTransportClientNewFunc(file *files.GoFile, service *types.Service) {
+func HTTPTransportClientNewFunc(file file.File, service types.Service) {
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("", "net/url")
 	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
@@ -66,7 +47,7 @@ func generateHTTPTransportClientNewFunc(file *files.GoFile, service *types.Servi
 	file.Pf("")
 }
 
-func generateHTTPTransportClientMethodFunc(file *files.GoFile, method *types.Method) {
+func HTTPTransportClientMethodFunc(file file.File, service types.Service, method types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
@@ -78,13 +59,13 @@ func generateHTTPTransportClientMethodFunc(file *files.GoFile, method *types.Met
 	file.Pf("")
 }
 
-func generateHTTPTransportClientGlobalVar(file *files.GoFile, service *types.Service) {
+func HTTPTransportClientGlobalVar(file file.File, service types.Service) {
 	file.AddImport("", service.ImportPath, "/pkg/transport/http/client")
 	file.Pf("var c *client.Client = client.New(nil)")
 	file.Pf("")
 }
 
-func generateHTTPTransportClientGlobalFunc(file *files.GoFile, method *types.Method) {
+func HTTPTransportClientGlobalFunc(file file.File, service types.Service, method types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.AddImport("", "context")
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)

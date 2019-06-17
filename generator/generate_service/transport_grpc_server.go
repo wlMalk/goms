@@ -1,24 +1,13 @@
 package generate_service
 
 import (
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateGRPCServerFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, true, false)
-	generateGRPCTransportServerRegisterFunc(file, service)
-	generateGRPCTransportServerRegisterSpecialFunc(file, service)
-	generateGRPCTransportServerHandlerStruct(file, service)
-	for _, method := range helpers.GetMethodsWithGRPCServerEnabled(service) {
-		generateGRPCTransportServerHandlerMethodFunc(file, method)
-	}
-	return file
-}
-
-func generateGRPCTransportServerRegisterFunc(file *files.GoFile, service *types.Service) {
+func GRPCTransportServerRegisterFunc(file file.File, service types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_grpc", "github.com/go-kit/kit/transport/grpc")
@@ -33,7 +22,7 @@ func generateGRPCTransportServerRegisterFunc(file *files.GoFile, service *types.
 	file.Pf("")
 }
 
-func generateGRPCTransportServerRegisterSpecialFunc(file *files.GoFile, service *types.Service) {
+func GRPCTransportServerRegisterSpecialFunc(file file.File, service types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_grpc", "github.com/go-kit/kit/transport/grpc")
@@ -58,7 +47,7 @@ func generateGRPCTransportServerRegisterSpecialFunc(file *files.GoFile, service 
 	file.Pf("")
 }
 
-func generateGRPCTransportServerHandlerStruct(file *files.GoFile, service *types.Service) {
+func GRPCTransportServerHandlerStruct(file file.File, service types.Service) {
 	file.Pf("type serverHandler struct {")
 	for _, method := range helpers.GetMethodsWithGRPCServerEnabled(service) {
 		lowerMethodName := strings.ToLowerFirst(method.Name)
@@ -68,12 +57,12 @@ func generateGRPCTransportServerHandlerStruct(file *files.GoFile, service *types
 	file.Pf("")
 }
 
-func generateGRPCTransportServerHandlerMethodFunc(file *files.GoFile, method *types.Method) {
+func GRPCTransportServerHandlerMethodFunc(file file.File, service types.Service, method types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	file.AddImport("", "context")
 	if len(method.Arguments) > 0 && len(method.Results) > 0 {
-		file.AddImport("pb", method.Service.ImportPath, "pkg/protobuf", strings.ToLower(strings.ToSnakeCase(method.Service.Name)))
+		file.AddImport("pb", service.ImportPath, "pkg/protobuf", strings.ToLower(strings.ToSnakeCase(service.Name)))
 		file.Pf("func (h *serverHandler) %s(ctx context.Context, req *pb.%sRequest) (*pb.%sResponse, error) {", methodName, methodName, methodName)
 	} else if len(method.Arguments) > 0 {
 		file.AddImport("empty", "github.com/golang/protobuf/ptypes/empty")

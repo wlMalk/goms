@@ -1,24 +1,13 @@
 package generate_service
 
 import (
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateServiceMiddlewareFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, true, false)
-	generateServiceMiddlewareTypes(file, service)
-	generateServiceMiddlewareChainFunc(file, service)
-	generateServiceRequestResponseMiddlewareChainFunc(file, service)
-	generateServiceApplyMiddlewareFunc(file, service)
-	generateServiceApplyMiddlewareSpecialFunc(file, service)
-	generateServiceApplyMiddlewareConditionalFunc(file, service)
-	return file
-}
-
-func generateServiceMiddlewareTypes(file *files.GoFile, service *types.Service) {
+func ServiceMiddlewareTypes(file file.File, service types.Service) {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("type (")
 	file.P("Middleware                func(handlers.Handler) handlers.Handler")
@@ -27,7 +16,7 @@ func generateServiceMiddlewareTypes(file *files.GoFile, service *types.Service) 
 	file.P("")
 }
 
-func generateServiceMiddlewareChainFunc(file *files.GoFile, service *types.Service) {
+func ServiceMiddlewareChainFunc(file file.File, service types.Service) {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func Chain(outer Middleware, others ...Middleware) Middleware {")
 	file.P("return func(next handlers.Handler) handlers.Handler {")
@@ -40,7 +29,7 @@ func generateServiceMiddlewareChainFunc(file *files.GoFile, service *types.Servi
 	file.P("")
 }
 
-func generateServiceRequestResponseMiddlewareChainFunc(file *files.GoFile, service *types.Service) {
+func ServiceRequestResponseMiddlewareChainFunc(file file.File, service types.Service) {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func ChainRequestResponse(outer RequestResponseMiddleware, others ...RequestResponseMiddleware) RequestResponseMiddleware {")
 	file.P("return func(next handlers.RequestResponseHandler) handlers.RequestResponseHandler {")
@@ -53,7 +42,7 @@ func generateServiceRequestResponseMiddlewareChainFunc(file *files.GoFile, servi
 	file.P("")
 }
 
-func generateServiceApplyMiddlewareFunc(file *files.GoFile, service *types.Service) {
+func ServiceApplyMiddlewareFunc(file file.File, service types.Service) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	file.AddImport("", service.ImportPath, "/pkg/transport")
 	serviceName := strings.ToUpperFirst(service.Name)
@@ -65,7 +54,7 @@ func generateServiceApplyMiddlewareFunc(file *files.GoFile, service *types.Servi
 	file.Pf("")
 }
 
-func generateServiceApplyMiddlewareSpecialFunc(file *files.GoFile, service *types.Service) {
+func ServiceApplyMiddlewareSpecialFunc(file file.File, service types.Service) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	file.AddImport("", service.ImportPath, "/pkg/transport")
 	serviceName := strings.ToUpperFirst(service.Name)
@@ -83,7 +72,7 @@ func generateServiceApplyMiddlewareSpecialFunc(file *files.GoFile, service *type
 	file.Pf("}")
 	file.Pf("")
 }
-func generateServiceApplyMiddlewareConditionalFunc(file *files.GoFile, service *types.Service) {
+func ServiceApplyMiddlewareConditionalFunc(file file.File, service types.Service) {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	file.AddImport("", service.ImportPath, "/pkg/transport")
 	file.AddImport("goms_endpoint", "github.com/wlMalk/goms/goms/endpoint")

@@ -3,33 +3,13 @@ package generate_service
 import (
 	strs "strings"
 
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateLoggingMiddlewareFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, true, false)
-	if helpers.HasLoggeds(service) || helpers.HasLoggedErrors(service) {
-		generateLoggingMiddlewareStructs(file, service)
-		generateLoggingMiddlewareNewFunc(file, service)
-	}
-	for _, method := range service.Methods {
-		if helpers.HasLoggeds(service) {
-			generateLoggingMiddlewareMethodHandler(file, method)
-		}
-		if helpers.HasLoggedErrors(service) {
-			generateErrorLoggingMiddlewareMethodHandler(file, method)
-		}
-	}
-	if helpers.HasLoggeds(service) {
-		generateLoggingMiddlewareTypes(file, service)
-	}
-	return file
-}
-
-func generateLoggingMiddlewareStructs(file *files.GoFile, service *types.Service) {
+func LoggingMiddlewareStructs(file file.File, service types.Service) {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	if helpers.HasLoggeds(service) {
 		file.Pf("type loggingMiddleware struct {")
@@ -45,7 +25,7 @@ func generateLoggingMiddlewareStructs(file *files.GoFile, service *types.Service
 	}
 }
 
-func generateLoggingMiddlewareNewFunc(file *files.GoFile, service *types.Service) {
+func LoggingMiddlewareNewFunc(file file.File, service types.Service) {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	if helpers.HasLoggeds(service) {
 		file.Pf("func LoggingMiddleware() RequestResponseMiddleware {")
@@ -65,19 +45,19 @@ func generateLoggingMiddlewareNewFunc(file *files.GoFile, service *types.Service
 	}
 }
 
-func generateLoggingMiddlewareMethodHandler(file *files.GoFile, method *types.Method) {
+func LoggingMiddlewareMethodHandler(file file.File, service types.Service, method types.Method) {
 	file.AddImport("", "context")
 	file.AddImport("", "github.com/wlMalk/goms/goms/log")
 	methodName := strings.ToUpperFirst(method.Name)
-	serviceName := strings.ToUpperFirst(method.Service.Name)
+	serviceName := strings.ToUpperFirst(service.Name)
 	args := []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
+		file.AddImport("", service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	results := []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
+		file.AddImport("", service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (m *loggingMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
@@ -85,7 +65,7 @@ func generateLoggingMiddlewareMethodHandler(file *files.GoFile, method *types.Me
 		file.Pf("defer func() {")
 		file.Pf("if err == nil {")
 		file.Pf("log.Info(ctx,")
-		file.Pf("\"service\", \"%s\",", helpers.GetName(serviceName, method.Service.Alias))
+		file.Pf("\"service\", \"%s\",", helpers.GetName(serviceName, service.Alias))
 		file.Pf("\"method\", \"%s\",", helpers.GetName(methodName, method.Alias))
 		if helpers.HasLoggedArguments(method) {
 			file.Pf("\"request\", log%sRequest{", methodName)
@@ -124,18 +104,18 @@ func generateLoggingMiddlewareMethodHandler(file *files.GoFile, method *types.Me
 	file.Pf("")
 }
 
-func generateErrorLoggingMiddlewareMethodHandler(file *files.GoFile, method *types.Method) {
+func ErrorLoggingMiddlewareMethodHandler(file file.File, service types.Service, method types.Method) {
 	file.AddImport("", "context")
 	file.AddImport("", "github.com/wlMalk/goms/goms/log")
 	methodName := strings.ToUpperFirst(method.Name)
 	args := []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
+		file.AddImport("", service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	results := []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
+		file.AddImport("", service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func (m *errorLoggingMiddleware) %s(%s) (%s) {", methodName, strs.Join(args, ", "), strs.Join(results, ", "))
@@ -155,7 +135,7 @@ func generateErrorLoggingMiddlewareMethodHandler(file *files.GoFile, method *typ
 	file.Pf("")
 }
 
-func generateLoggingMiddlewareTypes(file *files.GoFile, service *types.Service) {
+func LoggingMiddlewareTypes(file file.File, service types.Service) {
 	methods := helpers.GetMethodsWithLoggingEnabled(service)
 	if len(methods) > 0 {
 		file.Pf("type (")

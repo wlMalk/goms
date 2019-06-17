@@ -1,35 +1,24 @@
 package generate_service
 
 import (
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateHTTPResponsesFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, true, false)
-	for _, method := range helpers.GetMethodsWithHTTPEnabled(service) {
-		generateHTTPResponse(file, method)
-		generateHTTPResponseNewFunc(file, method)
-		generateHTTPResponseNewHTTPFunc(file, method)
-		generateHTTPResponseToResponseFunc(file, method)
-	}
-	return file
-}
-
-func generateHTTPResponse(file *files.GoFile, method *types.Method) {
+func HTTPResponse(file file.File, service types.Service, method types.Method) {
 	if len(method.Results) == 0 {
 		return
 	}
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("type %sResponse struct {", methodName)
-	generateHTTPResponseFields(file, method.Results)
+	HTTPResponseFields(file, method.Results)
 	file.Pf("}")
 	file.Pf("")
 }
 
-func generateHTTPResponseFields(file *files.GoFile, fields []*types.Field) {
+func HTTPResponseFields(file file.File, fields []*types.Field) {
 	for _, field := range fields {
 		fieldName := strings.ToUpperFirst(field.Name)
 		fieldSpecialName := helpers.GetName(strings.ToLowerFirst(field.Name), field.Alias)
@@ -37,12 +26,12 @@ func generateHTTPResponseFields(file *files.GoFile, fields []*types.Field) {
 	}
 }
 
-func generateHTTPResponseNewFunc(file *files.GoFile, method *types.Method) {
+func HTTPResponseNewFunc(file file.File, service types.Service, method types.Method) {
 	if len(method.Results) == 0 {
 		return
 	}
 	methodName := strings.ToUpperFirst(method.Name)
-	file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
+	file.AddImport("", service.ImportPath, "/pkg/service/responses")
 	file.Pf("func %s(res *responses.%sResponse) *%sResponse {", methodName, methodName, methodName)
 	file.Pf("resp := &%sResponse{}", methodName)
 	for _, res := range method.Results {
@@ -54,7 +43,7 @@ func generateHTTPResponseNewFunc(file *files.GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateHTTPResponseNewHTTPFunc(file *files.GoFile, method *types.Method) {
+func HTTPResponseNewHTTPFunc(file file.File, service types.Service, method types.Method) {
 	if len(method.Results) == 0 {
 		return
 	}
@@ -72,11 +61,11 @@ func generateHTTPResponseNewHTTPFunc(file *files.GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateHTTPResponseToResponseFunc(file *files.GoFile, method *types.Method) {
+func HTTPResponseToResponseFunc(file file.File, service types.Service, method types.Method) {
 	if len(method.Results) == 0 {
 		return
 	}
-	file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
+	file.AddImport("", service.ImportPath, "/pkg/service/responses")
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func (r *%sResponse) Response() *responses.%sResponse {", methodName, methodName)
 	file.Pf("resp := &responses.%sResponse{}", methodName)

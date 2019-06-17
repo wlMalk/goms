@@ -3,20 +3,13 @@ package generate_service
 import (
 	"path"
 
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateHTTPServerFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, true, false)
-	generateHTTPTransportServerRegisterFunc(file, service)
-	generateHTTPTransportServerRegisterSpecialFunc(file, service)
-	return file
-}
-
-func generateHTTPTransportServerRegisterFunc(file *files.GoFile, service *types.Service) {
+func HTTPTransportServerRegisterFunc(file file.File, service types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
@@ -31,7 +24,7 @@ func generateHTTPTransportServerRegisterFunc(file *files.GoFile, service *types.
 	file.Pf("")
 }
 
-func generateHTTPTransportServerRegisterSpecialFunc(file *files.GoFile, service *types.Service) {
+func HTTPTransportServerRegisterSpecialFunc(file file.File, service types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
@@ -42,7 +35,7 @@ func generateHTTPTransportServerRegisterSpecialFunc(file *files.GoFile, service 
 	for _, method := range helpers.GetMethodsWithHTTPServerEnabled(service) {
 		methodName := strings.ToUpperFirst(method.Name)
 		methodHTTPMethod := method.Options.HTTP.Method
-		methodURI := getMethodURI(method)
+		methodURI := getMethodURI(service, method)
 		file.Pf("server.RegisterMethod(\"%s\", \"%s\", kit_http.NewServer(", methodHTTPMethod, methodURI)
 		file.Pf("endpoints.%s,", methodName)
 		file.Pf("%s_http.Decode%sRequest,", serviceNameSnake, methodName)
@@ -54,10 +47,10 @@ func generateHTTPTransportServerRegisterSpecialFunc(file *files.GoFile, service 
 	file.Pf("")
 }
 
-func getMethodURI(method *types.Method) string {
-	serviceNameSnake := strings.ToSnakeCase(method.Service.Name)
-	serviceVersion := "v" + method.Service.Version.String()
-	serviceHTTPURIPrefix := method.Service.Options.HTTP.URIPrefix
+func getMethodURI(service types.Service, method types.Method) string {
+	serviceNameSnake := strings.ToSnakeCase(service.Name)
+	serviceVersion := "v" + service.Version.String()
+	serviceHTTPURIPrefix := service.Options.HTTP.URIPrefix
 	if serviceHTTPURIPrefix == "" {
 		serviceHTTPURIPrefix = serviceNameSnake
 	}

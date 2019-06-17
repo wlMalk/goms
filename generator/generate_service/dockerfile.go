@@ -1,15 +1,13 @@
 package generate_service
 
 import (
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateDockerFile(base string, service *types.Service) *files.TextFile {
+func DockerFileDefinition(file file.File, service types.Service) {
 	serviceNameKebab := strings.ToLower(strings.ToKebabCase(service.Name))
-	file := files.NewTextFile(base, "", "Dockerfile", "", false, false)
-	file.CommentFormat("# %s")
 	path := "/go/src/" + service.ImportPath
 	file.Pf("FROM golang:1.12 as builder")
 	file.Pf("ADD . %s", path)
@@ -22,5 +20,4 @@ func GenerateDockerFile(base string, service *types.Service) *files.TextFile {
 	file.Pf("WORKDIR /%s", serviceNameKebab)
 	file.Pf("EXPOSE 8080")
 	file.Pf("ENTRYPOINT [\"./%s\", \"start\"]", serviceNameKebab)
-	return file
 }

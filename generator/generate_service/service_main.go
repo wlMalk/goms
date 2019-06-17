@@ -3,40 +3,12 @@ package generate_service
 import (
 	"strings"
 
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateServiceMainFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, false, false)
-	file.Pkg = "main"
-
-	if service.Options.Generate.ProtoBuf && (helpers.IsGRPCServerEnabled(service) || helpers.IsGRPCClientEnabled(service)) {
-		file.Pf("//go:generate protoc --go_out=plugins=grpc:%s --proto_path=%s proto/service.goms.proto", strings.TrimSuffix(base, service.ImportPath), base)
-		file.P("")
-	}
-
-	generateServiceMainFunc(file, service)
-	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
-		generateServiceMainInitLoggerFunc(file, service)
-	}
-	if helpers.IsTracingEnabled(service) {
-		generateServiceMainInitTracerFunc(file, service)
-	}
-	if helpers.IsFrequencyMetricEnabled(service) {
-		generateServiceMainInitFrequencyFunc(file, service)
-	}
-	if helpers.IsLatencyMetricEnabled(service) {
-		generateServiceMainInitLatencyFunc(file, service)
-	}
-	if helpers.IsCounterMetricEnabled(service) {
-		generateServiceMainInitCounterFunc(file, service)
-	}
-	return file
-}
-
-func generateServiceMainFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainFunc(file file.File, service types.Service) {
 	file.AddImport("", "io")
 	file.AddImport("", "os")
 	if helpers.IsServerEnabled(service) {
@@ -51,7 +23,10 @@ func generateServiceMainFunc(file *files.GoFile, service *types.Service) {
 	if helpers.IsTracingEnabled(service) {
 		file.AddImport("opentracinggo", "github.com/opentracing/opentracing-go")
 	}
-
+	if service.Options.Generate.ProtoBuf && (helpers.IsGRPCServerEnabled(service) || helpers.IsGRPCClientEnabled(service)) {
+		file.Pf("//go: protoc --go_out=plugins=grpc:%s --proto_path=%s proto/service.goms.proto", strings.TrimSuffix(file.Base(), service.ImportPath), file.Base())
+		file.P("")
+	}
 	file.Pf("func main() {")
 	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
 		file.Pf("logger := InitLogger(os.Stderr)")
@@ -91,7 +66,7 @@ func generateServiceMainFunc(file *files.GoFile, service *types.Service) {
 	file.Pf("")
 }
 
-func generateServiceMainInitLoggerFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainInitLoggerFunc(file file.File, service types.Service) {
 	file.Pf("func InitLogger(writer io.Writer) log.Logger {")
 	file.Pf("logger := log.NewJSONLogger(writer)")
 	file.Pf("logger = log.With(logger, \"@timestamp\", log.DefaultTimestampUTC)")
@@ -101,7 +76,7 @@ func generateServiceMainInitLoggerFunc(file *files.GoFile, service *types.Servic
 	file.Pf("")
 }
 
-func generateServiceMainInitTracerFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainInitTracerFunc(file file.File, service types.Service) {
 	file.Pf("func InitTracer() opentracinggo.Tracer {")
 	file.Pf("// TODO: Initialize tracer")
 	file.Pf("return nil")
@@ -109,7 +84,7 @@ func generateServiceMainInitTracerFunc(file *files.GoFile, service *types.Servic
 	file.Pf("")
 }
 
-func generateServiceMainInitCounterFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainInitCounterFunc(file file.File, service types.Service) {
 	file.Pf("func InitRequestCounterMetric() metrics.Counter {")
 	file.Pf("// TODO: Initialize counterMetric")
 	file.Pf("return nil")
@@ -117,7 +92,7 @@ func generateServiceMainInitCounterFunc(file *files.GoFile, service *types.Servi
 	file.Pf("")
 }
 
-func generateServiceMainInitLatencyFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainInitLatencyFunc(file file.File, service types.Service) {
 	file.Pf("func InitRequestLatencyMetric() metrics.Histogram {")
 	file.Pf("// TODO: Initialize latencyMetric")
 	file.Pf("return nil")
@@ -125,7 +100,7 @@ func generateServiceMainInitLatencyFunc(file *files.GoFile, service *types.Servi
 	file.Pf("")
 }
 
-func generateServiceMainInitFrequencyFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainInitFrequencyFunc(file file.File, service types.Service) {
 	file.Pf("func InitRequestFrequencyMetric() metrics.Gauge {")
 	file.Pf("// TODO: Initialize frequencyMetric")
 	file.Pf("return nil")

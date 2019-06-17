@@ -3,31 +3,19 @@ package generate_service
 import (
 	strs "strings"
 
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateHTTPRequestsFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, true, false)
-	for _, method := range helpers.GetMethodsWithHTTPEnabled(service) {
-		generateHTTPRequest(file, method)
-		generateHTTPRequestNewFunc(file, method)
-		generateHTTPRequestNewHTTPFunc(file, method)
-		generateHTTPRequestToRequestFunc(file, method)
-		generateHTTPRequestToHTTPArgFunc(file, method)
-	}
-	return file
-}
-
-func generateHTTPRequest(file *files.GoFile, method *types.Method) {
+func HTTPRequest(file file.File, service types.Service, method types.Method) {
 	if len(method.Arguments) == 0 {
 		return
 	}
 	if (method.Options.HTTP.Method == "POST" || method.Options.HTTP.Method == "PUT") && hasArgumentsOfOrigin(method.Arguments, "BODY") {
 		file.Pf("type " + method.Name + "RequestBody struct {")
-		generateHTTPRequestArguments(file, getArgumentsOfOrigin(method.Arguments, "BODY"))
+		HTTPRequestArguments(file, getArgumentsOfOrigin(method.Arguments, "BODY"))
 		file.Pf("}")
 		file.Pf("")
 	}
@@ -37,13 +25,13 @@ func generateHTTPRequest(file *files.GoFile, method *types.Method) {
 		file.Pf("")
 	}
 	if hasArgumentsOfOrigin(method.Arguments, "HEADER") {
-		generateHTTPRequestArguments(file, getArgumentsOfOrigin(method.Arguments, "HEADER"))
+		HTTPRequestArguments(file, getArgumentsOfOrigin(method.Arguments, "HEADER"))
 	}
 	if hasArgumentsOfOrigin(method.Arguments, "QUERY") {
-		generateHTTPRequestArguments(file, getArgumentsOfOrigin(method.Arguments, "QUERY"))
+		HTTPRequestArguments(file, getArgumentsOfOrigin(method.Arguments, "QUERY"))
 	}
 	if hasArgumentsOfOrigin(method.Arguments, "PATH") {
-		generateHTTPRequestArguments(file, getArgumentsOfOrigin(method.Arguments, "PATH"))
+		HTTPRequestArguments(file, getArgumentsOfOrigin(method.Arguments, "PATH"))
 	}
 	file.Pf("}")
 	file.Pf("")
@@ -58,7 +46,7 @@ func hasArgumentsOfOrigin(args []*types.Argument, origin string) bool {
 	return false
 }
 
-func generateHTTPRequestArguments(file *files.GoFile, args []*types.Argument) {
+func HTTPRequestArguments(file file.File, args []*types.Argument) {
 	for _, arg := range args {
 		argName := strings.ToUpperFirst(arg.Name)
 		argSpecialName := helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias)
@@ -76,12 +64,12 @@ func getArgumentsOfOrigin(args []*types.Argument, origin string) (rArgs []*types
 	return
 }
 
-func generateHTTPRequestNewFunc(file *files.GoFile, method *types.Method) {
+func HTTPRequestNewFunc(file file.File, service types.Service, method types.Method) {
 	if len(method.Arguments) == 0 {
 		return
 	}
 	methodName := strings.ToUpperFirst(method.Name)
-	file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
+	file.AddImport("", service.ImportPath, "/pkg/service/requests")
 	file.Pf("func %s(req *requests.%sRequest) *%sRequest {", methodName, methodName, methodName)
 	file.Pf("r := &%sRequest{}", methodName)
 	for _, arg := range method.Arguments {
@@ -97,23 +85,23 @@ func generateHTTPRequestNewFunc(file *files.GoFile, method *types.Method) {
 	file.Pf("")
 }
 
-func generateHTTPRequestNewHTTPFunc(file *files.GoFile, method *types.Method) {
+func HTTPRequestNewHTTPFunc(file file.File, service types.Service, method types.Method) {
 	if len(method.Arguments) == 0 {
 		return
 	}
 	file.AddImport("", "net/http")
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func %sFromHTTP(r *http.Request) (*%sRequest, error) {", methodName, methodName)
-	generateHTTPRequestExtractorLogic(file, method)
+	HTTPRequestExtractorLogic(file, service, method)
 	file.Pf("}")
 	file.Pf("")
 }
 
-func generateHTTPRequestToRequestFunc(file *files.GoFile, method *types.Method) {
+func HTTPRequestToRequestFunc(file file.File, service types.Service, method types.Method) {
 	if len(method.Arguments) == 0 {
 		return
 	}
-	file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
+	file.AddImport("", service.ImportPath, "/pkg/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func (r *%sRequest) Request() *requests.%sRequest {", methodName, methodName)
 	file.Pf("req := &requests.%sRequest{}", methodName)
@@ -130,12 +118,12 @@ func generateHTTPRequestToRequestFunc(file *files.GoFile, method *types.Method) 
 	file.Pf("")
 }
 
-func generateHTTPRequestToHTTPArgFunc(file *files.GoFile, method *types.Method) {
+func HTTPRequestToHTTPArgFunc(file file.File, service types.Service, method types.Method) {
 	if len(method.Arguments) == 0 {
 		return
 	}
 	file.AddImport("", "net/http")
-	file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
+	file.AddImport("", service.ImportPath, "/pkg/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func (r *%sRequest) ToHTTP(req *http.Request) error {", methodName)
 	file.Pf("var err error")
@@ -211,7 +199,7 @@ func generateHTTPRequestToHTTPArgFunc(file *files.GoFile, method *types.Method) 
 				file.Pf("return err")
 				file.Pf("}")
 			}
-			file.Pf("goms_http.FormatURI(\"%s\",", getMethodURI(method))
+			file.Pf("goms_http.FormatURI(\"%s\",", getMethodURI(service, method))
 			for _, arg := range getArgumentsOfOrigin(method.Arguments, "PATH") {
 				argSpecialName := helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias)
 				lowerArgName := strings.ToLowerFirst(arg.Name)
@@ -225,7 +213,7 @@ func generateHTTPRequestToHTTPArgFunc(file *files.GoFile, method *types.Method) 
 	file.Pf("")
 }
 
-func generateHTTPRequestExtractorLogic(file *files.GoFile, method *types.Method) {
+func HTTPRequestExtractorLogic(file file.File, service types.Service, method types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("var err error")
 	file.Pf("req := &%sRequest{}", methodName)
@@ -240,34 +228,34 @@ func generateHTTPRequestExtractorLogic(file *files.GoFile, method *types.Method)
 	if hasArgumentsOfOrigin(method.Arguments, "HEADER") ||
 		hasArgumentsOfOrigin(method.Arguments, "QUERY") ||
 		hasArgumentsOfOrigin(method.Arguments, "PATH") {
-		generateHTTPRequestExtractors(file, method.Arguments)
+		HTTPRequestExtractors(file, method.Arguments)
 	}
 	file.Pf("return req, err")
 }
 
-func generateHTTPRequestExtractors(file *files.GoFile, args []*types.Argument) {
+func HTTPRequestExtractors(file file.File, args []*types.Argument) {
 	if hasArgumentsOfOrigin(args, "QUERY") {
 		file.Pf("query := r.URL.Query()")
 		for _, arg := range getArgumentsOfOrigin(args, "QUERY") {
-			generateQueryExtractor(file, arg)
+			QueryExtractor(file, arg)
 		}
 	}
 	if hasArgumentsOfOrigin(args, "HEADER") {
 		file.Pf("header := r.Header")
 		for _, arg := range getArgumentsOfOrigin(args, "HEADER") {
-			generateHeaderExtractor(file, arg)
+			HeaderExtractor(file, arg)
 		}
 	}
 	if hasArgumentsOfOrigin(args, "PATH") {
 		file.AddImport("goms_http", "github.com/wlMalk/goms/goms/transport/http")
 		file.Pf("pathParams:=goms_http.GetParams(r.Context())")
 		for _, arg := range getArgumentsOfOrigin(args, "PATH") {
-			generatePathExtractor(file, arg)
+			PathExtractor(file, arg)
 		}
 	}
 }
 
-func generateQueryExtractor(file *files.GoFile, arg *types.Argument) {
+func QueryExtractor(file file.File, arg *types.Argument) {
 	argName := strings.ToUpperFirst(arg.Name)
 	lowerArgName := strings.ToLowerFirst(arg.Name)
 	argNameSnake := strings.ToSnakeCase(helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias))
@@ -277,7 +265,7 @@ func generateQueryExtractor(file *files.GoFile, arg *types.Argument) {
 		file.Pf("var values %s", arg.Type.GoType())
 		file.Pf("for _,v:=range %ss {", lowerArgName)
 		file.Pf("if len(v) > 0 {")
-		generateArgumentConverter(file, arg, "vs", "v")
+		ArgumentConverter(file, arg, "vs", "v")
 		file.Pf("values = append(values, %s)", getTypeConverterWrapper(arg.Type.GoType(), "vs"))
 		file.Pf("}")
 		file.Pf("}")
@@ -286,13 +274,13 @@ func generateQueryExtractor(file *files.GoFile, arg *types.Argument) {
 	} else {
 		file.Pf("v:=query.Get(\"%s\")", argNameSnake)
 		file.Pf("if len(v) > 0 {")
-		generateArgumentConverter(file, arg, "vs", "v")
+		ArgumentConverter(file, arg, "vs", "v")
 		file.Pf("req.%s = vs", argName)
 		file.Pf("}")
 	}
 }
 
-func generateHeaderExtractor(file *files.GoFile, arg *types.Argument) {
+func HeaderExtractor(file file.File, arg *types.Argument) {
 	argName := strings.ToUpperFirst(arg.Name)
 	lowerArgName := strings.ToLowerFirst(arg.Name)
 	argNameKebabCase := strings.ToKebabCase(helpers.GetName(strings.ToLowerFirst(arg.Name), arg.Alias))
@@ -302,7 +290,7 @@ func generateHeaderExtractor(file *files.GoFile, arg *types.Argument) {
 		file.Pf("var values %s", arg.Type.GoType())
 		file.Pf("for _,v:=range %ss {", lowerArgName)
 		file.Pf("if len(v) > 0 {")
-		generateArgumentConverter(file, arg, "vs", "v")
+		ArgumentConverter(file, arg, "vs", "v")
 		file.Pf("values = append(values, %s)", getTypeConverterWrapper(arg.Type.GoType(), "vs"))
 		file.Pf("}")
 		file.Pf("}")
@@ -311,21 +299,21 @@ func generateHeaderExtractor(file *files.GoFile, arg *types.Argument) {
 	} else {
 		file.Pf("v:=header.Get(\"%s\")", argNameKebabCase)
 		file.Pf("if len(v) > 0 {")
-		generateArgumentConverter(file, arg, "vs", "v")
+		ArgumentConverter(file, arg, "vs", "v")
 		file.Pf("req.%s = vs", argName)
 		file.Pf("}")
 	}
 }
 
-func generatePathExtractor(file *files.GoFile, arg *types.Argument) {
+func PathExtractor(file file.File, arg *types.Argument) {
 	file.Pf("v:=pathParams.Get(\"%s\")", strings.ToSnakeCase(arg.Name))
 	file.Pf("if len(v) > 0 {")
-	generateArgumentConverter(file, arg, "vs", "v")
+	ArgumentConverter(file, arg, "vs", "v")
 	file.Pf("req.%s = vs", strings.ToUpperFirst(arg.Name))
 	file.Pf("}")
 }
 
-func generateArgumentConverter(file *files.GoFile, arg *types.Argument, varName string, argName string) {
+func ArgumentConverter(file file.File, arg *types.Argument, varName string, argName string) {
 	argNameSnake := strings.ToSnakeCase(arg.Name)
 	switch getBasicType(arg.Type.Name) {
 	case "int":

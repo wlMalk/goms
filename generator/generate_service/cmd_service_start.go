@@ -1,30 +1,13 @@
 package generate_service
 
 import (
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateServiceStartCMDFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, true, false)
-	generateServiceStartCMDFunc(file, service)
-	generateServiceMainInitEndpointsFunc(file, service)
-	generateServiceMainPrepareEndpointsFunc(file, service)
-	if helpers.IsServerEnabled(service) {
-		generateServiceMainInterruptHandlerFunc(file, service)
-	}
-	if helpers.IsGRPCServerEnabled(service) {
-		generateServiceMainServeGRPCFunc(file, service)
-	}
-	if helpers.IsHTTPServerEnabled(service) {
-		generateServiceMainServeHTTPFunc(file, service)
-	}
-	return file
-}
-
-func generateServiceStartCMDFunc(file *files.GoFile, service *types.Service) {
+func ServiceStartCMDFunc(file file.File, service types.Service) {
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("", "context")
 	file.AddImport("", "errors")
@@ -184,7 +167,7 @@ func generateServiceStartCMDFunc(file *files.GoFile, service *types.Service) {
 	file.Pf("")
 }
 
-func generateServiceMainInitEndpointsFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainInitEndpointsFunc(file file.File, service types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.Pf("func initEndpoints(s *%s.%s) transport.%s {", serviceNameSnake, serviceName, serviceName)
@@ -197,7 +180,7 @@ func generateServiceMainInitEndpointsFunc(file *files.GoFile, service *types.Ser
 	file.Pf("")
 }
 
-func generateServiceMainPrepareEndpointsFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainPrepareEndpointsFunc(file file.File, service types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func prepareEndpoints(")
 	file.Pf("endpoints transport.%s,", serviceName)
@@ -261,7 +244,7 @@ func generateServiceMainPrepareEndpointsFunc(file *files.GoFile, service *types.
 	file.Pf("")
 }
 
-func generateServiceMainInterruptHandlerFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainInterruptHandlerFunc(file file.File, service types.Service) {
 	file.Pf("func interruptHandler(ctx context.Context) error {")
 	file.Pf("interruptHandler := make(chan os.Signal, 1)")
 	file.Pf("signal.Notify(interruptHandler, syscall.SIGINT, syscall.SIGTERM)")
@@ -275,7 +258,7 @@ func generateServiceMainInterruptHandlerFunc(file *files.GoFile, service *types.
 	file.Pf("")
 }
 
-func generateServiceMainServeGRPCFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainServeGRPCFunc(file file.File, service types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.Pf("func serveGRPC(")
@@ -333,7 +316,7 @@ func generateServiceMainServeGRPCFunc(file *files.GoFile, service *types.Service
 	file.Pf("")
 }
 
-func generateServiceMainServeHTTPFunc(file *files.GoFile, service *types.Service) {
+func ServiceMainServeHTTPFunc(file file.File, service types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.Pf("func serveHTTP(")

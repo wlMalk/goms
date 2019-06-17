@@ -3,32 +3,13 @@ package generate_service
 import (
 	strs "strings"
 
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateGRPCClientFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, true, false)
-	generateGRPCTransportClientStruct(file, service)
-	generateGRPCTransportClientNewFunc(file, service)
-	for _, method := range helpers.GetMethodsWithGRPCClientEnabled(service) {
-		generateGRPCTransportClientMethodFunc(file, method)
-	}
-	return file
-}
-
-func GenerateGlobalGRPCClientFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, false, false)
-	generateGRPCTransportClientGlobalVar(file, service)
-	for _, method := range helpers.GetMethodsWithGRPCClientEnabled(service) {
-		generateGRPCTransportClientGlobalFunc(file, method)
-	}
-	return file
-}
-
-func generateGRPCTransportClientStruct(file *files.GoFile, service *types.Service) {
+func GRPCTransportClientStruct(file file.File, service types.Service) {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.Pf("type Client struct {")
@@ -41,7 +22,7 @@ func generateGRPCTransportClientStruct(file *files.GoFile, service *types.Servic
 	file.Pf("")
 }
 
-func generateGRPCTransportClientNewFunc(file *files.GoFile, service *types.Service) {
+func GRPCTransportClientNewFunc(file file.File, service types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_grpc", "github.com/go-kit/kit/transport/grpc")
@@ -60,7 +41,7 @@ func generateGRPCTransportClientNewFunc(file *files.GoFile, service *types.Servi
 		file.Pf("%s_grpc.Encode%sRequest,", serviceNameSnake, methodName)
 		file.Pf("%s_grpc.Decode%sResponse,", serviceNameSnake, methodName)
 		if len(method.Results) > 0 {
-			file.AddImport("pb", method.Service.ImportPath, "/pkg/protobuf/", strings.ToLower(strings.ToSnakeCase(method.Service.Name)))
+			file.AddImport("pb", service.ImportPath, "/pkg/protobuf/", strings.ToLower(strings.ToSnakeCase(service.Name)))
 			file.Pf("pb.%sResponse{},", methodName)
 		} else {
 			file.AddImport("", "github.com/golang/protobuf/ptypes/empty")
@@ -74,7 +55,7 @@ func generateGRPCTransportClientNewFunc(file *files.GoFile, service *types.Servi
 	file.Pf("")
 }
 
-func generateGRPCTransportClientMethodFunc(file *files.GoFile, method *types.Method) {
+func GRPCTransportClientMethodFunc(file file.File, service types.Service, method types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
@@ -86,13 +67,13 @@ func generateGRPCTransportClientMethodFunc(file *files.GoFile, method *types.Met
 	file.Pf("")
 }
 
-func generateGRPCTransportClientGlobalVar(file *files.GoFile, service *types.Service) {
+func GRPCTransportClientGlobalVar(file file.File, service types.Service) {
 	file.AddImport("", service.ImportPath, "/pkg/transport/grpc/client")
 	file.Pf("var c *client.Client = client.New(nil)")
 	file.Pf("")
 }
 
-func generateGRPCTransportClientGlobalFunc(file *files.GoFile, method *types.Method) {
+func GRPCTransportClientGlobalFunc(file file.File, service types.Service, method types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.AddImport("", "context")
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)

@@ -3,26 +3,13 @@ package generate_service
 import (
 	strs "strings"
 
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateConvertersFile(base string, path string, name string, service *types.Service) *files.GoFile {
-	file := files.NewGoFile(base, path, name, true, false)
-	generateHandlerConverterTypes(file, service)
-	generateHandlerConverterNewFuncs(file, service)
-	for _, method := range service.Methods {
-		generateHandlerToRequestResponseHandlerConverter(file, method)
-		generateRequestResponseHandlerToHandlerConverter(file, method)
-		generateRequestResponseHandlerToEndpointConverter(file, method)
-		generateEndpointToRequestResponseHandlerConverter(file, method)
-	}
-	return file
-}
-
-func generateHandlerConverterTypes(file *files.GoFile, service *types.Service) {
+func HandlerConverterTypes(file file.File, service types.Service) {
 	file.Pf("type (")
 	file.Pf("requestResponseHandler struct {")
 	file.Pf("handler handlers.Handler")
@@ -34,7 +21,7 @@ func generateHandlerConverterTypes(file *files.GoFile, service *types.Service) {
 	file.Pf("")
 }
 
-func generateHandlerConverterNewFuncs(file *files.GoFile, service *types.Service) {
+func HandlerConverterNewFuncs(file file.File, service types.Service) {
 	file.Pf("func HandlerToRequestResponseHandler(h handlers.Handler) handlers.RequestResponseHandler {")
 	file.Pf("return &requestResponseHandler{handler: h}")
 	file.Pf("}")
@@ -45,19 +32,19 @@ func generateHandlerConverterNewFuncs(file *files.GoFile, service *types.Service
 	file.Pf("")
 }
 
-func generateHandlerToRequestResponseHandlerConverter(file *files.GoFile, method *types.Method) {
+func HandlerToRequestResponseHandlerConverter(file file.File, service types.Service, method types.Method) {
 	file.AddImport("", "context")
-	file.AddImport("", method.Service.ImportPath, "/pkg/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	methodName := strings.ToUpperFirst(method.Name)
 	args := []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
 		// Import requests
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
+		file.AddImport("", service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	results := []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
+		file.AddImport("", service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	argsInCall := append([]string{"ctx"}, helpers.GetMethodArgumentsFromRequestInCall(method.Arguments)...)
@@ -82,9 +69,9 @@ func generateHandlerToRequestResponseHandlerConverter(file *files.GoFile, method
 	file.Pf("")
 }
 
-func generateRequestResponseHandlerToHandlerConverter(file *files.GoFile, method *types.Method) {
+func RequestResponseHandlerToHandlerConverter(file file.File, service types.Service, method types.Method) {
 	file.AddImport("", "context")
-	file.AddImport("", method.Service.ImportPath, "/pkg/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	methodName := strings.ToUpperFirst(method.Name)
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
 	results := append(helpers.GetMethodResults(method.Results), "err error")
@@ -101,7 +88,7 @@ func generateRequestResponseHandlerToHandlerConverter(file *files.GoFile, method
 	}
 	argsInCall = []string{"ctx"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
+		file.AddImport("", service.ImportPath, "/pkg/service/requests")
 		argsInCall = append(argsInCall, "req")
 	}
 	if len(method.Results) > 0 {
@@ -118,9 +105,9 @@ func generateRequestResponseHandlerToHandlerConverter(file *files.GoFile, method
 	file.Pf("")
 }
 
-func generateRequestResponseHandlerToEndpointConverter(file *files.GoFile, method *types.Method) {
+func RequestResponseHandlerToEndpointConverter(file file.File, service types.Service, method types.Method) {
 	file.AddImport("", "context")
-	file.AddImport("", method.Service.ImportPath, "/pkg/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("func %sRequestResponseHandlerToEndpoint(next handlers.%sRequestResponseHandler) endpoint.Endpoint {", methodName, methodName)
@@ -130,7 +117,7 @@ func generateRequestResponseHandlerToEndpointConverter(file *files.GoFile, metho
 		retValue = "nil, "
 	}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
+		file.AddImport("", service.ImportPath, "/pkg/service/requests")
 		file.Pf("return %snext.%s(ctx, req.(*requests.%sRequest))", retValue, methodName, methodName)
 	} else {
 		file.Pf("return %snext.%s(ctx)", retValue, methodName)
@@ -144,7 +131,7 @@ func generateRequestResponseHandlerToEndpointConverter(file *files.GoFile, metho
 		retValue = "nil, "
 	}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
+		file.AddImport("", service.ImportPath, "/pkg/service/requests")
 		file.Pf("return %sh.handler.%s(ctx, req.(*requests.%sRequest))", retValue, methodName, methodName)
 	} else {
 		file.Pf("return %sh.handler.%s(ctx)", retValue, methodName)
@@ -153,19 +140,19 @@ func generateRequestResponseHandlerToEndpointConverter(file *files.GoFile, metho
 	file.Pf("")
 }
 
-func generateEndpointToRequestResponseHandlerConverter(file *files.GoFile, method *types.Method) {
+func EndpointToRequestResponseHandlerConverter(file file.File, service types.Service, method types.Method) {
 	file.AddImport("", "context")
-	file.AddImport("", method.Service.ImportPath, "/pkg/service/handlers")
+	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	methodName := strings.ToUpperFirst(method.Name)
 	args := []string{"ctx context.Context"}
 	if len(method.Arguments) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/requests")
+		file.AddImport("", service.ImportPath, "/pkg/service/requests")
 		args = append(args, "req *requests."+methodName+"Request")
 	}
 	results := []string{"err error"}
 	if len(method.Results) > 0 {
-		file.AddImport("", method.Service.ImportPath, "/pkg/service/responses")
+		file.AddImport("", service.ImportPath, "/pkg/service/responses")
 		results = append([]string{"res *responses." + methodName + "Response"}, results...)
 	}
 	file.Pf("func EndpointTo%sRequestResponseHandler(next endpoint.Endpoint) handlers.%sRequestResponseHandler {", methodName, methodName)

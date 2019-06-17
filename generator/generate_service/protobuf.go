@@ -1,30 +1,18 @@
 package generate_service
 
 import (
-	"github.com/wlMalk/goms/generator/files"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GenerateProtoBufServiceDefinitionsFile(base string, path string, name string, service *types.Service) *files.ProtoFile {
-	file := files.NewProtoFile(base, path, name, true, false)
-	file.Pkg = strings.ToLower(strings.ToSnakeCase(service.Name))
-	file.Pf("option go_package = \"%s/pkg/protobuf/%s\";", service.ImportPath, file.Pkg)
+func ProtoBufPackageDefinition(file file.File, service types.Service) {
+	file.Pf("option go_package = \"%s/pkg/protobuf/%s\";", service.ImportPath, strings.ToLower(strings.ToSnakeCase(service.Name)))
 	file.P("")
-	for _, method := range helpers.GetMethodsWithGRPCEnabled(service) {
-		if len(method.Arguments) > 0 {
-			generateProtoBufMethodRequestDefinition(file, method)
-		}
-		if len(method.Results) > 0 {
-			generateProtoBufMethodResponseDefinition(file, method)
-		}
-	}
-	generateProtoBufServiceDefinition(file, service)
-	return file
 }
 
-func generateProtoBufMethodRequestDefinition(file *files.ProtoFile, method *types.Method) {
+func ProtoBufMethodRequestDefinition(file file.File, service types.Service, method types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("message %sRequest {", methodName)
 	for i, arg := range method.Arguments {
@@ -35,7 +23,7 @@ func generateProtoBufMethodRequestDefinition(file *files.ProtoFile, method *type
 	file.Pf("")
 }
 
-func generateProtoBufMethodResponseDefinition(file *files.ProtoFile, method *types.Method) {
+func ProtoBufMethodResponseDefinition(file file.File, service types.Service, method types.Method) {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("message %sResponse {", methodName)
 	for i, field := range method.Results {
@@ -46,7 +34,7 @@ func generateProtoBufMethodResponseDefinition(file *files.ProtoFile, method *typ
 	file.Pf("")
 }
 
-func generateProtoBufServiceDefinition(file *files.ProtoFile, service *types.Service) {
+func ProtoBufServiceDefinition(file file.File, service types.Service) {
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("service %sService {", serviceName)
 	for _, method := range helpers.GetMethodsWithGRPCEnabled(service) {
