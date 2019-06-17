@@ -11,7 +11,7 @@ type Service struct {
 	Path       string
 	ImportPath string
 	Version    Version
-	Methods    []*Method
+	Methods    []Method
 	Structs    []*Struct
 	Enums      []*Enum
 

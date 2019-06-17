@@ -57,7 +57,7 @@ func (p *Parser) parseService(iface *astTypes.Interface, serviceName string) (*t
 		if err := validateMethod(m); err != nil {
 			return nil, err
 		}
-		s.Methods = append(s.Methods, m)
+		s.Methods = append(s.Methods, *m)
 	}
 	return s, nil
 }
