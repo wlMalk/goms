@@ -180,7 +180,7 @@ func IsCircuitBreakingEnabled(service types.Service) bool {
 
 func HasLoggeds(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Logging && (HasLoggedArguments(*method) || HasLoggedResults(*method)) {
+		if method.Options.Generate.Logging && (HasLoggedArguments(method) || HasLoggedResults(method)) {
 			return true
 		}
 	}
@@ -324,7 +324,7 @@ func IsCounterMetricEnabled(service types.Service) bool {
 	return false
 }
 
-func FilteredMethods(methods []*types.Method, filter func(method *types.Method) bool) (ms []*types.Method) {
+func FilteredMethods(methods []types.Method, filter func(method types.Method) bool) (ms []types.Method) {
 	for _, method := range methods {
 		if filter(method) {
 			ms = append(ms, method)
@@ -351,86 +351,86 @@ func FilteredFields(fields []*types.Field, filter func(field *types.Field) bool)
 	return
 }
 
-func GetMethodsWithCachingEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithCachingEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.Caching
 	})
 }
 
-func GetMethodsWithLoggingEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithLoggingEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.Logging
 	})
 }
 
-func GetMethodsWithMethodStubsEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithMethodStubsEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.MethodStubs
 	})
 }
 
-func GetMethodsWithValidatorsEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithValidatorsEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.Validators
 	})
 }
 
-func GetMethodsWithValidatingEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithValidatingEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.Validating
 	})
 }
 
-func GetMethodsWithMiddlewareEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithMiddlewareEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.Middleware
 	})
 }
 
-func GetMethodsWithHTTPServerEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithHTTPServerEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.HTTPServer
 	})
 }
 
-func GetMethodsWithHTTPClientEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithHTTPClientEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.HTTPServer
 	})
 }
 
-func GetMethodsWithHTTPEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithHTTPEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.HTTPServer || method.Options.Generate.HTTPClient
 	})
 }
 
-func GetMethodsWithGRPCServerEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithGRPCServerEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.GRPCServer
 	})
 }
 
-func GetMethodsWithGRPCClientEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithGRPCClientEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.GRPCServer
 	})
 }
 
-func GetMethodsWithGRPCEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithGRPCEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.GRPCServer || method.Options.Generate.GRPCClient
 	})
 }
 
-func GetMethodsWithTracingEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithTracingEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.Tracing
 	})
 }
 
-func GetMethodsWithMetricsEnabled(service types.Service) (ms []*types.Method) {
-	return FilteredMethods(service.Methods, func(method *types.Method) bool {
+func GetMethodsWithMetricsEnabled(service types.Service) (ms []types.Method) {
+	return FilteredMethods(service.Methods, func(method types.Method) bool {
 		return method.Options.Generate.FrequencyMetric || method.Options.Generate.LatencyMetric || method.Options.Generate.CounterMetric
 	})
 }
