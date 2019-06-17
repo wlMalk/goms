@@ -1,4 +1,4 @@
-package generate_service
+package generators
 
 import (
 	strs "strings"
