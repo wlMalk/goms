@@ -39,7 +39,7 @@ func NewGoFile(base string, path string, name string, overwrite bool, merge bool
 func (f *GoFile) WriteTo(w io.Writer) (int64, error) {
 	lines := f.lines
 	f.lines = nil
-	f.Cs(generateFileHeader(f.Overwrite())...)
+	// f.Cs(generateFileHeader(f.Overwrite())...)
 	f.lines = append(f.lines, f.writePackage()...)
 	f.lines = append(f.lines, f.writeImports()...)
 	f.lines = append(f.lines, lines...)
@@ -89,10 +89,14 @@ func (f *GoFile) writeImports() (lines []string) {
 	return
 }
 
-func (f *GoFile) HasImport(path string) bool {
+func (f *GoFile) HasImport(path ...string) bool {
+	for i := range path {
+		path[i] = strs.Trim(path[i], "/")
+	}
+	iPath := strs.Join(path, "/")
 	for i := range f.imports {
 		for _, l := range f.imports[i] {
-			if l.path == path {
+			if l.path == iPath {
 				return true
 			}
 		}
@@ -116,10 +120,10 @@ const dnsName string = `^([a-zA-Z0-9_]{1}[a-zA-Z0-9_-]{0,62}){1}(\.[a-zA-Z0-9_]{
 var rxDNSName = regexp.MustCompile(dnsName)
 
 func (f *GoFile) AddImport(alias string, path ...string) {
-	for i := range path {
-		path[i] = strs.Trim(path[i], "/")
-	}
-	if !f.HasImport(strs.Join(path, "/")) {
+	if !f.HasImport(path...) {
+		for i := range path {
+			path[i] = strs.Trim(path[i], "/")
+		}
 		if strs.HasSuffix(filepath.ToSlash(f.base), path[0]) {
 			f.imports[1] = append(f.imports[1], &goImportDef{alias: alias, path: strs.Join(path, "/")})
 		} else if pathParts := strs.Split(strs.Join(path, "/"), "/"); len(pathParts) > 0 && rxDNSName.MatchString(pathParts[0]) {

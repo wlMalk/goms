@@ -47,9 +47,9 @@ func (f *TextFile) WriteTo(w io.Writer) (int64, error) {
 	lines := f.lines
 	f.lines = nil
 	if f.commentFormat != "" {
-		f.Cs(generateFileHeader(f.Overwrite())...)
+		// f.Cs(generateFileHeader(f.Overwrite())...)
 	} else {
-		f.Ps(generateFileHeader(f.Overwrite())...)
+		// f.Ps(generateFileHeader(f.Overwrite())...)
 	}
 	f.lines = append(f.lines, lines...)
 	lines = nil
@@ -66,4 +66,13 @@ func (f *TextFile) Pf(format string, args ...interface{}) {
 
 func (f *TextFile) Ps(s ...string) {
 	f.lines = append(f.lines, s...)
+}
+
+func (f *TextFile) HasImport(path ...string) bool {
+	// no op
+	return false
+}
+
+func (f *TextFile) AddImport(alias string, path ...string) {
+	// no op
 }
