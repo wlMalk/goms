@@ -1,23 +1,34 @@
 package file
 
 import (
+	"strings"
+
 	"github.com/wlMalk/goms/parser/types"
 )
 
 type (
-	serviceGenerator func(file File, service types.Service)
-	methodGenerator  func(file File, service types.Service, method types.Method)
+	ServiceGenerator func(file File, service types.Service)
+	MethodGenerator  func(file File, service types.Service, method types.Method)
+)
+
+type (
+	ServiceCondition func(service types.Service) bool
+	MethodCondition  func(service types.Service, method types.Method) bool
+)
+
+type (
+	MethodsExtractor func(service types.Service) []types.Method
 )
 
 type serviceGeneratorHandler struct {
-	generator  serviceGenerator
-	conditions []func(service types.Service) bool
+	generator  ServiceGenerator
+	conditions []ServiceCondition
 }
 
 type methodGeneratorHandler struct {
-	generator  methodGenerator
-	conditions []func(service types.Service, method types.Method) bool
-	extractor  func(service types.Service) []*types.Method
+	generator  MethodGenerator
+	conditions []MethodCondition
+	extractor  MethodsExtractor
 }
 
 type SpecBeforeFunc func(file File, service types.Service)
@@ -33,7 +44,7 @@ type Spec struct {
 	afterFuncs        []SpecAfterFunc
 	serviceGenerators map[string]serviceGeneratorHandler
 	methodGenerators  map[string]methodGeneratorHandler
-	conditions        []func(service types.Service) bool
+	conditions        []ServiceCondition
 	overwrite         bool
 	overwriteFunc     func(service types.Service) bool
 	merge             bool
@@ -70,8 +81,8 @@ func (f Spec) Merge(merge bool, mergeFunc func(service types.Service) bool) Spec
 	return f
 }
 
-func (f Spec) Conditions(conds ...func(service types.Service) bool) Spec {
-	f.conditions = conds
+func (f Spec) Conditions(conds ...ServiceCondition) Spec {
+	f.conditions = append(f.conditions, conds...)
 	return f
 }
 
@@ -83,6 +94,81 @@ func (f Spec) Before(before ...SpecBeforeFunc) Spec {
 func (f Spec) After(after ...SpecAfterFunc) Spec {
 	f.afterFuncs = after
 	return f
+}
+
+func (f Spec) AddServiceGenerator(name string, generator ServiceGenerator, conds ...ServiceCondition) Spec {
+	name = strings.ToLower(name)
+	g := serviceGeneratorHandler{
+		generator:  generator,
+		conditions: conds,
+	}
+	f.serviceGenerators[name] = g
+	return f
+}
+
+func (f Spec) ServiceGenerator(name string, generator ServiceGenerator) Spec {
+	name = strings.ToLower(name)
+	g := f.getServiceGenerator(name)
+	g.generator = generator
+	f.serviceGenerators[name] = g
+	return f
+}
+
+func (f Spec) ServiceGeneratorConditions(name string, conds ...ServiceCondition) Spec {
+	name = strings.ToLower(name)
+	g := f.getServiceGenerator(name)
+	g.conditions = append(g.conditions, conds...)
+	f.serviceGenerators[name] = g
+	return f
+}
+
+func (f Spec) AddMethodGenerator(name string, generator MethodGenerator, extractor MethodsExtractor, conds ...MethodCondition) Spec {
+	name = strings.ToLower(name)
+	g := methodGeneratorHandler{
+		generator:  generator,
+		extractor:  extractor,
+		conditions: conds,
+	}
+	f.methodGenerators[name] = g
+	return f
+}
+
+func (f Spec) MethodGenerator(name string, generator MethodGenerator) Spec {
+	name = strings.ToLower(name)
+	g := f.getMethodGenerator(name)
+	g.generator = generator
+	f.methodGenerators[name] = g
+	return f
+}
+
+func (f Spec) MethodGeneratorConditions(name string, conds ...MethodCondition) Spec {
+	name = strings.ToLower(name)
+	g := f.getMethodGenerator(name)
+	g.conditions = append(g.conditions, conds...)
+	f.methodGenerators[name] = g
+	return f
+}
+
+func (f Spec) MethodGeneratorExtractor(name string, extractor MethodsExtractor) Spec {
+	name = strings.ToLower(name)
+	g := f.getMethodGenerator(name)
+	g.extractor = extractor
+	f.methodGenerators[name] = g
+	return f
+}
+
+func (f Spec) getServiceGenerator(name string) serviceGeneratorHandler {
+	if h, ok := f.serviceGenerators[name]; ok {
+		return h
+	}
+	return serviceGeneratorHandler{}
+}
+
+func (f Spec) getMethodGenerator(name string) methodGeneratorHandler {
+	if h, ok := f.methodGenerators[name]; ok {
+		return h
+	}
+	return methodGeneratorHandler{}
 }
 
 func (f Spec) Generate(service types.Service) File {
@@ -103,10 +189,10 @@ func (f Spec) Generate(service types.Service) File {
 			methods = g.extractor(service)
 		}
 		for _, method := range methods {
-			if !checkMethodConditions(service, *method, g.conditions...) {
+			if !checkMethodConditions(service, method, g.conditions...) {
 				continue
 			}
-			g.generator(file, service, *method)
+			g.generator(file, service, method)
 		}
 	}
 	return file
@@ -143,7 +229,7 @@ func createFile(f Spec, service types.Service, creator Creator) File {
 	return file
 }
 
-func checkServiceConditions(service types.Service, conds ...func(service types.Service) bool) bool {
+func checkServiceConditions(service types.Service, conds ...ServiceCondition) bool {
 	for _, cond := range conds {
 		if !cond(service) {
 			return false
@@ -152,7 +238,7 @@ func checkServiceConditions(service types.Service, conds ...func(service types.S
 	return true
 }
 
-func checkMethodConditions(service types.Service, method types.Method, conds ...func(service types.Service, method types.Method) bool) bool {
+func checkMethodConditions(service types.Service, method types.Method, conds ...MethodCondition) bool {
 	for _, cond := range conds {
 		if !cond(service, method) {
 			return false
