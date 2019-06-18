@@ -241,6 +241,15 @@ func IsRecoveringEnabled(service types.Service) bool {
 	return false
 }
 
+func IsHTTPEnabled(service types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.HTTPServer || method.Options.Generate.HTTPClient {
+			return true
+		}
+	}
+	return false
+}
+
 func IsHTTPServerEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
 		if method.Options.Generate.HTTPServer {
@@ -253,6 +262,15 @@ func IsHTTPServerEnabled(service types.Service) bool {
 func IsHTTPClientEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
 		if method.Options.Generate.HTTPClient {
+			return true
+		}
+	}
+	return false
+}
+
+func IsGRPCEnabled(service types.Service) bool {
+	for _, method := range service.Methods {
+		if method.Options.Generate.GRPCServer || method.Options.Generate.GRPCClient {
 			return true
 		}
 	}
