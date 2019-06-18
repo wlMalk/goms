@@ -14,7 +14,7 @@ import (
 
 var versionPattern = regexp.MustCompile(`(?is)^v?([0-9]+)((\.|-|_|:)([0-9]+))?((\.|-|_|:)([0-9]+))?$`)
 
-func (p *Parser) Parse(ast *astTypes.File) (services []*types.Service, err error) {
+func (p *Parser) Parse(ast *astTypes.File) (services []types.Service, err error) {
 	serviceName := cleanServiceName(ast.Name)
 	ifaces := getServiceInterfaces(ast.Interfaces, serviceName)
 	if len(ifaces) == 0 {
@@ -25,7 +25,7 @@ func (p *Parser) Parse(ast *astTypes.File) (services []*types.Service, err error
 		if err != nil {
 			return nil, err
 		}
-		services = append(services, s)
+		services = append(services, *s)
 	}
 	return
 }
