@@ -95,7 +95,7 @@ func (fs Files) Save() error {
 			if err != nil {
 				return err
 			}
-		} else if err == nil && f.Merge() {
+			// } else if err == nil && f.Merge() {
 			// TODO
 		} else if err != nil {
 			return err
