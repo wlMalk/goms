@@ -7,8 +7,8 @@ import (
 )
 
 type (
-	ServiceGenerator func(file File, service types.Service)
-	MethodGenerator  func(file File, service types.Service, method types.Method)
+	ServiceGenerator func(file File, service types.Service) error
+	MethodGenerator  func(file File, service types.Service, method types.Method) error
 )
 
 type (
@@ -52,8 +52,11 @@ type Spec struct {
 }
 
 func NewSpec(fileType string) Spec {
-	f := Spec{}
-	f.fileType = "go"
+	f := Spec{
+		serviceGenerators: map[string]serviceGeneratorHandler{},
+		methodGenerators:  map[string]methodGeneratorHandler{},
+	}
+	f.fileType = fileType
 	return f
 }
 
@@ -171,17 +174,25 @@ func (f Spec) getMethodGenerator(name string) methodGeneratorHandler {
 	return methodGeneratorHandler{}
 }
 
-func (f Spec) Generate(service types.Service) File {
+func (f Spec) Type() string {
+	return f.fileType
+}
+
+func (f Spec) Generate(service types.Service, creator Creator) (File, error) {
 	if !checkServiceConditions(service, f.conditions...) {
-		return nil
+		return nil, nil
 	}
-	file := createFile(f, service, nil)
+	var err error
+	file := createFile(f, service, creator)
 	applySpecFuncs(file, service, f.beforeFuncs...)
 	for _, g := range f.serviceGenerators {
 		if !checkServiceConditions(service, g.conditions...) {
 			continue
 		}
-		g.generator(file, service)
+		err = g.generator(file, service)
+		if err != nil {
+			return nil, err
+		}
 	}
 	for _, g := range f.methodGenerators {
 		methods := service.Methods
@@ -192,10 +203,13 @@ func (f Spec) Generate(service types.Service) File {
 			if !checkMethodConditions(service, method, g.conditions...) {
 				continue
 			}
-			g.generator(file, service, method)
+			err = g.generator(file, service, method)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
-	return file
+	return file, nil
 }
 
 func createFile(f Spec, service types.Service, creator Creator) File {
@@ -217,15 +231,6 @@ func createFile(f Spec, service types.Service, creator Creator) File {
 		merge = f.mergeFunc(service)
 	}
 	file = creator(service.Path, path, name, overwrite, merge)
-	//
-	// switch f.fileType {
-	// case "go":
-	// 	file = files.NewGoFile(service.Path, path, name, overwrite, merge)
-	// case "proto":
-	// 	file = files.NewProtoFile(service.Path, path, name, overwrite, merge)
-	// case "text":
-	// 	file = files.NewTextFile(service.Path, path, name, f.extension, overwrite, merge)
-	// }
 	return file
 }
 
