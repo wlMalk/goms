@@ -61,6 +61,7 @@ func main() {
 	}
 
 	p := parser.Default()
+	g := generator.Default()
 
 	services, err := p.Parse(file)
 	if err != nil {
@@ -69,7 +70,7 @@ func main() {
 	for _, service := range services {
 		service.Path = filepath.Join(currentDir, "v"+service.Version.FullStringSpecial("."))
 		service.ImportPath = filepath.ToSlash(filepath.Join(importPath, "v"+service.Version.FullStringSpecial(".")))
-		files, err := generator.GenerateService(service)
+		files, err := g.Generate(service)
 		if err != nil {
 			fail(err)
 		}
