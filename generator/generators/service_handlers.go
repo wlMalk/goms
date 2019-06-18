@@ -9,13 +9,14 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func MethodHandlers(file file.File, service types.Service, method types.Method) {
+func MethodHandlers(file file.File, service types.Service, method types.Method) error {
 	MethodHandlerTypes(file, service, method)
 	MethodHandlerFuncTypes(file, service, method)
 	MethodHandlerFuncHandlers(file, service, method)
+	return nil
 }
 
-func ServiceHandlerTypes(file file.File, service types.Service) {
+func ServiceHandlerTypes(file file.File, service types.Service) error {
 	file.Pf("type (")
 	file.Pf("Handler interface {")
 	for _, method := range service.Methods {
@@ -37,9 +38,10 @@ func ServiceHandlerTypes(file file.File, service types.Service) {
 	file.Pf("}")
 	file.Pf(")")
 	file.Pf("")
+	return nil
 }
 
-func MethodHandlerTypes(file file.File, service types.Service, method types.Method) {
+func MethodHandlerTypes(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
@@ -66,9 +68,10 @@ func MethodHandlerTypes(file file.File, service types.Service, method types.Meth
 	file.Pf("}")
 	file.Pf(")")
 	file.Pf("")
+	return nil
 }
 
-func MethodHandlerFuncTypes(file file.File, service types.Service, method types.Method) {
+func MethodHandlerFuncTypes(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
@@ -93,9 +96,10 @@ func MethodHandlerFuncTypes(file file.File, service types.Service, method types.
 
 	file.Pf(")")
 	file.Pf("")
+	return nil
 }
 
-func MethodHandlerFuncHandlers(file file.File, service types.Service, method types.Method) {
+func MethodHandlerFuncHandlers(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
@@ -125,4 +129,5 @@ func MethodHandlerFuncHandlers(file file.File, service types.Service, method typ
 	file.Pf("return f(ctx, req)")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

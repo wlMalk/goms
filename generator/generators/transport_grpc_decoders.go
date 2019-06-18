@@ -7,7 +7,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GRPCRequestDecoder(file file.File, service types.Service, method types.Method) {
+func GRPCRequestDecoder(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	serviceName := strings.ToUpperFirst(service.Name)
 	methodName := strings.ToUpperFirst(method.Name)
@@ -25,9 +25,10 @@ func GRPCRequestDecoder(file file.File, service types.Service, method types.Meth
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func GRPCResponseDecoder(file file.File, service types.Service, method types.Method) {
+func GRPCResponseDecoder(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	serviceName := strings.ToUpperFirst(service.Name)
 	methodName := strings.ToUpperFirst(method.Name)
@@ -45,4 +46,5 @@ func GRPCResponseDecoder(file file.File, service types.Service, method types.Met
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

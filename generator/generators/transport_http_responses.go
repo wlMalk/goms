@@ -7,15 +7,16 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func HTTPResponse(file file.File, service types.Service, method types.Method) {
+func HTTPResponse(file file.File, service types.Service, method types.Method) error {
 	if len(method.Results) == 0 {
-		return
+		return nil
 	}
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("type %sResponse struct {", methodName)
 	HTTPResponseFields(file, method.Results)
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
 func HTTPResponseFields(file file.File, fields []*types.Field) {
@@ -26,9 +27,9 @@ func HTTPResponseFields(file file.File, fields []*types.Field) {
 	}
 }
 
-func HTTPResponseNewFunc(file file.File, service types.Service, method types.Method) {
+func HTTPResponseNewFunc(file file.File, service types.Service, method types.Method) error {
 	if len(method.Results) == 0 {
-		return
+		return nil
 	}
 	methodName := strings.ToUpperFirst(method.Name)
 	file.AddImport("", service.ImportPath, "/pkg/service/responses")
@@ -41,11 +42,12 @@ func HTTPResponseNewFunc(file file.File, service types.Service, method types.Met
 	file.Pf("return resp")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPResponseNewHTTPFunc(file file.File, service types.Service, method types.Method) {
+func HTTPResponseNewHTTPFunc(file file.File, service types.Service, method types.Method) error {
 	if len(method.Results) == 0 {
-		return
+		return nil
 	}
 	file.AddImport("", "net/http")
 	file.AddImport("", "encoding/json")
@@ -59,11 +61,12 @@ func HTTPResponseNewHTTPFunc(file file.File, service types.Service, method types
 	file.Pf("return resp, nil")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPResponseToResponseFunc(file file.File, service types.Service, method types.Method) {
+func HTTPResponseToResponseFunc(file file.File, service types.Service, method types.Method) error {
 	if len(method.Results) == 0 {
-		return
+		return nil
 	}
 	file.AddImport("", service.ImportPath, "/pkg/service/responses")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -76,4 +79,5 @@ func HTTPResponseToResponseFunc(file file.File, service types.Service, method ty
 	file.Pf("return resp")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

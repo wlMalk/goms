@@ -7,7 +7,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func ServiceStructType(file file.File, service types.Service) {
+func ServiceStructType(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	serviceName := strings.ToUpperFirst(service.Name)
@@ -31,9 +31,10 @@ func ServiceStructType(file file.File, service types.Service) {
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceStructTypeNewFunc(file file.File, service types.Service) {
+func ServiceStructTypeNewFunc(file file.File, service types.Service) error {
 	file.AddImport("", "context")
 	file.AddImport("", "github.com/wlMalk/goms/goms/errors")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
@@ -57,9 +58,10 @@ func ServiceStructTypeNewFunc(file file.File, service types.Service) {
 	ServiceMethodsRegisteration(file, service)
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMethodsRegisteration(file file.File, service types.Service) {
+func ServiceMethodsRegisteration(file file.File, service types.Service) error {
 	for _, method := range service.Methods {
 		TypeSwitchForMethodHandler(file, service, method)
 		if method.Options.Generate.Middleware {
@@ -70,9 +72,10 @@ func ServiceMethodsRegisteration(file file.File, service types.Service) {
 		MiddlewareCheckerForService(file, service)
 	}
 	EndpointsPacker(file, service)
+	return nil
 }
 
-func TypeSwitchForMethodHandler(file file.File, service types.Service, method types.Method) {
+func TypeSwitchForMethodHandler(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers/converters")
@@ -87,25 +90,28 @@ func TypeSwitchForMethodHandler(file file.File, service types.Service, method ty
 	file.Pf("s.endpoints.%s = t.%s", lowerMethodName, methodName)
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func MiddlewareCheckerForEndpoint(file file.File, service types.Service, method types.Method) {
+func MiddlewareCheckerForEndpoint(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	file.Pf("if t, ok := middlewareGetter.(interface{ %sMiddleware(e endpoint.Endpoint) endpoint.Endpoint }); ok {", methodName)
 	file.Pf("s.endpoints.%s = t.%sMiddleware(s.endpoints.%s)", lowerMethodName, methodName, lowerMethodName)
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func MiddlewareCheckerForService(file file.File, service types.Service) {
+func MiddlewareCheckerForService(file file.File, service types.Service) error {
 	file.Pf("if t, ok := middlewareGetter.(interface{ Middleware(h handlers.EndpointHandler) handlers.EndpointHandler }); ok {")
 	file.Pf("s.handler = t.Middleware(s.endpoints)")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func OuterMiddlewareCheckerForEndpoint(file file.File, service types.Service, method types.Method) {
+func OuterMiddlewareCheckerForEndpoint(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	file.Pf("if t, ok := h.(interface {")
@@ -114,9 +120,10 @@ func OuterMiddlewareCheckerForEndpoint(file file.File, service types.Service, me
 	file.Pf("%s = t.Outer%sMiddleware(%s)", lowerMethodName, methodName, lowerMethodName)
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceStructMethodHandler(file file.File, service types.Service, method types.Method) {
+func ServiceStructMethodHandler(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
@@ -124,9 +131,10 @@ func ServiceStructMethodHandler(file file.File, service types.Service, method ty
 	file.Pf("return s.%s(ctx, req)", lowerMethodName)
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func EndpointsPacker(file file.File, service types.Service) {
+func EndpointsPacker(file file.File, service types.Service) error {
 	file.Pf("var (")
 	serviceName := strings.ToUpperFirst(service.Name)
 	for _, method := range service.Methods {
@@ -148,4 +156,5 @@ func EndpointsPacker(file file.File, service types.Service) {
 	file.Pf("}")
 	file.Pf("")
 	file.Pf("return endpoints")
+	return nil
 }

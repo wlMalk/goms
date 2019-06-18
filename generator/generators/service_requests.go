@@ -9,7 +9,17 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func MethodRequestNewFunc(file file.File, service types.Service, method types.Method) {
+func ServiceRequestStruct(file file.File, service types.Service, method types.Method) error {
+	methodName := strings.ToUpperFirst(method.Name)
+	file.Pf("type %sRequest struct {", methodName)
+	for _, arg := range method.Arguments {
+		file.Pf("%s %s", strings.ToUpperFirst(arg.Name), arg.Type.GoType())
+	}
+	file.Pf("}")
+	return nil
+}
+
+func ServiceRequestNewFunc(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	args := helpers.GetMethodArguments(method.Arguments)
 	file.Pf("func %s(%s)*%sRequest{", methodName, strs.Join(args, ", "), methodName)
@@ -20,4 +30,5 @@ func MethodRequestNewFunc(file file.File, service types.Service, method types.Me
 	file.Pf("}")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

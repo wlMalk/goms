@@ -9,7 +9,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func ValidatingValidatorsTypes(file file.File, service types.Service) {
+func ValidatingValidatorsTypes(file file.File, service types.Service) error {
 	file.P("type (")
 	for _, method := range helpers.GetMethodsWithValidatingEnabled(service) {
 		methodName := strings.ToUpperFirst(method.Name)
@@ -19,9 +19,10 @@ func ValidatingValidatorsTypes(file file.File, service types.Service) {
 	}
 	file.P(")")
 	file.P("")
+	return nil
 }
 
-func ValidatingMiddlewareStruct(file file.File, service types.Service) {
+func ValidatingMiddlewareStruct(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("type validatingMiddleware struct {")
 	for _, method := range helpers.GetMethodsWithValidatingEnabled(service) {
@@ -33,9 +34,10 @@ func ValidatingMiddlewareStruct(file file.File, service types.Service) {
 	file.P("next handlers.RequestResponseHandler")
 	file.P("}")
 	file.P("")
+	return nil
 }
 
-func ValidatingMiddlewareNewFunc(file file.File, service types.Service) {
+func ValidatingMiddlewareNewFunc(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func ValidatingMiddleware(validator interface{}) RequestResponseMiddleware {")
 	file.P("return func(next handlers.RequestResponseHandler) handlers.RequestResponseHandler {")
@@ -51,9 +53,10 @@ func ValidatingMiddlewareNewFunc(file file.File, service types.Service) {
 	file.P("}")
 	file.P("}")
 	file.P("")
+	return nil
 }
 
-func ValidatingMiddlewareMethodFunc(file file.File, service types.Service, method types.Method) {
+func ValidatingMiddlewareMethodFunc(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
@@ -83,4 +86,5 @@ func ValidatingMiddlewareMethodFunc(file file.File, service types.Service, metho
 	file.Pf("return m.next.%s(%s)", methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func CachingMiddlewareStruct(file file.File, service types.Service) {
+func CachingMiddlewareStruct(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", "github.com/wlMalk/goms/goms/cache")
 	file.AddImport("", "hash")
@@ -19,9 +19,10 @@ func CachingMiddlewareStruct(file file.File, service types.Service) {
 	file.P("next  handlers.RequestResponseHandler")
 	file.P("}")
 	file.P("")
+	return nil
 }
 
-func CachingMiddlewareCacheKeyerInterface(file file.File, service types.Service) {
+func CachingMiddlewareCacheKeyerInterface(file file.File, service types.Service) error {
 	file.Pf("type cacheKeyer interface {")
 	for _, method := range service.Methods {
 		if method.Options.Generate.Middleware && len(method.Arguments) > 0 && len(method.Results) > 0 && method.Options.Generate.Caching {
@@ -30,9 +31,10 @@ func CachingMiddlewareCacheKeyerInterface(file file.File, service types.Service)
 		}
 	}
 	file.Pf("}")
+	return nil
 }
 
-func CachingMiddlewareNewFunc(file file.File, service types.Service) {
+func CachingMiddlewareNewFunc(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", "github.com/wlMalk/goms/goms/cache")
 	file.AddImport("", "hash")
@@ -47,9 +49,10 @@ func CachingMiddlewareNewFunc(file file.File, service types.Service) {
 	file.P("}")
 	file.P("}")
 	file.P("")
+	return nil
 }
 
-func CachingMiddlewareMethodFunc(file file.File, service types.Service, method types.Method) {
+func CachingMiddlewareMethodFunc(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", "github.com/wlMalk/goms/goms/cache")
 	file.AddImport("", "github.com/wlMalk/goms/goms/log")
@@ -92,4 +95,5 @@ func CachingMiddlewareMethodFunc(file file.File, service types.Service, method t
 	file.Pf("return m.next.%s(%s)", methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

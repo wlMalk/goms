@@ -9,7 +9,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GRPCTransportClientStruct(file file.File, service types.Service) {
+func GRPCTransportClientStruct(file file.File, service types.Service) error {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.Pf("type Client struct {")
@@ -20,9 +20,10 @@ func GRPCTransportClientStruct(file file.File, service types.Service) {
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func GRPCTransportClientNewFunc(file file.File, service types.Service) {
+func GRPCTransportClientNewFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_grpc", "github.com/go-kit/kit/transport/grpc")
@@ -53,9 +54,10 @@ func GRPCTransportClientNewFunc(file file.File, service types.Service) {
 	file.Pf("}")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func GRPCTransportClientMethodFunc(file file.File, service types.Service, method types.Method) {
+func GRPCTransportClientMethodFunc(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
@@ -65,15 +67,17 @@ func GRPCTransportClientMethodFunc(file file.File, service types.Service, method
 	file.Pf("return c.%s.%s(%s)", lowerMethodName, methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func GRPCTransportClientGlobalVar(file file.File, service types.Service) {
+func GRPCTransportClientGlobalVar(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/transport/grpc/client")
 	file.Pf("var c *client.Client = client.New(nil)")
 	file.Pf("")
+	return nil
 }
 
-func GRPCTransportClientGlobalFunc(file file.File, service types.Service, method types.Method) {
+func GRPCTransportClientGlobalFunc(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.AddImport("", "context")
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
@@ -83,4 +87,5 @@ func GRPCTransportClientGlobalFunc(file file.File, service types.Service, method
 	file.Pf("return c.%s(%s)", methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

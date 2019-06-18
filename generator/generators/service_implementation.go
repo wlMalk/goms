@@ -9,21 +9,23 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func ServiceImplementationStruct(file file.File, service types.Service) {
+func ServiceImplementationStruct(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("type %s struct {}", serviceName)
 	file.Pf("")
+	return nil
 }
 
-func ServiceImplementationStructNewFunc(file file.File, service types.Service) {
+func ServiceImplementationStructNewFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func New() *%s {", serviceName)
 	file.Pf("return &%s{}", serviceName)
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMethodImplementation(file file.File, service types.Service, method types.Method) {
+func ServiceMethodImplementation(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
 	serviceName := strings.ToUpperFirst(service.Name)
@@ -34,9 +36,10 @@ func ServiceMethodImplementation(file file.File, service types.Service, method t
 	file.Pf("return")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMethodImplementationMiddleware(file file.File, service types.Service, method types.Method) {
+func ServiceMethodImplementationMiddleware(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	methodName := strings.ToUpperFirst(method.Name)
 	serviceName := strings.ToUpperFirst(service.Name)
@@ -45,9 +48,10 @@ func ServiceMethodImplementationMiddleware(file file.File, service types.Service
 	file.Pf("return e")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMethodImplementationOuterMiddleware(file file.File, service types.Service, method types.Method) {
+func ServiceMethodImplementationOuterMiddleware(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	methodName := strings.ToUpperFirst(method.Name)
 	serviceName := strings.ToUpperFirst(service.Name)
@@ -56,9 +60,21 @@ func ServiceMethodImplementationOuterMiddleware(file file.File, service types.Se
 	file.Pf("return e")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMethodImplementationValidateFunc(file file.File, service types.Service, method types.Method) {
+func ServiceMethodImplementationValidatorStruct(file file.File, service types.Service) error {
+	serviceName := strings.ToUpperFirst(service.Name)
+	file.Pf("type %sValidator struct {}", serviceName)
+	file.Pf("")
+	file.Pf("func NewValidator() *%sValidator {", serviceName)
+	file.Pf("return &%sValidator{}", serviceName)
+	file.Pf("}")
+	file.Pf("")
+	return nil
+}
+
+func ServiceMethodImplementationValidateFunc(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -68,9 +84,10 @@ func ServiceMethodImplementationValidateFunc(file file.File, service types.Servi
 	file.Pf("return nil")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceImplementationMiddleware(file file.File, service types.Service) {
+func ServiceImplementationMiddleware(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func (s *%s) Middleware(h handlers.RequestResponseHandler) handlers.RequestResponseHandler {", serviceName)
@@ -78,22 +95,25 @@ func ServiceImplementationMiddleware(file file.File, service types.Service) {
 	file.Pf("return h")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func CachingMiddlewareCacheKeyerType(file file.File, service types.Service) {
+func CachingMiddlewareCacheKeyerType(file file.File, service types.Service) error {
 	file.Pf("type CacheKeyer struct {")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func CachingMiddlewareKeyerNewFunc(file file.File, service types.Service) {
+func CachingMiddlewareKeyerNewFunc(file file.File, service types.Service) error {
 	file.P("func NewCacheKeyer() *CacheKeyer{")
 	file.P("return &CacheKeyer{}")
 	file.P("}")
 	file.Pf("")
+	return nil
 }
 
-func CachingMiddlewareKeyerMethodFunc(file file.File, service types.Service, method types.Method) {
+func CachingMiddlewareKeyerMethodFunc(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -102,4 +122,5 @@ func CachingMiddlewareKeyerMethodFunc(file file.File, service types.Service, met
 	file.Pf("return")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

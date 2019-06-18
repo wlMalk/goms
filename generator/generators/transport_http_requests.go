@@ -9,9 +9,9 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func HTTPRequest(file file.File, service types.Service, method types.Method) {
+func HTTPRequest(file file.File, service types.Service, method types.Method) error {
 	if len(method.Arguments) == 0 {
-		return
+		return nil
 	}
 	if (method.Options.HTTP.Method == "POST" || method.Options.HTTP.Method == "PUT") && hasArgumentsOfOrigin(method.Arguments, "BODY") {
 		file.Pf("type " + method.Name + "RequestBody struct {")
@@ -35,6 +35,7 @@ func HTTPRequest(file file.File, service types.Service, method types.Method) {
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
 func hasArgumentsOfOrigin(args []*types.Argument, origin string) bool {
@@ -64,9 +65,9 @@ func getArgumentsOfOrigin(args []*types.Argument, origin string) (rArgs []*types
 	return
 }
 
-func HTTPRequestNewFunc(file file.File, service types.Service, method types.Method) {
+func HTTPRequestNewFunc(file file.File, service types.Service, method types.Method) error {
 	if len(method.Arguments) == 0 {
-		return
+		return nil
 	}
 	methodName := strings.ToUpperFirst(method.Name)
 	file.AddImport("", service.ImportPath, "/pkg/service/requests")
@@ -83,11 +84,12 @@ func HTTPRequestNewFunc(file file.File, service types.Service, method types.Meth
 	file.Pf("return r")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPRequestNewHTTPFunc(file file.File, service types.Service, method types.Method) {
+func HTTPRequestNewHTTPFunc(file file.File, service types.Service, method types.Method) error {
 	if len(method.Arguments) == 0 {
-		return
+		return nil
 	}
 	file.AddImport("", "net/http")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -95,11 +97,12 @@ func HTTPRequestNewHTTPFunc(file file.File, service types.Service, method types.
 	HTTPRequestExtractorLogic(file, service, method)
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPRequestToRequestFunc(file file.File, service types.Service, method types.Method) {
+func HTTPRequestToRequestFunc(file file.File, service types.Service, method types.Method) error {
 	if len(method.Arguments) == 0 {
-		return
+		return nil
 	}
 	file.AddImport("", service.ImportPath, "/pkg/service/requests")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -116,11 +119,12 @@ func HTTPRequestToRequestFunc(file file.File, service types.Service, method type
 	file.Pf("return req")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPRequestToHTTPArgFunc(file file.File, service types.Service, method types.Method) {
+func HTTPRequestToHTTPArgFunc(file file.File, service types.Service, method types.Method) error {
 	if len(method.Arguments) == 0 {
-		return
+		return nil
 	}
 	file.AddImport("", "net/http")
 	file.AddImport("", service.ImportPath, "/pkg/service/requests")
@@ -211,9 +215,10 @@ func HTTPRequestToHTTPArgFunc(file file.File, service types.Service, method type
 	file.Pf("return nil")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPRequestExtractorLogic(file file.File, service types.Service, method types.Method) {
+func HTTPRequestExtractorLogic(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("var err error")
 	file.Pf("req := &%sRequest{}", methodName)
@@ -231,6 +236,7 @@ func HTTPRequestExtractorLogic(file file.File, service types.Service, method typ
 		HTTPRequestExtractors(file, method.Arguments)
 	}
 	file.Pf("return req, err")
+	return nil
 }
 
 func HTTPRequestExtractors(file file.File, args []*types.Argument) {

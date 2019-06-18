@@ -9,7 +9,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func HTTPTransportServerRegisterFunc(file file.File, service types.Service) {
+func HTTPTransportServerRegisterFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
@@ -22,9 +22,10 @@ func HTTPTransportServerRegisterFunc(file file.File, service types.Service) {
 	file.Pf("})")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPTransportServerRegisterSpecialFunc(file file.File, service types.Service) {
+func HTTPTransportServerRegisterSpecialFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
@@ -45,6 +46,7 @@ func HTTPTransportServerRegisterSpecialFunc(file file.File, service types.Servic
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
 func getMethodURI(service types.Service, method types.Method) string {

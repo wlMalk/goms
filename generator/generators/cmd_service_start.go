@@ -7,7 +7,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func ServiceStartCMDFunc(file file.File, service types.Service) {
+func ServiceStartCMDFunc(file file.File, service types.Service) error {
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("", "context")
 	file.AddImport("", "errors")
@@ -165,9 +165,10 @@ func ServiceStartCMDFunc(file file.File, service types.Service) {
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMainInitEndpointsFunc(file file.File, service types.Service) {
+func ServiceMainInitEndpointsFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.Pf("func initEndpoints(s *%s.%s) transport.%s {", serviceNameSnake, serviceName, serviceName)
@@ -178,9 +179,10 @@ func ServiceMainInitEndpointsFunc(file file.File, service types.Service) {
 	file.Pf(")")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMainPrepareEndpointsFunc(file file.File, service types.Service) {
+func ServiceMainPrepareEndpointsFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("func prepareEndpoints(")
 	file.Pf("endpoints transport.%s,", serviceName)
@@ -242,9 +244,10 @@ func ServiceMainPrepareEndpointsFunc(file file.File, service types.Service) {
 	file.Pf("return endpoints")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMainInterruptHandlerFunc(file file.File, service types.Service) {
+func ServiceMainInterruptHandlerFunc(file file.File, service types.Service) error {
 	file.Pf("func interruptHandler(ctx context.Context) error {")
 	file.Pf("interruptHandler := make(chan os.Signal, 1)")
 	file.Pf("signal.Notify(interruptHandler, syscall.SIGINT, syscall.SIGTERM)")
@@ -256,9 +259,10 @@ func ServiceMainInterruptHandlerFunc(file file.File, service types.Service) {
 	file.Pf("}")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMainServeGRPCFunc(file file.File, service types.Service) {
+func ServiceMainServeGRPCFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.Pf("func serveGRPC(")
@@ -314,9 +318,10 @@ func ServiceMainServeGRPCFunc(file file.File, service types.Service) {
 	file.Pf("}")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMainServeHTTPFunc(file file.File, service types.Service) {
+func ServiceMainServeHTTPFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.Pf("func serveHTTP(")
@@ -373,4 +378,5 @@ func ServiceMainServeHTTPFunc(file file.File, service types.Service) {
 	file.Pf("}")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

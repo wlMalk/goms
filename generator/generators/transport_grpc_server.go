@@ -7,7 +7,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func GRPCTransportServerRegisterFunc(file file.File, service types.Service) {
+func GRPCTransportServerRegisterFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_grpc", "github.com/go-kit/kit/transport/grpc")
@@ -20,9 +20,10 @@ func GRPCTransportServerRegisterFunc(file file.File, service types.Service) {
 	file.Pf("})")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func GRPCTransportServerRegisterSpecialFunc(file file.File, service types.Service) {
+func GRPCTransportServerRegisterSpecialFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_grpc", "github.com/go-kit/kit/transport/grpc")
@@ -45,9 +46,10 @@ func GRPCTransportServerRegisterSpecialFunc(file file.File, service types.Servic
 	file.Pf("pb.Register%sServiceServer(server.Server, handler)", serviceName)
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func GRPCTransportServerHandlerStruct(file file.File, service types.Service) {
+func GRPCTransportServerHandlerStruct(file file.File, service types.Service) error {
 	file.Pf("type serverHandler struct {")
 	for _, method := range helpers.GetMethodsWithGRPCServerEnabled(service) {
 		lowerMethodName := strings.ToLowerFirst(method.Name)
@@ -55,9 +57,10 @@ func GRPCTransportServerHandlerStruct(file file.File, service types.Service) {
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func GRPCTransportServerHandlerMethodFunc(file file.File, service types.Service, method types.Method) {
+func GRPCTransportServerHandlerMethodFunc(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	file.AddImport("", "context")
@@ -85,4 +88,5 @@ func GRPCTransportServerHandlerMethodFunc(file file.File, service types.Service,
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

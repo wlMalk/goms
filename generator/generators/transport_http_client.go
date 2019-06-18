@@ -9,7 +9,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func HTTPTransportClientStruct(file file.File, service types.Service) {
+func HTTPTransportClientStruct(file file.File, service types.Service) error {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.Pf("type Client struct {")
@@ -20,9 +20,10 @@ func HTTPTransportClientStruct(file file.File, service types.Service) {
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPTransportClientNewFunc(file file.File, service types.Service) {
+func HTTPTransportClientNewFunc(file file.File, service types.Service) error {
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("", "net/url")
 	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
@@ -45,9 +46,10 @@ func HTTPTransportClientNewFunc(file file.File, service types.Service) {
 	file.Pf("}")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPTransportClientMethodFunc(file file.File, service types.Service, method types.Method) {
+func HTTPTransportClientMethodFunc(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	lowerMethodName := strings.ToLowerFirst(method.Name)
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
@@ -57,15 +59,17 @@ func HTTPTransportClientMethodFunc(file file.File, service types.Service, method
 	file.Pf("return c.%s.%s(%s)", lowerMethodName, methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPTransportClientGlobalVar(file file.File, service types.Service) {
+func HTTPTransportClientGlobalVar(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/transport/http/client")
 	file.Pf("var c *client.Client = client.New(nil)")
 	file.Pf("")
+	return nil
 }
 
-func HTTPTransportClientGlobalFunc(file file.File, service types.Service, method types.Method) {
+func HTTPTransportClientGlobalFunc(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.AddImport("", "context")
 	args := append([]string{"ctx context.Context"}, helpers.GetMethodArguments(method.Arguments)...)
@@ -75,4 +79,5 @@ func HTTPTransportClientGlobalFunc(file file.File, service types.Service, method
 	file.Pf("return c.%s(%s)", methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

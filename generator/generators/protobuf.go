@@ -7,12 +7,13 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func ProtoBufPackageDefinition(file file.File, service types.Service) {
+func ProtoBufPackageDefinition(file file.File, service types.Service) error {
 	file.Pf("option go_package = \"%s/pkg/protobuf/%s\";", service.ImportPath, strings.ToLower(strings.ToSnakeCase(service.Name)))
 	file.P("")
+	return nil
 }
 
-func ProtoBufMethodRequestDefinition(file file.File, service types.Service, method types.Method) {
+func ProtoBufMethodRequestDefinition(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("message %sRequest {", methodName)
 	for i, arg := range method.Arguments {
@@ -21,9 +22,10 @@ func ProtoBufMethodRequestDefinition(file file.File, service types.Service, meth
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ProtoBufMethodResponseDefinition(file file.File, service types.Service, method types.Method) {
+func ProtoBufMethodResponseDefinition(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("message %sResponse {", methodName)
 	for i, field := range method.Results {
@@ -32,9 +34,10 @@ func ProtoBufMethodResponseDefinition(file file.File, service types.Service, met
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ProtoBufServiceDefinition(file file.File, service types.Service) {
+func ProtoBufServiceDefinition(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	file.Pf("service %sService {", serviceName)
 	for _, method := range helpers.GetMethodsWithGRPCEnabled(service) {
@@ -54,4 +57,5 @@ func ProtoBufServiceDefinition(file file.File, service types.Service) {
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

@@ -7,16 +7,17 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func ServiceMiddlewareTypes(file file.File, service types.Service) {
+func ServiceMiddlewareTypes(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("type (")
 	file.P("Middleware                func(handlers.Handler) handlers.Handler")
 	file.P("RequestResponseMiddleware func(handlers.RequestResponseHandler) handlers.RequestResponseHandler")
 	file.P(")")
 	file.P("")
+	return nil
 }
 
-func ServiceMiddlewareChainFunc(file file.File, service types.Service) {
+func ServiceMiddlewareChainFunc(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func Chain(outer Middleware, others ...Middleware) Middleware {")
 	file.P("return func(next handlers.Handler) handlers.Handler {")
@@ -27,9 +28,10 @@ func ServiceMiddlewareChainFunc(file file.File, service types.Service) {
 	file.P("}")
 	file.P("}")
 	file.P("")
+	return nil
 }
 
-func ServiceRequestResponseMiddlewareChainFunc(file file.File, service types.Service) {
+func ServiceRequestResponseMiddlewareChainFunc(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func ChainRequestResponse(outer RequestResponseMiddleware, others ...RequestResponseMiddleware) RequestResponseMiddleware {")
 	file.P("return func(next handlers.RequestResponseHandler) handlers.RequestResponseHandler {")
@@ -40,9 +42,10 @@ func ServiceRequestResponseMiddlewareChainFunc(file file.File, service types.Ser
 	file.P("}")
 	file.P("}")
 	file.P("")
+	return nil
 }
 
-func ServiceApplyMiddlewareFunc(file file.File, service types.Service) {
+func ServiceApplyMiddlewareFunc(file file.File, service types.Service) error {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	file.AddImport("", service.ImportPath, "/pkg/transport")
 	serviceName := strings.ToUpperFirst(service.Name)
@@ -52,9 +55,10 @@ func ServiceApplyMiddlewareFunc(file file.File, service types.Service) {
 	file.Pf("}, mw...)")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceApplyMiddlewareSpecialFunc(file file.File, service types.Service) {
+func ServiceApplyMiddlewareSpecialFunc(file file.File, service types.Service) error {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	file.AddImport("", service.ImportPath, "/pkg/transport")
 	serviceName := strings.ToUpperFirst(service.Name)
@@ -71,8 +75,10 @@ func ServiceApplyMiddlewareSpecialFunc(file file.File, service types.Service) {
 	file.Pf("return endpoints")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
-func ServiceApplyMiddlewareConditionalFunc(file file.File, service types.Service) {
+
+func ServiceApplyMiddlewareConditionalFunc(file file.File, service types.Service) error {
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
 	file.AddImport("", service.ImportPath, "/pkg/transport")
 	file.AddImport("goms_endpoint", "github.com/wlMalk/goms/goms/endpoint")
@@ -96,4 +102,5 @@ func ServiceApplyMiddlewareConditionalFunc(file file.File, service types.Service
 	file.Pf("return endpoints")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

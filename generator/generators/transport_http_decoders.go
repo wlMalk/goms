@@ -6,7 +6,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func HTTPRequestDecoder(file file.File, service types.Service, method types.Method) {
+func HTTPRequestDecoder(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", "net/http")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -23,9 +23,10 @@ func HTTPRequestDecoder(file file.File, service types.Service, method types.Meth
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HTTPResponseDecoder(file file.File, service types.Service, method types.Method) {
+func HTTPResponseDecoder(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", "net/http")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -42,4 +43,5 @@ func HTTPResponseDecoder(file file.File, service types.Service, method types.Met
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

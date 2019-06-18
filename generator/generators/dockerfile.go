@@ -6,7 +6,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func DockerFileDefinition(file file.File, service types.Service) {
+func DockerFileDefinition(file file.File, service types.Service) error {
 	serviceNameKebab := strings.ToLower(strings.ToKebabCase(service.Name))
 	path := "/go/src/" + service.ImportPath
 	file.Pf("FROM golang:1.12 as builder")
@@ -20,4 +20,5 @@ func DockerFileDefinition(file file.File, service types.Service) {
 	file.Pf("WORKDIR /%s", serviceNameKebab)
 	file.Pf("EXPOSE 8080")
 	file.Pf("ENTRYPOINT [\"./%s\", \"start\"]", serviceNameKebab)
+	return nil
 }

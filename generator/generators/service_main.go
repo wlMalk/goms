@@ -8,7 +8,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func ServiceMainFunc(file file.File, service types.Service) {
+func ServiceMainFunc(file file.File, service types.Service) error {
 	file.AddImport("", "io")
 	file.AddImport("", "os")
 	if helpers.IsServerEnabled(service) {
@@ -24,7 +24,7 @@ func ServiceMainFunc(file file.File, service types.Service) {
 		file.AddImport("opentracinggo", "github.com/opentracing/opentracing-go")
 	}
 	if service.Options.Generate.ProtoBuf && (helpers.IsGRPCServerEnabled(service) || helpers.IsGRPCClientEnabled(service)) {
-		file.Pf("//go: protoc --go_out=plugins=grpc:%s --proto_path=%s proto/service.goms.proto", strings.TrimSuffix(file.Base(), service.ImportPath), file.Base())
+		file.Pf("//go:generate protoc --go_out=plugins=grpc:%s --proto_path=%s proto/service.goms.proto", strings.TrimSuffix(file.Base(), service.ImportPath), file.Base())
 		file.P("")
 	}
 	file.Pf("func main() {")
@@ -64,9 +64,10 @@ func ServiceMainFunc(file file.File, service types.Service) {
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMainInitLoggerFunc(file file.File, service types.Service) {
+func ServiceMainInitLoggerFunc(file file.File, service types.Service) error {
 	file.Pf("func InitLogger(writer io.Writer) log.Logger {")
 	file.Pf("logger := log.NewJSONLogger(writer)")
 	file.Pf("logger = log.With(logger, \"@timestamp\", log.DefaultTimestampUTC)")
@@ -74,36 +75,41 @@ func ServiceMainInitLoggerFunc(file file.File, service types.Service) {
 	file.Pf("return logger")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMainInitTracerFunc(file file.File, service types.Service) {
+func ServiceMainInitTracerFunc(file file.File, service types.Service) error {
 	file.Pf("func InitTracer() opentracinggo.Tracer {")
 	file.Pf("// TODO: Initialize tracer")
 	file.Pf("return nil")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMainInitCounterFunc(file file.File, service types.Service) {
+func ServiceMainInitCounterFunc(file file.File, service types.Service) error {
 	file.Pf("func InitRequestCounterMetric() metrics.Counter {")
 	file.Pf("// TODO: Initialize counterMetric")
 	file.Pf("return nil")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMainInitLatencyFunc(file file.File, service types.Service) {
+func ServiceMainInitLatencyFunc(file file.File, service types.Service) error {
 	file.Pf("func InitRequestLatencyMetric() metrics.Histogram {")
 	file.Pf("// TODO: Initialize latencyMetric")
 	file.Pf("return nil")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ServiceMainInitFrequencyFunc(file file.File, service types.Service) {
+func ServiceMainInitFrequencyFunc(file file.File, service types.Service) error {
 	file.Pf("func InitRequestFrequencyMetric() metrics.Gauge {")
 	file.Pf("// TODO: Initialize frequencyMetric")
 	file.Pf("return nil")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

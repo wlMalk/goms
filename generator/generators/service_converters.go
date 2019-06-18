@@ -9,7 +9,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func HandlerConverterTypes(file file.File, service types.Service) {
+func HandlerConverterTypes(file file.File, service types.Service) error {
 	file.Pf("type (")
 	file.Pf("requestResponseHandler struct {")
 	file.Pf("handler handlers.Handler")
@@ -19,9 +19,10 @@ func HandlerConverterTypes(file file.File, service types.Service) {
 	file.Pf("}")
 	file.Pf(")")
 	file.Pf("")
+	return nil
 }
 
-func HandlerConverterNewFuncs(file file.File, service types.Service) {
+func HandlerConverterNewFuncs(file file.File, service types.Service) error {
 	file.Pf("func HandlerToRequestResponseHandler(h handlers.Handler) handlers.RequestResponseHandler {")
 	file.Pf("return &requestResponseHandler{handler: h}")
 	file.Pf("}")
@@ -30,9 +31,10 @@ func HandlerConverterNewFuncs(file file.File, service types.Service) {
 	file.Pf("return &endpointHandler{handler: h}")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func HandlerToRequestResponseHandlerConverter(file file.File, service types.Service, method types.Method) {
+func HandlerToRequestResponseHandlerConverter(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -67,9 +69,10 @@ func HandlerToRequestResponseHandlerConverter(file file.File, service types.Serv
 	file.Pf("return")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func RequestResponseHandlerToHandlerConverter(file file.File, service types.Service, method types.Method) {
+func RequestResponseHandlerToHandlerConverter(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -103,9 +106,10 @@ func RequestResponseHandlerToHandlerConverter(file file.File, service types.Serv
 	file.Pf("})")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func RequestResponseHandlerToEndpointConverter(file file.File, service types.Service, method types.Method) {
+func RequestResponseHandlerToEndpointConverter(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
@@ -138,9 +142,10 @@ func RequestResponseHandlerToEndpointConverter(file file.File, service types.Ser
 	}
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func EndpointToRequestResponseHandlerConverter(file file.File, service types.Service, method types.Method) {
+func EndpointToRequestResponseHandlerConverter(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.AddImport("", "github.com/go-kit/kit/endpoint")
@@ -178,4 +183,5 @@ func EndpointToRequestResponseHandlerConverter(file file.File, service types.Ser
 	file.Pf("})")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

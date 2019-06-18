@@ -9,7 +9,7 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func LoggingMiddlewareStructs(file file.File, service types.Service) {
+func LoggingMiddlewareStructs(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	if helpers.HasLoggeds(service) {
 		file.Pf("type loggingMiddleware struct {")
@@ -23,9 +23,10 @@ func LoggingMiddlewareStructs(file file.File, service types.Service) {
 		file.Pf("}")
 		file.Pf("")
 	}
+	return nil
 }
 
-func LoggingMiddlewareNewFunc(file file.File, service types.Service) {
+func LoggingMiddlewareNewFunc(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	if helpers.HasLoggeds(service) {
 		file.Pf("func LoggingMiddleware() RequestResponseMiddleware {")
@@ -43,9 +44,10 @@ func LoggingMiddlewareNewFunc(file file.File, service types.Service) {
 		file.Pf("}")
 		file.Pf("")
 	}
+	return nil
 }
 
-func LoggingMiddlewareMethodHandler(file file.File, service types.Service, method types.Method) {
+func LoggingMiddlewareMethodHandler(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", "github.com/wlMalk/goms/goms/log")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -102,9 +104,10 @@ func LoggingMiddlewareMethodHandler(file file.File, service types.Service, metho
 	file.Pf("return m.next.%s(%s)", methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ErrorLoggingMiddlewareMethodHandler(file file.File, service types.Service, method types.Method) {
+func ErrorLoggingMiddlewareMethodHandler(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", "github.com/wlMalk/goms/goms/log")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -133,9 +136,10 @@ func ErrorLoggingMiddlewareMethodHandler(file file.File, service types.Service, 
 	file.Pf("return m.next.%s(%s)", methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func LoggingMiddlewareTypes(file file.File, service types.Service) {
+func LoggingMiddlewareTypes(file file.File, service types.Service) error {
 	methods := helpers.GetMethodsWithLoggingEnabled(service)
 	if len(methods) > 0 {
 		file.Pf("type (")
@@ -175,4 +179,5 @@ func LoggingMiddlewareTypes(file file.File, service types.Service) {
 		file.Pf(")")
 		file.Pf("")
 	}
+	return nil
 }

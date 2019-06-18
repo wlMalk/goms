@@ -6,9 +6,9 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func ProtoResponseNewFunc(file file.File, service types.Service, method types.Method) {
+func ProtoResponseNewFunc(file file.File, service types.Service, method types.Method) error {
 	if len(method.Results) == 0 {
-		return
+		return nil
 	}
 	methodName := strings.ToUpperFirst(method.Name)
 	file.AddImport("", service.ImportPath, "/pkg/service/responses")
@@ -22,11 +22,12 @@ func ProtoResponseNewFunc(file file.File, service types.Service, method types.Me
 	file.Pf("return")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
 
-func ProtoResponseNewProtoFunc(file file.File, service types.Service, method types.Method) {
+func ProtoResponseNewProtoFunc(file file.File, service types.Service, method types.Method) error {
 	if len(method.Results) == 0 {
-		return
+		return nil
 	}
 	methodName := strings.ToUpperFirst(method.Name)
 	file.AddImport("", service.ImportPath, "/pkg/service/responses")
@@ -40,4 +41,5 @@ func ProtoResponseNewProtoFunc(file file.File, service types.Service, method typ
 	file.Pf("return")
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }

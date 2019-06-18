@@ -8,15 +8,16 @@ import (
 	"github.com/wlMalk/goms/parser/types"
 )
 
-func RecoveringMiddlewareStruct(file file.File, service types.Service) {
+func RecoveringMiddlewareStruct(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("type recoveringMiddleware struct {")
 	file.P("next  handlers.RequestResponseHandler")
 	file.P("}")
 	file.P("")
+	return nil
 }
 
-func RecoveringMiddlewareNewFunc(file file.File, service types.Service) {
+func RecoveringMiddlewareNewFunc(file file.File, service types.Service) error {
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers")
 	file.P("func RecoveringMiddleware() RequestResponseMiddleware {")
 	file.P("return func(next handlers.RequestResponseHandler) handlers.RequestResponseHandler {")
@@ -26,9 +27,10 @@ func RecoveringMiddlewareNewFunc(file file.File, service types.Service) {
 	file.P("}")
 	file.P("}")
 	file.P("")
+	return nil
 }
 
-func RecoveringMiddlewareMethodFunc(file file.File, service types.Service, method types.Method) {
+func RecoveringMiddlewareMethodFunc(file file.File, service types.Service, method types.Method) error {
 	file.AddImport("", "context")
 	file.AddImport("", "fmt")
 	methodName := strings.ToUpperFirst(method.Name)
@@ -57,4 +59,5 @@ func RecoveringMiddlewareMethodFunc(file file.File, service types.Service, metho
 	file.Pf("return m.next.%s(%s)", methodName, strs.Join(argsInCall, ", "))
 	file.Pf("}")
 	file.Pf("")
+	return nil
 }
