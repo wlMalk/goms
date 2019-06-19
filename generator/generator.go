@@ -22,6 +22,14 @@ func (g *Generator) AddSpec(name string, spec file.Spec) {
 	g.specs[strings.ToLower(name)] = spec
 }
 
+func (g *Generator) RemoveSpec(name string) {
+	delete(g.specs, strings.ToLower(name))
+}
+
+func (g *Generator) RemoveGenerator(name string, generatorName string) {
+	g.AddSpec(name, g.GetSpec(name).RemoveGenerator(generatorName))
+}
+
 func (g *Generator) AddServiceGenerator(name string, generatorName string, generator file.ServiceGenerator) {
 	g.AddSpec(name, g.GetSpec(name).AddServiceGenerator(generatorName, generator))
 }

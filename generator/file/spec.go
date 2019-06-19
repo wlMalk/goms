@@ -160,6 +160,12 @@ func (f Spec) MethodGeneratorExtractor(name string, extractor MethodsExtractor) 
 	return f
 }
 
+func (f Spec) RemoveGenerator(name string) Spec {
+	delete(f.serviceGenerators, strings.ToLower(name))
+	delete(f.methodGenerators, strings.ToLower(name))
+	return f
+}
+
 func (f Spec) getServiceGenerator(name string) serviceGeneratorHandler {
 	if h, ok := f.serviceGenerators[name]; ok {
 		return h
@@ -180,6 +186,9 @@ func (f Spec) Type() string {
 
 func (f Spec) Generate(service types.Service, creator Creator) (File, error) {
 	if !checkServiceConditions(service, f.conditions...) {
+		return nil, nil
+	}
+	if len(f.serviceGenerators) == 0 && len(f.methodGenerators) == 0 {
 		return nil, nil
 	}
 	var err error
