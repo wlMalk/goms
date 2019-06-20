@@ -4,90 +4,31 @@ import (
 	"fmt"
 	strs "strings"
 
+	"github.com/wlMalk/goms/constants"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
 
-type methodGenerateOptionsHandler map[string]func(method *types.Method, v bool)
-
-var methodGenerateOptions = methodGenerateOptionsHandler{
-	"circuit-breaking": func(method *types.Method, v bool) {
-		method.Options.Generate.CircuitBreaking = v
-	}, "rate-limiting": func(method *types.Method, v bool) {
-		method.Options.Generate.RateLimiting = v
-	}, "recovering": func(method *types.Method, v bool) {
-		method.Options.Generate.Recovering = v
-	}, "caching": func(method *types.Method, v bool) {
-		method.Options.Generate.Caching = v
-	}, "logging": func(method *types.Method, v bool) {
-		method.Options.Generate.Logging = v
-	}, "tracing": func(method *types.Method, v bool) {
-		method.Options.Generate.Tracing = v
-	}, "metrics": func(method *types.Method, v bool) {
-		method.Options.Generate.FrequencyMetric = v
-		method.Options.Generate.LatencyMetric = v
-		method.Options.Generate.CounterMetric = v
-	}, "validators": func(method *types.Method, v bool) {
-		method.Options.Generate.Validators = v
-	}, "validating": func(method *types.Method, v bool) {
-		method.Options.Generate.Validating = v
-	}, "middleware": func(method *types.Method, v bool) {
-		method.Options.Generate.Middleware = v
-	}, "method-stubs": func(method *types.Method, v bool) {
-		method.Options.Generate.MethodStubs = v
-	}, "grpc-server": func(method *types.Method, v bool) {
-		method.Options.Generate.GRPCServer = v
-	}, "grpc-client": func(method *types.Method, v bool) {
-		method.Options.Generate.GRPCClient = v
-	}, "http-server": func(method *types.Method, v bool) {
-		method.Options.Generate.HTTPServer = v
-	}, "http-client": func(method *types.Method, v bool) {
-		method.Options.Generate.HTTPClient = v
-	}, "grpc": func(method *types.Method, v bool) {
-		method.Options.Generate.GRPCServer = v
-		method.Options.Generate.GRPCClient = v
-	}, "http": func(method *types.Method, v bool) {
-		method.Options.Generate.HTTPServer = v
-		method.Options.Generate.HTTPClient = v
-	},
-}
-
-func (m methodGenerateOptionsHandler) all(method *types.Method, v bool, tagName string) {
-	for _, f := range m {
-		f(method, v)
-	}
-}
-
-func (m methodGenerateOptionsHandler) allBut(method *types.Method, v bool, tagName string, options ...string) error {
-	m.all(method, v, tagName)
-	return m.only(method, !v, tagName, options...)
-}
-
-func (m methodGenerateOptionsHandler) only(method *types.Method, v bool, tagName string, options ...string) error {
-	for _, option := range options {
-		f, ok := m[strs.ToLower(option)]
-		if !ok {
-			return fmt.Errorf("invalid value '%s' for %s method tag in '%s' method", option, tagName, method.Name)
-		}
-		f(method, v)
-	}
-	return nil
-}
-
 func MethodTransportsTag(method *types.Method, tag string) error {
 	transports := strings.SplitS(tag, ",")
-	method.Options.Generate.HTTPServer = false
-	method.Options.Generate.HTTPClient = false
-	method.Options.Generate.GRPCServer = false
-	method.Options.Generate.GRPCClient = false
+	method.Generate.Remove(
+		constants.MethodGenerateHTTPServerFlag,
+		constants.MethodGenerateHTTPClientFlag,
+		constants.MethodGenerateGRPCServerFlag,
+		constants.MethodGenerateGRPCClientFlag,
+	)
 	for _, i := range transports {
 		switch strs.ToUpper(i) {
 		case "HTTP":
-			method.Options.Generate.HTTPServer = true
-			method.Options.Generate.HTTPClient = true
+			method.Generate.Add(
+				constants.MethodGenerateHTTPServerFlag,
+				constants.MethodGenerateHTTPClientFlag,
+			)
 		case "GRPC":
-			method.Options.Generate.GRPCServer = true
-			method.Options.Generate.GRPCClient = true
+			method.Generate.Add(
+				constants.MethodGenerateGRPCServerFlag,
+				constants.MethodGenerateGRPCClientFlag,
+			)
 		default:
 			return fmt.Errorf("invalid value '%s' for transports method tag in '%s' method", i, method.Name)
 		}
@@ -97,17 +38,19 @@ func MethodTransportsTag(method *types.Method, tag string) error {
 
 func MethodMetricsTag(method *types.Method, tag string) error {
 	transports := strings.SplitS(tag, ",")
-	method.Options.Generate.FrequencyMetric = false
-	method.Options.Generate.LatencyMetric = false
-	method.Options.Generate.CounterMetric = false
+	method.Generate.Remove(
+		constants.MethodGenerateFrequencyMetricFlag,
+		constants.MethodGenerateLatencyMetricFlag,
+		constants.MethodGenerateCounterMetricFlag,
+	)
 	for _, i := range transports {
 		switch strs.ToLower(i) {
 		case "frequency":
-			method.Options.Generate.FrequencyMetric = true
+			method.Generate.Add(constants.MethodGenerateFrequencyMetricFlag)
 		case "latency":
-			method.Options.Generate.LatencyMetric = true
+			method.Generate.Add(constants.MethodGenerateLatencyMetricFlag)
 		case "counter":
-			method.Options.Generate.CounterMetric = true
+			method.Generate.Add(constants.MethodGenerateCounterMetricFlag)
 		default:
 			return fmt.Errorf("invalid value '%s' for metrics method tag in '%s' method", i, method.Name)
 		}
@@ -188,26 +131,6 @@ paramsLoop:
 		return fmt.Errorf("invalid name '%s' given to logs-len method tag in '%s' method", p, method.Name)
 	}
 	return nil
-}
-
-func MethodEnableTag(method *types.Method, tag string) error {
-	options := strings.SplitS(tag, ",")
-	return methodGenerateOptions.only(method, true, "enable", options...)
-}
-
-func MethodDisableTag(method *types.Method, tag string) error {
-	options := strings.SplitS(tag, ",")
-	return methodGenerateOptions.only(method, false, "disable", options...)
-}
-
-func MethodEnableAllTag(method *types.Method, tag string) error {
-	options := strings.SplitS(tag, ",")
-	return methodGenerateOptions.allBut(method, true, "enable-all", options...)
-}
-
-func MethodDisableAllTag(method *types.Method, tag string) error {
-	options := strings.SplitS(tag, ",")
-	return methodGenerateOptions.allBut(method, false, "disable-all", options...)
 }
 
 func MethodAliasTag(method *types.Method, tag string) error {
