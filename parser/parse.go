@@ -255,3 +255,75 @@ func (p *Parser) methodParamsTag(method *types.Method, tag string) error {
 	}
 	return nil
 }
+
+func (p *Parser) serviceGenerateTag(service *types.Service, tag string) error {
+	options := strings.SplitS(tag, ",")
+	err := p.serviceGenerateFlagsHandler.add(&service.Generate, options...)
+	if err != nil {
+		if errInvalid, ok := err.(*errGenerateInvalidValue); ok {
+			return errInvalidGenerateValue("service", service.Name, "generate", errInvalid.invalidValue)
+		}
+		return err
+	}
+	return nil
+}
+
+func (p *Parser) serviceGenerateAllTag(service *types.Service, tag string) error {
+	options := strings.SplitS(tag, ",")
+	err := p.serviceGenerateFlagsHandler.allBut(&service.Generate, options...)
+	if err != nil {
+		if errInvalid, ok := err.(*errGenerateInvalidValue); ok {
+			return errInvalidGenerateValue("service", service.Name, "generate-all", errInvalid.invalidValue)
+		}
+		return err
+	}
+	return nil
+}
+
+func (p *Parser) methodEnableTag(method *types.Method, tag string) error {
+	options := strings.SplitS(tag, ",")
+	err := p.methodGenerateFlagsHandler.add(&method.Generate, options...)
+	if err != nil {
+		if errInvalid, ok := err.(*errGenerateInvalidValue); ok {
+			return errInvalidGenerateValue("method", method.Name, "enable", errInvalid.invalidValue)
+		}
+		return err
+	}
+	return nil
+}
+
+func (p *Parser) methodDisableTag(method *types.Method, tag string) error {
+	options := strings.SplitS(tag, ",")
+	err := p.methodGenerateFlagsHandler.remove(&method.Generate, options...)
+	if err != nil {
+		if errInvalid, ok := err.(*errGenerateInvalidValue); ok {
+			return errInvalidGenerateValue("method", method.Name, "disable", errInvalid.invalidValue)
+		}
+		return err
+	}
+	return nil
+}
+
+func (p *Parser) methodEnableAllTag(method *types.Method, tag string) error {
+	options := strings.SplitS(tag, ",")
+	err := p.methodGenerateFlagsHandler.allBut(&method.Generate, options...)
+	if err != nil {
+		if errInvalid, ok := err.(*errGenerateInvalidValue); ok {
+			return errInvalidGenerateValue("method", method.Name, "enable-all", errInvalid.invalidValue)
+		}
+		return err
+	}
+	return nil
+}
+
+func (p *Parser) methodDisableAllTag(method *types.Method, tag string) error {
+	options := strings.SplitS(tag, ",")
+	err := p.methodGenerateFlagsHandler.only(&method.Generate, options...)
+	if err != nil {
+		if errInvalid, ok := err.(*errGenerateInvalidValue); ok {
+			return errInvalidGenerateValue("method", method.Name, "disable-all", errInvalid.invalidValue)
+		}
+		return err
+	}
+	return nil
+}
