@@ -141,3 +141,60 @@ const (
 	SpecNameRequests                        string = "requests"
 	SpecNameResponses                       string = "responses"
 )
+
+const (
+	ServiceGenerateLoggerFlag           string = "logger"
+	ServiceGenerateCircuitBreakingFlag  string = "circuit-breaking"
+	ServiceGenerateRateLimitingFlag     string = "rate-limiting"
+	ServiceGenerateRecoveringFlag       string = "recovering"
+	ServiceGenerateCachingFlag          string = "caching"
+	ServiceGenerateLoggingFlag          string = "logging"
+	ServiceGenerateTracingFlag          string = "tracing"
+	ServiceGenerateServiceDiscoveryFlag string = "service-discovery"
+	ServiceGenerateProtoBufFlag         string = "proto-buf"
+	ServiceGenerateMainFlag             string = "main"
+	ServiceGenerateValidatorsFlag       string = "validators"
+	ServiceGenerateValidatingFlag       string = "validating"
+	ServiceGenerateMiddlewareFlag       string = "middleware"
+	ServiceGenerateMethodStubsFlag      string = "method-stubs"
+	ServiceGenerateFrequencyMetricFlag  string = "frequency-metric"
+	ServiceGenerateLatencyMetricFlag    string = "latency-metric"
+	ServiceGenerateCounterMetricFlag    string = "counter-metric"
+	ServiceGenerateHTTPServerFlag       string = "http-server"
+	ServiceGenerateHTTPClientFlag       string = "http-client"
+	ServiceGenerateGRPCServerFlag       string = "grpc-server"
+	ServiceGenerateGRPCClientFlag       string = "grpc-client"
+	ServiceGenerateDockerfileFlag       string = "dockerfile"
+)
+
+const (
+	MethodGenerateCircuitBreakingFlag string = "circuit-breaking"
+	MethodGenerateRateLimitingFlag    string = "rate-limiting"
+	MethodGenerateRecoveringFlag      string = "recovering"
+	MethodGenerateCachingFlag         string = "caching"
+	MethodGenerateLoggingFlag         string = "logging"
+	MethodGenerateValidatorsFlag      string = "validators"
+	MethodGenerateValidatingFlag      string = "validating"
+	MethodGenerateMiddlewareFlag      string = "middleware"
+	MethodGenerateMethodStubsFlag     string = "method-stubs"
+	MethodGenerateTracingFlag         string = "tracing"
+	MethodGenerateFrequencyMetricFlag string = "frequency-metric"
+	MethodGenerateLatencyMetricFlag   string = "latency-metric"
+	MethodGenerateCounterMetricFlag   string = "counter-metric"
+	MethodGenerateHTTPServerFlag      string = "http-server"
+	MethodGenerateHTTPClientFlag      string = "http-client"
+	MethodGenerateGRPCServerFlag      string = "grpc-server"
+	MethodGenerateGRPCClientFlag      string = "grpc-client"
+)
+
+const (
+	ServiceGenerateGroupMetrics string = "metrics"
+	ServiceGenerateGroupHTTP    string = "http"
+	ServiceGenerateGroupGRPC    string = "grpc"
+)
+
+const (
+	MethodGenerateGroupMetrics string = "metrics"
+	MethodGenerateGroupHTTP    string = "http"
+	MethodGenerateGroupGRPC    string = "grpc"
+)
