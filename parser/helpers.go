@@ -124,6 +124,21 @@ func errInvalidTagFormat(origin string, tagName string, tag string) error {
 	return fmt.Errorf("invalid %s tag '%s': @%s(%s)", origin, tagName, tagName, tag)
 }
 
+func errInvalidGenerateValue(origin string, originName string, tagName string, value string) error {
+	return fmt.Errorf("invalid value '%s' for %s %s tag in '%s' %s", value, tagName, origin, originName, origin)
+}
+
+func expandGenerateGroups(a []string, m map[string][]string) (g []string) {
+	for i := range a {
+		if n, ok := m[strings.ToLower(a[i])]; ok {
+			g = append(g, n...)
+		} else {
+			g = append(g, strings.ToLower(a[i]))
+		}
+	}
+	return
+}
+
 func filterArguments(args []*types.Argument, f func(*types.Argument) bool) (filtered []*types.Argument) {
 	for _, arg := range args {
 		if f(arg) {
