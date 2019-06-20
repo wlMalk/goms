@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	strs "strings"
+	"unicode/utf8"
 
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
@@ -72,18 +73,21 @@ func cleanServiceName(name string) string {
 func limitLineLength(str string, length int) []string {
 	words := strs.Fields(str)
 	var lines []string
-	charCount := 0
+	var charCount int
 	var line []string
+	var count int
+	var wordCount int
 	for i := 0; i < len(words); {
-		count := charCount + len(words[i]) + len(line) - 1
+		wordCount = utf8.RuneCountInString(words[i])
+		count = charCount + wordCount + len(line)
 		if count <= length {
 			line = append(line, words[i])
-			charCount += len(words[i])
+			charCount += wordCount
 			i++
 		}
 		if count > length || i == len(words) {
 			lines = append(lines, strs.Join(line, " "))
-			line = []string{}
+			line = nil
 			charCount = 0
 		}
 	}
