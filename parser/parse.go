@@ -49,7 +49,7 @@ func (p *Parser) parseService(iface *astTypes.Interface, serviceName string) (*t
 		if err != nil {
 			return nil, err
 		}
-		setUpMethodFromService(s, m)
+		p.setUpMethodFromService(s, m)
 		err = p.parseMethodTags(m, ts)
 		if err != nil {
 			return nil, err

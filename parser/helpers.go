@@ -10,24 +10,8 @@ import (
 	astTypes "github.com/vetcher/go-astra/types"
 )
 
-func setUpMethodFromService(s *types.Service, m *types.Method) {
-	m.Options.Generate.Caching = s.Options.Generate.Caching
-	m.Options.Generate.Logging = s.Options.Generate.Logging
-	m.Options.Generate.MethodStubs = s.Options.Generate.MethodStubs
-	m.Options.Generate.Middleware = s.Options.Generate.Middleware
-	m.Options.Generate.Validators = s.Options.Generate.Validators
-	m.Options.Generate.Validating = s.Options.Generate.Validating
-	m.Options.Generate.CircuitBreaking = s.Options.Generate.CircuitBreaking
-	m.Options.Generate.RateLimiting = s.Options.Generate.RateLimiting
-	m.Options.Generate.Recovering = s.Options.Generate.Recovering
-	m.Options.Generate.Tracing = s.Options.Generate.Tracing
-	m.Options.Generate.FrequencyMetric = s.Options.Generate.FrequencyMetric
-	m.Options.Generate.LatencyMetric = s.Options.Generate.LatencyMetric
-	m.Options.Generate.CounterMetric = s.Options.Generate.CounterMetric
-	m.Options.Generate.HTTPServer = s.Options.Generate.HTTPServer
-	m.Options.Generate.HTTPClient = s.Options.Generate.HTTPClient
-	m.Options.Generate.GRPCServer = s.Options.Generate.GRPCServer
-	m.Options.Generate.GRPCClient = s.Options.Generate.GRPCClient
+func (p *Parser) setUpMethodFromService(s *types.Service, m *types.Method) {
+	p.methodGenerateFlagsHandler.copy(&m.Generate, s.Generate)
 }
 
 func validateMethod(m *types.Method) error {
