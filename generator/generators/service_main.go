@@ -3,6 +3,7 @@ package generators
 import (
 	"strings"
 
+	"github.com/wlMalk/goms/constants"
 	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/parser/types"
@@ -14,7 +15,7 @@ func ServiceMainFunc(file file.File, service types.Service) error {
 	if helpers.IsServerEnabled(service) {
 		file.AddImport("", service.ImportPath, "/cmd/start")
 	}
-	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+	if service.Generate.Has(constants.ServiceGenerateLoggerFlag) || helpers.IsLoggingEnabled(service) {
 		file.AddImport("", "github.com/go-kit/kit/log")
 	}
 	if helpers.IsMetricsEnabled(service) {
@@ -23,12 +24,12 @@ func ServiceMainFunc(file file.File, service types.Service) error {
 	if helpers.IsTracingEnabled(service) {
 		file.AddImport("opentracinggo", "github.com/opentracing/opentracing-go")
 	}
-	if service.Options.Generate.ProtoBuf && (helpers.IsGRPCServerEnabled(service) || helpers.IsGRPCClientEnabled(service)) {
+	if service.Generate.Has(constants.ServiceGenerateProtoBufFlag) && (helpers.IsGRPCServerEnabled(service) || helpers.IsGRPCClientEnabled(service)) {
 		file.Pf("//go:generate protoc --go_out=plugins=grpc:%s --proto_path=%s proto/service.goms.proto", strings.TrimSuffix(file.Base(), service.ImportPath), file.Base())
 		file.P("")
 	}
 	file.Pf("func main() {")
-	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+	if service.Generate.Has(constants.ServiceGenerateLoggerFlag) || helpers.IsLoggingEnabled(service) {
 		file.Pf("logger := InitLogger(os.Stderr)")
 	}
 	if helpers.IsTracingEnabled(service) {
@@ -45,7 +46,7 @@ func ServiceMainFunc(file file.File, service types.Service) error {
 	}
 	if helpers.IsServerEnabled(service) {
 		file.Pf("start.Start(")
-		if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+		if service.Generate.Has(constants.ServiceGenerateLoggerFlag) || helpers.IsLoggingEnabled(service) {
 			file.Pf("logger,")
 		}
 		if helpers.IsTracingEnabled(service) {

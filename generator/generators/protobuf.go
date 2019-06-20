@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"github.com/wlMalk/goms/constants"
 	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
@@ -42,7 +43,7 @@ func ProtoBufServiceDefinition(file file.File, service types.Service) error {
 	file.Pf("service %sService {", serviceName)
 	for _, method := range helpers.GetMethodsWithGRPCEnabled(service) {
 		methodName := strings.ToUpperFirst(method.Name)
-		if !method.Options.Generate.GRPCClient && !method.Options.Generate.GRPCServer {
+		if method.Generate.HasNone(constants.MethodGenerateGRPCServerFlag, constants.MethodGenerateGRPCClientFlag) {
 			continue
 		}
 		if len(method.Arguments) > 0 && len(method.Arguments) > 0 {

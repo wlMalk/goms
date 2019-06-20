@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"github.com/wlMalk/goms/constants"
 	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
@@ -40,7 +41,7 @@ func ServiceStartCMDFunc(file file.File, service types.Service) error {
 		helpers.IsMetricsEnabled(service) {
 		file.AddImport("goms_middleware", "github.com/wlMalk/goms/goms/middleware")
 	}
-	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+	if service.Generate.Has(constants.ServiceGenerateLoggerFlag) || helpers.IsLoggingEnabled(service) {
 		file.AddImport("", "github.com/go-kit/kit/log")
 	}
 	if helpers.IsMetricsEnabled(service) {
@@ -73,7 +74,7 @@ func ServiceStartCMDFunc(file file.File, service types.Service) error {
 	}
 
 	file.Pf("func Start(")
-	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+	if service.Generate.Has(constants.ServiceGenerateLoggerFlag) || helpers.IsLoggingEnabled(service) {
 		file.Pf("logger log.Logger,")
 	}
 	if helpers.IsTracingEnabled(service) {
@@ -89,7 +90,7 @@ func ServiceStartCMDFunc(file file.File, service types.Service) error {
 		file.Pf("counterMetric metrics.Counter,")
 	}
 	file.Pf(") {")
-	if service.Options.Generate.Logger {
+	if service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 		file.Pf("logger.Log(\"message\", \"Hello, I am alive\")")
 		file.Pf("defer logger.Log(\"message\", \"goodbye, good luck\")")
 		file.Pf("")
@@ -127,10 +128,10 @@ func ServiceStartCMDFunc(file file.File, service types.Service) error {
 		file.Pf("ctx,")
 		file.Pf("&endpoints,")
 		file.Pf("grpcAddr,")
-		if service.Options.Generate.Logger {
+		if service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 			file.Pf("log.With(logger, \"transport\", \"GRPC\"),")
 		}
-		if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+		if helpers.IsTracingEnabled(service) && service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 			file.Pf("tracer,")
 		}
 		file.Pf(")")
@@ -144,10 +145,10 @@ func ServiceStartCMDFunc(file file.File, service types.Service) error {
 		file.Pf("ctx,")
 		file.Pf("&endpoints,")
 		file.Pf("httpAddr,")
-		if service.Options.Generate.Logger {
+		if service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 			file.Pf("log.With(logger, \"transport\", \"HTTP\"),")
 		}
-		if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+		if helpers.IsTracingEnabled(service) && service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 			file.Pf("tracer,")
 		}
 		file.Pf(")")
@@ -155,7 +156,7 @@ func ServiceStartCMDFunc(file file.File, service types.Service) error {
 	}
 	if helpers.IsServerEnabled(service) {
 		file.Pf("")
-		if service.Options.Generate.Logger {
+		if service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 			file.Pf("if err := g.Wait(); err != nil {")
 			file.Pf("logger.Log(\"error\", err)")
 			file.Pf("}")
@@ -269,10 +270,10 @@ func ServiceMainServeGRPCFunc(file file.File, service types.Service) error {
 	file.Pf("ctx context.Context,")
 	file.Pf("endpoints *transport.%s,", serviceName)
 	file.Pf("addr string,")
-	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+	if service.Generate.Has(constants.ServiceGenerateLoggerFlag) || helpers.IsLoggingEnabled(service) {
 		file.Pf("logger log.Logger,")
 	}
-	if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+	if helpers.IsTracingEnabled(service) && service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 		file.Pf("tracer opentracinggo.Tracer,")
 	}
 	file.Pf(") error {")
@@ -287,7 +288,7 @@ func ServiceMainServeGRPCFunc(file file.File, service types.Service) error {
 	file.Pf("func(method string) (opts []kit_grpc.ServerOption) {")
 	file.Pf("opts = append(")
 	file.Pf("opts, kit_grpc.ServerBefore(")
-	if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+	if helpers.IsTracingEnabled(service) && service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 		file.Pf("opentracing.GRPCToContext(tracer, method, logger),")
 	}
 	file.Pf("goms_grpc.MethodInjector(\"%s\", method),", helpers.GetName(serviceName, service.Alias))
@@ -302,7 +303,7 @@ func ServiceMainServeGRPCFunc(file file.File, service types.Service) error {
 	file.Pf("},")
 	file.Pf(")")
 	file.Pf("")
-	if service.Options.Generate.Logger {
+	if service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 		file.Pf("logger.Log(\"listening on\", addr)")
 	}
 	file.Pf("ch := make(chan error)")
@@ -328,10 +329,10 @@ func ServiceMainServeHTTPFunc(file file.File, service types.Service) error {
 	file.Pf("ctx context.Context,")
 	file.Pf("endpoints *transport.%s,", serviceName)
 	file.Pf("addr string,")
-	if service.Options.Generate.Logger || helpers.IsLoggingEnabled(service) {
+	if service.Generate.Has(constants.ServiceGenerateLoggerFlag) || helpers.IsLoggingEnabled(service) {
 		file.Pf("logger log.Logger,")
 	}
-	if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+	if helpers.IsTracingEnabled(service) && service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 		file.Pf("tracer opentracinggo.Tracer,")
 	}
 	file.Pf(") error {")
@@ -345,7 +346,7 @@ func ServiceMainServeHTTPFunc(file file.File, service types.Service) error {
 	file.Pf("func(method string) (opts []kit_http.ServerOption) {")
 	file.Pf("opts = append(")
 	file.Pf("opts, kit_http.ServerBefore(")
-	if helpers.IsTracingEnabled(service) && service.Options.Generate.Logger {
+	if helpers.IsTracingEnabled(service) && service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 		file.Pf("opentracing.HTTPToContext(tracer, method, logger),")
 	}
 	file.Pf("goms_http.MethodInjector(\"%s\", method),", helpers.GetName(serviceName, service.Alias))
@@ -360,7 +361,7 @@ func ServiceMainServeHTTPFunc(file file.File, service types.Service) error {
 	file.Pf("},")
 	file.Pf(")")
 	file.Pf("")
-	if service.Options.Generate.Logger {
+	if service.Generate.Has(constants.ServiceGenerateLoggerFlag) {
 		file.Pf("logger.Log(\"listening on\", addr)")
 	}
 	file.Pf("ch := make(chan error)")

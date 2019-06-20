@@ -1,6 +1,7 @@
 package generators
 
 import (
+	"github.com/wlMalk/goms/constants"
 	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
 	"github.com/wlMalk/goms/generator/strings"
@@ -64,11 +65,11 @@ func ServiceStructTypeNewFunc(file file.File, service types.Service) error {
 func ServiceMethodsRegisteration(file file.File, service types.Service) error {
 	for _, method := range service.Methods {
 		TypeSwitchForMethodHandler(file, service, method)
-		if method.Options.Generate.Middleware {
+		if method.Generate.Has(constants.MethodGenerateMiddlewareFlag) {
 			MiddlewareCheckerForEndpoint(file, service, method)
 		}
 	}
-	if service.Options.Generate.Middleware {
+	if service.Generate.Has(constants.ServiceGenerateMiddlewareFlag) {
 		MiddlewareCheckerForService(file, service)
 	}
 	EndpointsPacker(file, service)
