@@ -17,7 +17,7 @@ func DockerfileFileSpec(g *Generator) {
 		file.NewSpec("Dockerfile").
 			Name("Dockerfile", nil).
 			Conditions(func(service types.Service) bool {
-				return service.Options.Generate.Dockerfile
+				return service.Generate.Has(constants.ServiceGenerateDockerfileFlag)
 			}).
 			Before(file.SpecBeforeFunc(func(file file.File, service types.Service) {
 				file.(*files.TextFile).CommentFormat("# %s")
@@ -32,7 +32,7 @@ func ProtoBufServiceDefinitionsFileSpec(g *Generator) {
 			Name("service.goms", nil).
 			Overwrite(true, nil).
 			Conditions(func(service types.Service) bool {
-				return service.Options.Generate.ProtoBuf && helpers.IsGRPCEnabled(service)
+				return service.Generate.Has(constants.ServiceGenerateProtoBufFlag) && helpers.IsGRPCEnabled(service)
 			}).
 			Before(file.SpecBeforeFunc(func(file file.File, service types.Service) {
 				file.(*files.ProtoFile).Pkg = strings.ToLower(strings.ToSnakeCase(service.Name))
@@ -52,14 +52,14 @@ func ServiceMainFileSpec(g *Generator) {
 		file.NewSpec("go").
 			Name("main", nil).
 			Conditions(func(service types.Service) bool {
-				return service.Options.Generate.Main
+				return service.Generate.Has(constants.ServiceGenerateMainFlag)
 			}).
 			Before(file.SpecBeforeFunc(func(file file.File, service types.Service) {
 				file.(*files.GoFile).Pkg = "main"
 			})))
 	g.AddServiceGenerator(constants.SpecNameServiceMain, constants.ServiceGeneratorServiceMainFunc, generators.ServiceMainFunc)
 	g.AddServiceGeneratorWithConditions(constants.SpecNameServiceMain, constants.ServiceGeneratorServiceMainInitLoggerFunc, generators.ServiceMainInitLoggerFunc, func(service types.Service) bool {
-		return service.Options.Generate.Logger || helpers.IsLoggingEnabled(service)
+		return service.Generate.Has(constants.ServiceGenerateLoggerFlag) || helpers.IsLoggingEnabled(service)
 	})
 	g.AddServiceGeneratorWithConditions(constants.SpecNameServiceMain, constants.ServiceGeneratorServiceMainInitTracerFunc, generators.ServiceMainInitTracerFunc, helpers.IsTracingEnabled)
 	g.AddServiceGeneratorWithConditions(constants.SpecNameServiceMain, constants.ServiceGeneratorServiceMainInitFrequencyFunc, generators.ServiceMainInitFrequencyFunc, helpers.IsFrequencyMetricEnabled)
@@ -74,7 +74,7 @@ func ServiceStartCMDFileSpec(g *Generator) {
 			Name("start", nil).
 			Overwrite(true, nil).
 			Conditions(func(service types.Service) bool {
-				return service.Options.Generate.Main && helpers.IsServerEnabled(service)
+				return service.Generate.Has(constants.ServiceGenerateMainFlag) && helpers.IsServerEnabled(service)
 			}))
 	g.AddServiceGenerator(constants.SpecNameServiceStartCMD, constants.ServiceGeneratorServiceStartCMDFunc, generators.ServiceStartCMDFunc)
 	g.AddServiceGenerator(constants.SpecNameServiceStartCMD, constants.ServiceGeneratorServiceMainInitEndpointsFunc, generators.ServiceMainInitEndpointsFunc)
@@ -159,7 +159,7 @@ func ServiceImplementationMiddlewareFileSpec(g *Generator) {
 	g.AddMethodGeneratorWithExtractor(constants.SpecNameServiceImplementationMiddleware, constants.MethodGeneratorServiceMethodImplementationMiddleware, generators.ServiceMethodImplementationMiddleware, helpers.GetMethodsWithMiddlewareEnabled)
 	g.AddMethodGeneratorWithExtractor(constants.SpecNameServiceImplementationMiddleware, constants.MethodGeneratorServiceMethodImplementationOuterMiddleware, generators.ServiceMethodImplementationOuterMiddleware, helpers.GetMethodsWithMiddlewareEnabled)
 	g.AddServiceGeneratorWithConditions(constants.SpecNameServiceImplementationMiddleware, constants.ServiceGeneratorServiceImplementationMiddleware, generators.ServiceImplementationMiddleware, func(service types.Service) bool {
-		return service.Options.Generate.Middleware
+		return service.Generate.Has(constants.ServiceGenerateMiddlewareFlag)
 	})
 }
 
@@ -207,7 +207,7 @@ func ServiceMiddlewareFileSpec(g *Generator) {
 			Name("middleware.goms", nil).
 			Overwrite(true, nil).
 			Conditions(func(service types.Service) bool {
-				return helpers.IsMiddlewareEnabled(service) || service.Options.Generate.Middleware
+				return helpers.IsMiddlewareEnabled(service) || service.Generate.Has(constants.ServiceGenerateMiddlewareFlag)
 			}))
 	g.AddServiceGenerator(constants.SpecNameServiceMiddleware, constants.ServiceGeneratorServiceMiddlewareTypes, generators.ServiceMiddlewareTypes)
 	g.AddServiceGenerator(constants.SpecNameServiceMiddleware, constants.ServiceGeneratorServiceMiddlewareChainFunc, generators.ServiceMiddlewareChainFunc)
@@ -407,7 +407,7 @@ func ProtoRequestsConvertersFileSpec(g *Generator) {
 			Name("requests.goms", nil).
 			Overwrite(true, nil).
 			Conditions(func(service types.Service) bool {
-				return service.Options.Generate.ProtoBuf && helpers.IsGRPCEnabled(service)
+				return service.Generate.Has(constants.ServiceGenerateProtoBufFlag) && helpers.IsGRPCEnabled(service)
 			}))
 	g.AddMethodGeneratorWithExtractor(constants.SpecNameProtoRequestsConverters, constants.MethodGeneratorProtoRequestNewFunc, generators.ProtoRequestNewFunc, helpers.GetMethodsWithGRPCEnabled)
 	g.AddMethodGeneratorWithExtractor(constants.SpecNameProtoRequestsConverters, constants.MethodGeneratorProtoRequestNewProtoFunc, generators.ProtoRequestNewProtoFunc, helpers.GetMethodsWithGRPCEnabled)
@@ -422,7 +422,7 @@ func ProtoResponsesConvertersFileSpec(g *Generator) {
 			Name("responses.goms", nil).
 			Overwrite(true, nil).
 			Conditions(func(service types.Service) bool {
-				return service.Options.Generate.ProtoBuf && helpers.IsGRPCEnabled(service)
+				return service.Generate.Has(constants.ServiceGenerateProtoBufFlag) && helpers.IsGRPCEnabled(service)
 			}))
 	g.AddMethodGeneratorWithExtractor(constants.SpecNameProtoResponsesConverters, constants.MethodGeneratorProtoResponseNewFunc, generators.ProtoResponseNewFunc, helpers.GetMethodsWithGRPCEnabled)
 	g.AddMethodGeneratorWithExtractor(constants.SpecNameProtoResponsesConverters, constants.MethodGeneratorProtoResponseNewProtoFunc, generators.ProtoResponseNewProtoFunc, helpers.GetMethodsWithGRPCEnabled)
