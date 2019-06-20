@@ -4,6 +4,7 @@ import (
 	"fmt"
 	strs "strings"
 
+	"github.com/wlMalk/goms/constants"
 	"github.com/wlMalk/goms/generator/files"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
@@ -135,7 +136,7 @@ func GetName(name string, alias string) string {
 
 func IsCachingEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Caching {
+		if method.Generate.Has(constants.MethodGenerateCachingFlag) {
 			return true
 		}
 	}
@@ -144,7 +145,7 @@ func IsCachingEnabled(service types.Service) bool {
 
 func IsLoggingEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Logging {
+		if method.Generate.Has(constants.MethodGenerateLoggingFlag) {
 			return true
 		}
 	}
@@ -153,7 +154,7 @@ func IsLoggingEnabled(service types.Service) bool {
 
 func IsServerEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.HTTPServer || method.Options.Generate.GRPCServer {
+		if method.Generate.HasAny(constants.MethodGenerateHTTPServerFlag, constants.MethodGenerateGRPCServerFlag) {
 			return true
 		}
 	}
@@ -162,7 +163,7 @@ func IsServerEnabled(service types.Service) bool {
 
 func IsRateLimitingEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.RateLimiting {
+		if method.Generate.Has(constants.MethodGenerateRateLimitingFlag) {
 			return true
 		}
 	}
@@ -171,7 +172,7 @@ func IsRateLimitingEnabled(service types.Service) bool {
 
 func IsCircuitBreakingEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.CircuitBreaking {
+		if method.Generate.Has(constants.MethodGenerateCircuitBreakingFlag) {
 			return true
 		}
 	}
@@ -180,7 +181,7 @@ func IsCircuitBreakingEnabled(service types.Service) bool {
 
 func HasLoggeds(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Logging && (HasLoggedArguments(method) || HasLoggedResults(method)) {
+		if method.Generate.Has(constants.MethodGenerateLoggingFlag) && (HasLoggedArguments(method) || HasLoggedResults(method)) {
 			return true
 		}
 	}
@@ -189,7 +190,7 @@ func HasLoggeds(service types.Service) bool {
 
 func HasLoggedErrors(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Logging && !method.Options.Logging.IgnoreError {
+		if method.Generate.Has(constants.MethodGenerateLoggingFlag) && !method.Options.Logging.IgnoreError {
 			return true
 		}
 	}
@@ -198,7 +199,7 @@ func HasLoggedErrors(service types.Service) bool {
 
 func IsMethodStubsEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.MethodStubs {
+		if method.Generate.Has(constants.MethodGenerateMethodStubsFlag) {
 			return true
 		}
 	}
@@ -207,7 +208,7 @@ func IsMethodStubsEnabled(service types.Service) bool {
 
 func IsValidatorsEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Validators {
+		if method.Generate.Has(constants.MethodGenerateValidatorsFlag) {
 			return true
 		}
 	}
@@ -216,7 +217,7 @@ func IsValidatorsEnabled(service types.Service) bool {
 
 func IsValidatingEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Validating {
+		if method.Generate.Has(constants.MethodGenerateValidatingFlag) {
 			return true
 		}
 	}
@@ -225,7 +226,7 @@ func IsValidatingEnabled(service types.Service) bool {
 
 func IsMiddlewareEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Middleware {
+		if method.Generate.Has(constants.MethodGenerateMiddlewareFlag) {
 			return true
 		}
 	}
@@ -234,7 +235,7 @@ func IsMiddlewareEnabled(service types.Service) bool {
 
 func IsRecoveringEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Recovering {
+		if method.Generate.Has(constants.MethodGenerateRecoveringFlag) {
 			return true
 		}
 	}
@@ -243,7 +244,7 @@ func IsRecoveringEnabled(service types.Service) bool {
 
 func IsHTTPEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.HTTPServer || method.Options.Generate.HTTPClient {
+		if method.Generate.HasAny(constants.MethodGenerateHTTPServerFlag, constants.MethodGenerateHTTPClientFlag) {
 			return true
 		}
 	}
@@ -252,7 +253,7 @@ func IsHTTPEnabled(service types.Service) bool {
 
 func IsHTTPServerEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.HTTPServer {
+		if method.Generate.Has(constants.MethodGenerateHTTPServerFlag) {
 			return true
 		}
 	}
@@ -261,7 +262,7 @@ func IsHTTPServerEnabled(service types.Service) bool {
 
 func IsHTTPClientEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.HTTPClient {
+		if method.Generate.Has(constants.MethodGenerateHTTPClientFlag) {
 			return true
 		}
 	}
@@ -270,7 +271,7 @@ func IsHTTPClientEnabled(service types.Service) bool {
 
 func IsGRPCEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.GRPCServer || method.Options.Generate.GRPCClient {
+		if method.Generate.HasAny(constants.MethodGenerateGRPCServerFlag, constants.MethodGenerateGRPCClientFlag) {
 			return true
 		}
 	}
@@ -279,7 +280,7 @@ func IsGRPCEnabled(service types.Service) bool {
 
 func IsGRPCServerEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.GRPCServer {
+		if method.Generate.Has(constants.MethodGenerateGRPCServerFlag) {
 			return true
 		}
 	}
@@ -288,7 +289,7 @@ func IsGRPCServerEnabled(service types.Service) bool {
 
 func IsGRPCClientEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.GRPCClient {
+		if method.Generate.Has(constants.MethodGenerateGRPCClientFlag) {
 			return true
 		}
 	}
@@ -297,7 +298,7 @@ func IsGRPCClientEnabled(service types.Service) bool {
 
 func IsTracingEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.Tracing {
+		if method.Generate.Has(constants.MethodGenerateTracingFlag) {
 			return true
 		}
 	}
@@ -306,9 +307,11 @@ func IsTracingEnabled(service types.Service) bool {
 
 func IsMetricsEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.FrequencyMetric ||
-			method.Options.Generate.LatencyMetric ||
-			method.Options.Generate.CounterMetric {
+		if method.Generate.HasAny(
+			constants.MethodGenerateFrequencyMetricFlag,
+			constants.MethodGenerateLatencyMetricFlag,
+			constants.MethodGenerateCounterMetricFlag,
+		) {
 			return true
 		}
 	}
@@ -317,7 +320,7 @@ func IsMetricsEnabled(service types.Service) bool {
 
 func IsFrequencyMetricEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.FrequencyMetric {
+		if method.Generate.Has(constants.MethodGenerateFrequencyMetricFlag) {
 			return true
 		}
 	}
@@ -326,7 +329,7 @@ func IsFrequencyMetricEnabled(service types.Service) bool {
 
 func IsLatencyMetricEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.LatencyMetric {
+		if method.Generate.Has(constants.MethodGenerateLatencyMetricFlag) {
 			return true
 		}
 	}
@@ -335,7 +338,7 @@ func IsLatencyMetricEnabled(service types.Service) bool {
 
 func IsCounterMetricEnabled(service types.Service) bool {
 	for _, method := range service.Methods {
-		if method.Options.Generate.CounterMetric {
+		if method.Generate.Has(constants.MethodGenerateCounterMetricFlag) {
 			return true
 		}
 	}
@@ -371,85 +374,85 @@ func FilteredFields(fields []*types.Field, filter func(field *types.Field) bool)
 
 func GetMethodsWithCachingEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.Caching
+		return method.Generate.Has(constants.MethodGenerateCachingFlag)
 	})
 }
 
 func GetMethodsWithLoggingEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.Logging
+		return method.Generate.Has(constants.MethodGenerateLoggingFlag)
 	})
 }
 
 func GetMethodsWithMethodStubsEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.MethodStubs
+		return method.Generate.Has(constants.MethodGenerateMethodStubsFlag)
 	})
 }
 
 func GetMethodsWithValidatorsEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.Validators
+		return method.Generate.Has(constants.MethodGenerateValidatorsFlag)
 	})
 }
 
 func GetMethodsWithValidatingEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.Validating
+		return method.Generate.Has(constants.MethodGenerateValidatingFlag)
 	})
 }
 
 func GetMethodsWithMiddlewareEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.Middleware
+		return method.Generate.Has(constants.MethodGenerateMiddlewareFlag)
 	})
 }
 
 func GetMethodsWithHTTPServerEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.HTTPServer
+		return method.Generate.Has(constants.MethodGenerateHTTPServerFlag)
 	})
 }
 
 func GetMethodsWithHTTPClientEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.HTTPServer
+		return method.Generate.Has(constants.MethodGenerateHTTPServerFlag)
 	})
 }
 
 func GetMethodsWithHTTPEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.HTTPServer || method.Options.Generate.HTTPClient
+		return method.Generate.HasAny(constants.MethodGenerateHTTPServerFlag, constants.MethodGenerateHTTPClientFlag)
 	})
 }
 
 func GetMethodsWithGRPCServerEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.GRPCServer
+		return method.Generate.Has(constants.MethodGenerateGRPCServerFlag)
 	})
 }
 
 func GetMethodsWithGRPCClientEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.GRPCServer
+		return method.Generate.Has(constants.MethodGenerateGRPCServerFlag)
 	})
 }
 
 func GetMethodsWithGRPCEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.GRPCServer || method.Options.Generate.GRPCClient
+		return method.Generate.HasAny(constants.MethodGenerateGRPCServerFlag, constants.MethodGenerateGRPCClientFlag)
 	})
 }
 
 func GetMethodsWithTracingEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.Tracing
+		return method.Generate.Has(constants.MethodGenerateTracingFlag)
 	})
 }
 
 func GetMethodsWithMetricsEnabled(service types.Service) (ms []types.Method) {
 	return FilteredMethods(service.Methods, func(method types.Method) bool {
-		return method.Options.Generate.FrequencyMetric || method.Options.Generate.LatencyMetric || method.Options.Generate.CounterMetric
+		return method.Generate.HasAny(constants.MethodGenerateFrequencyMetricFlag, constants.MethodGenerateLatencyMetricFlag, constants.MethodGenerateCounterMetricFlag)
 	})
 }
 
@@ -489,7 +492,7 @@ func HasLoggedResults(method types.Method) bool {
 
 func IsCachaeble(service types.Service) bool {
 	for _, method := range service.Methods {
-		if len(method.Arguments) > 0 && len(method.Results) > 0 && method.Options.Generate.Caching {
+		if len(method.Arguments) > 0 && len(method.Results) > 0 && method.Generate.Has(constants.MethodGenerateCachingFlag) {
 			return true
 		}
 	}
@@ -498,7 +501,7 @@ func IsCachaeble(service types.Service) bool {
 
 func IsValidatable(service types.Service) bool {
 	for _, method := range service.Methods {
-		if len(method.Arguments) > 0 && method.Options.Generate.Validating {
+		if len(method.Arguments) > 0 && method.Generate.Has(constants.MethodGenerateValidatingFlag) {
 			return true
 		}
 	}
