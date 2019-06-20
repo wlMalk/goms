@@ -64,7 +64,9 @@ func (g *Generator) Generate(service types.Service) (files Files, err error) {
 		if err != nil {
 			return nil, err
 		}
-		files = append(files, file)
+		if file != nil {
+			files = append(files, file)
+		}
 	}
 	return
 }
