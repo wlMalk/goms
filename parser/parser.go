@@ -157,6 +157,22 @@ func (p *Parser) registerParamTagParser(name string, parser paramTagParser) {
 	p.builtInParamTags[strings.ToLower(name)] = parser
 }
 
+func (p *Parser) RegisterServiceGenerateFlags(flags ...string) {
+	p.serviceGenerateFlagsHandler.addAllowed(flags...)
+}
+
+func (p *Parser) RegisterServiceGenerateFlagsGroup(group string, flags ...string) {
+	p.serviceGenerateFlagsHandler.groupAllowed(group, flags...)
+}
+
+func (p *Parser) RegisterMethodGenerateFlags(flags ...string) {
+	p.methodGenerateFlagsHandler.addAllowed(flags...)
+}
+
+func (p *Parser) RegisterMethodGenerateFlagsGroup(group string, flags ...string) {
+	p.methodGenerateFlagsHandler.groupAllowed(group, flags...)
+}
+
 func (p *Parser) getBuiltInServiceTags() (tags []string) {
 	for k := range p.builtInServiceTags {
 		tags = append(tags, k)
