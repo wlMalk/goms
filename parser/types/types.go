@@ -17,6 +17,7 @@ type Service struct {
 
 	Options      ServiceOptions
 	OtherOptions TagsOptions
+	Generate     GenerateList
 }
 
 type Version struct {
@@ -60,6 +61,7 @@ type Method struct {
 
 	Options      MethodOptions
 	OtherOptions TagsOptions
+	Generate     GenerateList
 }
 
 type Type struct {
