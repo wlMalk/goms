@@ -1,13 +1,79 @@
 package types
 
+import (
+	strs "strings"
+)
+
+type GenerateList []string
+
+func (g GenerateList) Has(a ...string) bool {
+loop:
+	for i := range a {
+		for j := range g {
+			if strs.ToLower(a[i]) == g[j] {
+				continue loop
+			}
+		}
+		return false
+	}
+	return true
+}
+
+func (g GenerateList) HasAny(a ...string) bool {
+	if len(a) == 0 {
+		return true
+	}
+	for i := range a {
+		for j := range g {
+			if strs.ToLower(a[i]) == g[j] {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (g GenerateList) HasNone(a ...string) bool {
+	for i := range a {
+		for j := range g {
+			if strs.ToLower(a[i]) == g[j] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (g *GenerateList) Add(a ...string) {
+	for i := range a {
+		if g.HasNone(a[i]) {
+			*g = append(*g, strs.ToLower(a[i]))
+		}
+	}
+}
+
+func (g *GenerateList) Remove(a ...string) {
+	for i := range a {
+		for j := range *g {
+			if strs.ToLower(a[i]) == (*g)[j] {
+				*g = append((*g)[:j], (*g)[j+1:]...)
+				break
+			}
+		}
+	}
+}
+
+func (g *GenerateList) Empty() {
+	g.Remove(*g...)
+}
+
 type TagOptions map[string]interface{}
 
 type TagsOptions map[string]TagOptions
 
 type ServiceOptions struct {
-	HTTP     HTTPServiceOptions
-	GRPC     GRPCServiceOptions
-	Generate GenerateServiceOptions
+	HTTP HTTPServiceOptions
+	GRPC GRPCServiceOptions
 }
 
 type HTTPServiceOptions struct {
@@ -17,56 +83,10 @@ type HTTPServiceOptions struct {
 type GRPCServiceOptions struct {
 }
 
-type GenerateServiceOptions struct {
-	Logger           bool
-	CircuitBreaking  bool
-	RateLimiting     bool
-	Recovering       bool
-	Caching          bool
-	Logging          bool
-	Tracing          bool
-	ServiceDiscovery bool
-	ProtoBuf         bool
-	Main             bool
-	Validators       bool
-	Validating       bool
-	Middleware       bool
-	MethodStubs      bool
-	FrequencyMetric  bool
-	LatencyMetric    bool
-	CounterMetric    bool
-	HTTPServer       bool
-	HTTPClient       bool
-	GRPCServer       bool
-	GRPCClient       bool
-	Dockerfile       bool
-}
-
 type MethodOptions struct {
-	HTTP     HTTPMethodOptions
-	GRPC     GRPCMethodOptions
-	Logging  LoggingMethodOptions
-	Generate GenerateMethodOptions
-}
-
-type GenerateMethodOptions struct {
-	CircuitBreaking bool
-	RateLimiting    bool
-	Recovering      bool
-	Caching         bool
-	Logging         bool
-	Validators      bool
-	Validating      bool
-	Middleware      bool
-	MethodStubs     bool
-	Tracing         bool
-	FrequencyMetric bool
-	LatencyMetric   bool
-	CounterMetric   bool
-	HTTPServer      bool
-	HTTPClient      bool
-	GRPCServer      bool
-	GRPCClient      bool
+	HTTP    HTTPMethodOptions
+	GRPC    GRPCMethodOptions
+	Logging LoggingMethodOptions
 }
 
 type HTTPMethodOptions struct {
