@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/wlMalk/goms/constants"
 	"github.com/wlMalk/goms/parser/tags"
 	"github.com/wlMalk/goms/parser/types"
 )
@@ -60,6 +61,81 @@ func BuiltInParamTagsParsers(parser *Parser) {
 	parser.registerParamTagParser("http-origin", tags.ParamHTTPOriginTag)
 }
 
+func BuiltInServiceGenerateFlags(parser *Parser) {
+	parser.RegisterServiceGenerateFlags(
+		constants.ServiceGenerateLoggerFlag,
+		constants.ServiceGenerateCircuitBreakingFlag,
+		constants.ServiceGenerateRateLimitingFlag,
+		constants.ServiceGenerateRecoveringFlag,
+		constants.ServiceGenerateCachingFlag,
+		constants.ServiceGenerateLoggingFlag,
+		constants.ServiceGenerateTracingFlag,
+		constants.ServiceGenerateServiceDiscoveryFlag,
+		constants.ServiceGenerateProtoBufFlag,
+		constants.ServiceGenerateMainFlag,
+		constants.ServiceGenerateValidatorsFlag,
+		constants.ServiceGenerateValidatingFlag,
+		constants.ServiceGenerateMiddlewareFlag,
+		constants.ServiceGenerateMethodStubsFlag,
+		constants.ServiceGenerateFrequencyMetricFlag,
+		constants.ServiceGenerateLatencyMetricFlag,
+		constants.ServiceGenerateCounterMetricFlag,
+		constants.ServiceGenerateHTTPServerFlag,
+		constants.ServiceGenerateHTTPClientFlag,
+		constants.ServiceGenerateGRPCServerFlag,
+		constants.ServiceGenerateGRPCClientFlag,
+		constants.ServiceGenerateDockerfileFlag,
+	)
+	parser.RegisterServiceGenerateFlagsGroup(constants.ServiceGenerateGroupMetrics,
+		constants.ServiceGenerateFrequencyMetricFlag,
+		constants.ServiceGenerateLatencyMetricFlag,
+		constants.ServiceGenerateCounterMetricFlag,
+	)
+	parser.RegisterServiceGenerateFlagsGroup(constants.ServiceGenerateGroupHTTP,
+		constants.ServiceGenerateHTTPServerFlag,
+		constants.ServiceGenerateHTTPClientFlag,
+	)
+	parser.RegisterServiceGenerateFlagsGroup(constants.ServiceGenerateGroupGRPC,
+		constants.ServiceGenerateGRPCServerFlag,
+		constants.ServiceGenerateGRPCClientFlag,
+	)
+}
+
+func BuiltInMethodGenerateFlags(parser *Parser) {
+	parser.RegisterMethodGenerateFlags(
+		constants.MethodGenerateCircuitBreakingFlag,
+		constants.MethodGenerateRateLimitingFlag,
+		constants.MethodGenerateRecoveringFlag,
+		constants.MethodGenerateCachingFlag,
+		constants.MethodGenerateLoggingFlag,
+		constants.MethodGenerateValidatorsFlag,
+		constants.MethodGenerateValidatingFlag,
+		constants.MethodGenerateMiddlewareFlag,
+		constants.MethodGenerateMethodStubsFlag,
+		constants.MethodGenerateTracingFlag,
+		constants.MethodGenerateFrequencyMetricFlag,
+		constants.MethodGenerateLatencyMetricFlag,
+		constants.MethodGenerateCounterMetricFlag,
+		constants.MethodGenerateHTTPServerFlag,
+		constants.MethodGenerateHTTPClientFlag,
+		constants.MethodGenerateGRPCServerFlag,
+		constants.MethodGenerateGRPCClientFlag,
+	)
+	parser.RegisterMethodGenerateFlagsGroup(constants.MethodGenerateGroupMetrics,
+		constants.MethodGenerateFrequencyMetricFlag,
+		constants.MethodGenerateLatencyMetricFlag,
+		constants.MethodGenerateCounterMetricFlag,
+	)
+	parser.RegisterMethodGenerateFlagsGroup(constants.MethodGenerateGroupHTTP,
+		constants.MethodGenerateHTTPServerFlag,
+		constants.MethodGenerateHTTPClientFlag,
+	)
+	parser.RegisterMethodGenerateFlagsGroup(constants.MethodGenerateGroupGRPC,
+		constants.MethodGenerateGRPCServerFlag,
+		constants.MethodGenerateGRPCClientFlag,
+	)
+}
+
 func New(opts ...ParserOption) *Parser {
 	p := &Parser{
 		builtInServiceTags:          map[string]serviceTagParser{},
@@ -88,7 +164,13 @@ func New(opts ...ParserOption) *Parser {
 }
 
 func Default(opts ...ParserOption) *Parser {
-	opts = append([]ParserOption{BuiltInServiceTagsParsers, BuiltInMethodTagsParsers, BuiltInParamTagsParsers}, opts...)
+	opts = append([]ParserOption{
+		BuiltInServiceTagsParsers,
+		BuiltInMethodTagsParsers,
+		BuiltInParamTagsParsers,
+		BuiltInServiceGenerateFlags,
+		BuiltInMethodGenerateFlags,
+	}, opts...)
 	return New(opts...)
 }
 
