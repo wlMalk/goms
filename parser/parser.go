@@ -30,14 +30,15 @@ type Parser struct {
 	otherMethodTags    map[string]MethodTagParser
 	builtInParamTags   map[string]paramTagParser
 	otherParamTags     map[string]ParamTagParser
+
+	serviceGenerateFlagsHandler *generateHandler
+	methodGenerateFlagsHandler  *generateHandler
 }
 
 type ParserOption func(parser *Parser)
 
 func BuiltInServiceTagsParsers(parser *Parser) {
 	parser.registerServiceTagParser("name", tags.ServiceNameTag)
-	parser.registerServiceTagParser("generate-all", tags.ServiceGenerateAllTag)
-	parser.registerServiceTagParser("generate", tags.ServiceGenerateTag)
 	parser.registerServiceTagParser("transports", tags.ServiceTransportsTag)
 	parser.registerServiceTagParser("metrics", tags.ServiceMetricsTag)
 	parser.registerServiceTagParser("http-URI-prefix", tags.ServiceHTTPUriPrefixTag)
@@ -52,10 +53,6 @@ func BuiltInMethodTagsParsers(parser *Parser) {
 	parser.registerMethodTagParser("http-abs-URI", tags.MethodHTTPAbsUriTag)
 	parser.registerMethodTagParser("logs-ignore", tags.MethodLogsIgnoreTag)
 	parser.registerMethodTagParser("logs-len", tags.MethodLogsLenTag)
-	parser.registerMethodTagParser("disable", tags.MethodDisableTag)
-	parser.registerMethodTagParser("enable", tags.MethodEnableTag)
-	parser.registerMethodTagParser("disable-all", tags.MethodDisableAllTag)
-	parser.registerMethodTagParser("enable-all", tags.MethodEnableAllTag)
 	parser.registerMethodTagParser("alias", tags.MethodAliasTag)
 }
 
@@ -65,14 +62,25 @@ func BuiltInParamTagsParsers(parser *Parser) {
 
 func New(opts ...ParserOption) *Parser {
 	p := &Parser{
-		builtInServiceTags: map[string]serviceTagParser{},
-		otherServiceTags:   map[string]ServiceTagParser{},
-		builtInMethodTags:  map[string]methodTagParser{},
-		otherMethodTags:    map[string]MethodTagParser{},
-		builtInParamTags:   map[string]paramTagParser{},
-		otherParamTags:     map[string]ParamTagParser{},
+		builtInServiceTags:          map[string]serviceTagParser{},
+		otherServiceTags:            map[string]ServiceTagParser{},
+		builtInMethodTags:           map[string]methodTagParser{},
+		otherMethodTags:             map[string]MethodTagParser{},
+		builtInParamTags:            map[string]paramTagParser{},
+		otherParamTags:              map[string]ParamTagParser{},
+		serviceGenerateFlagsHandler: newGenerateHandler(),
+		methodGenerateFlagsHandler:  newGenerateHandler(),
 	}
 	p.builtInMethodTags["params"] = p.methodParamsTag
+
+	p.builtInServiceTags["generate-all"] = p.serviceGenerateAllTag
+	p.builtInServiceTags["generate"] = p.serviceGenerateTag
+
+	p.builtInMethodTags["disable"] = p.methodDisableTag
+	p.builtInMethodTags["enable"] = p.methodEnableTag
+	p.builtInMethodTags["disable-all"] = p.methodDisableAllTag
+	p.builtInMethodTags["enable-all"] = p.methodEnableAllTag
+
 	for _, opt := range opts {
 		opt(p)
 	}
