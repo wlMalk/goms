@@ -13,7 +13,6 @@ import (
 	"github.com/wlMalk/goms/version"
 
 	"github.com/gookit/color"
-	"github.com/vetcher/go-astra"
 )
 
 func main() {
@@ -52,18 +51,11 @@ func main() {
 	if err != nil {
 		fail(fmt.Errorf("error when parse file: %v", err))
 	}
-	file, err := astra.ParseAstFile(f)
-	if err != nil {
-		if os.IsNotExist(err) {
-			fail(fmt.Errorf("%s file does not exist", path))
-		}
-		fail(err)
-	}
 
 	p := parser.Default()
 	g := generator.Default()
 
-	services, err := p.Parse(file)
+	services, err := p.Parse(f)
 	if err != nil {
 		fail(err)
 	}
