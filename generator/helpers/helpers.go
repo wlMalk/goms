@@ -58,10 +58,10 @@ func GetUnexportedMethodSignature(receiver string, method types.Method) string {
 	return GetFuncSignature(receiver, strings.ToLowerFirst(method.Name), GetMethodArguments(method.Arguments), GetMethodResults(method.Results))
 }
 
-func GetFieldTagsString(tags map[string]string) string {
+func GetFieldTagsString(tags map[string][]string) string {
 	var a []string
 	for k, v := range tags {
-		a = append(a, fmt.Sprintf("%s:\"%s\"", k, v))
+		a = append(a, fmt.Sprintf("%s:\"%s\"", k, strs.Join(v, ",")))
 	}
 	return strs.Join(a, ",")
 }
@@ -74,9 +74,9 @@ func GenerateStruct(file *files.GoFile, name string, fields []*types.Field) {
 	for _, f := range fields {
 		jsonName := GetName(strings.ToLowerFirst(f.Name), f.Alias)
 		if len(f.Tags) == 0 {
-			f.Tags = map[string]string{"json": strings.ToLowerFirst(jsonName)}
+			f.Tags = map[string][]string{"json": []string{strings.ToLowerFirst(jsonName)}}
 		} else {
-			f.Tags["json"] = strings.ToLowerFirst(jsonName)
+			f.Tags["json"] = []string{strings.ToLowerFirst(jsonName)}
 		}
 		file.Pf("%s %s `%s`", f.Name, f.Type.GoType(), GetFieldTagsString(f.Tags))
 	}
