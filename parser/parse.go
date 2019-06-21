@@ -30,6 +30,10 @@ func (p *Parser) Parse(f *ast.File) (services []types.Service, err error) {
 	if err != nil {
 		return nil, err
 	}
+	argumentsGroups, err := p.parseArgumentsGroups(file)
+	if err != nil {
+		return nil, err
+	}
 	serviceName := cleanServiceName(file.Name)
 	ifaces := getServiceInterfaces(file.Interfaces, serviceName)
 	if len(ifaces) == 0 {
@@ -42,6 +46,7 @@ func (p *Parser) Parse(f *ast.File) (services []types.Service, err error) {
 		}
 		p.setServiceEnums(s, enums)
 		p.setServiceEntities(s, entities)
+		p.setServiceArgumentsGroups(s, argumentsGroups)
 		services = append(services, *s)
 	}
 	return
@@ -320,6 +325,26 @@ func (p *Parser) parseEntities(ast *astTypes.File) (entities []types.Entity, err
 	return
 }
 
+func (p *Parser) parseArgumentsGroups(ast *astTypes.File) (argumentsGroups []types.ArgumentsGroup, err error) {
+	for _, t := range ast.Structures {
+		if strs.HasSuffix(t.Name, "ArgumentsGroup") {
+			ag := types.ArgumentsGroup{}
+			ag.Name = strs.TrimSuffix(t.Name, "ArgumentsGroup")
+			for _, f := range t.Fields {
+				arg := types.Argument{}
+				arg.Name = f.Name
+				arg.Type, err = parseType(f.Variable.Type)
+				if err != nil {
+					return nil, err
+				}
+				ag.Arguments = append(ag.Arguments, &arg)
+			}
+			argumentsGroups = append(argumentsGroups, ag)
+		}
+	}
+	return
+}
+
 func (p *Parser) setServiceEnums(service *types.Service, enums []types.Enum) {
 	for _, e := range enums {
 		found := false
@@ -366,6 +391,31 @@ func (p *Parser) setServiceEntities(service *types.Service, entities []types.Ent
 		}
 		if found {
 			service.Entities = append(service.Entities, e)
+		}
+	}
+}
+
+func (p *Parser) setServiceArgumentsGroups(service *types.Service, argumentsGroups []types.ArgumentsGroup) {
+	for _, ag := range argumentsGroups {
+		found := false
+		for _, method := range service.Methods {
+			for _, arg := range method.Arguments {
+				if arg.Type.Name == ag.Name+"ArgumentsGroup" {
+					arg.Type.ArgumentsGroup = &ag
+					arg.Type.IsArgumentsGroup = true
+					found = true
+				}
+			}
+			for _, res := range method.Results {
+				if res.Type.Name == ag.Name+"ArgumentsGroup" {
+					res.Type.ArgumentsGroup = &ag
+					res.Type.IsArgumentsGroup = true
+					found = true
+				}
+			}
+		}
+		if found {
+			service.ArgumentsGroups = append(service.ArgumentsGroups, ag)
 		}
 	}
 }
