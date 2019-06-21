@@ -3,20 +3,31 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"go/ast"
 	"regexp"
+	"strconv"
 	strs "strings"
 
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 
+	astra "github.com/vetcher/go-astra"
 	astTypes "github.com/vetcher/go-astra/types"
 )
 
 var versionPattern = regexp.MustCompile(`(?is)^v?([0-9]+)((\.|-|_|:)([0-9]+))?((\.|-|_|:)([0-9]+))?$`)
 
-func (p *Parser) Parse(ast *astTypes.File) (services []types.Service, err error) {
-	serviceName := cleanServiceName(ast.Name)
-	ifaces := getServiceInterfaces(ast.Interfaces, serviceName)
+func (p *Parser) Parse(f *ast.File) (services []types.Service, err error) {
+	file, err := astra.ParseAstFile(f)
+	if err != nil {
+		return nil, err
+	}
+	enums, err := p.parseEnums(f)
+	if err != nil {
+		return nil, err
+	}
+	serviceName := cleanServiceName(file.Name)
+	ifaces := getServiceInterfaces(file.Interfaces, serviceName)
 	if len(ifaces) == 0 {
 		return nil, errors.New("no service definitions were found")
 	}
@@ -25,6 +36,7 @@ func (p *Parser) Parse(ast *astTypes.File) (services []types.Service, err error)
 		if err != nil {
 			return nil, err
 		}
+		p.setServiceEnums(s, enums)
 		services = append(services, *s)
 	}
 	return
@@ -232,6 +244,79 @@ func (p *Parser) parseParamTags(param *types.Argument, tags []string) error {
 		return fmt.Errorf("invalid param tag \"%s\"", tag)
 	}
 	return nil
+}
+
+func (p *Parser) parseEnums(file *ast.File) (enums []types.Enum, err error) {
+	for _, t := range file.Decls {
+		if g, ok := t.(*ast.GenDecl); ok && g.Tok.String() == "type" {
+			for _, s := range g.Specs {
+				if ts, ok := s.(*ast.TypeSpec); ok && fmt.Sprint(ts.Type) == "int" && ts.Name.IsExported() {
+					e := types.Enum{}
+					e.Name = ts.Name.String()
+					e.Cases, err = p.parseEnumCases(file, e.Name)
+					if err != nil {
+						return nil, err
+					}
+					enums = append(enums, e)
+				}
+			}
+		}
+	}
+	return
+}
+
+func (p *Parser) parseEnumCases(file *ast.File, enum string) (cases []types.EnumCase, err error) {
+	for _, t := range file.Decls {
+		if g, ok := t.(*ast.GenDecl); ok && g.Tok.String() == "const" {
+			for _, s := range g.Specs {
+				if ts, ok := s.(*ast.ValueSpec); ok && fmt.Sprint(ts.Type) == enum {
+					if len(ts.Names) != len(ts.Values) {
+						return nil, fmt.Errorf("cannot parse '%s' enum values", enum)
+					}
+					for i := range ts.Names {
+						if bv, ok := ts.Values[i].(*ast.BasicLit); ts.Names[i].IsExported() && ok {
+							eCase := types.EnumCase{}
+							eCase.Name = ts.Names[i].String()
+							v, err := strconv.Atoi(bv.Value)
+							if err != nil {
+								return nil, fmt.Errorf("cannot parse '%s' value '%s' for '%s' enum", enum, eCase.Name, bv.Value)
+							}
+							eCase.Value = v
+							cases = append(cases, eCase)
+						} else {
+							return nil, fmt.Errorf("cannot parse '%s' enum values", enum)
+						}
+					}
+				}
+			}
+		}
+	}
+	return
+}
+
+func (p *Parser) setServiceEnums(service *types.Service, enums []types.Enum) {
+	for _, e := range enums {
+		found := false
+		for _, method := range service.Methods {
+			for _, arg := range method.Arguments {
+				if arg.Type.Name == e.Name {
+					arg.Type.Enum = &e
+					arg.Type.IsEnum = true
+					found = true
+				}
+			}
+			for _, res := range method.Results {
+				if res.Type.Name == e.Name {
+					res.Type.Enum = &e
+					res.Type.IsEnum = true
+					found = true
+				}
+			}
+		}
+		if found {
+			service.Enums = append(service.Enums, e)
+		}
+	}
 }
 
 func (p *Parser) methodParamsTag(method *types.Method, tag string) error {
