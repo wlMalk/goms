@@ -26,6 +26,10 @@ func (p *Parser) Parse(f *ast.File) (services []types.Service, err error) {
 	if err != nil {
 		return nil, err
 	}
+	entities, err := p.parseEntities(file)
+	if err != nil {
+		return nil, err
+	}
 	serviceName := cleanServiceName(file.Name)
 	ifaces := getServiceInterfaces(file.Interfaces, serviceName)
 	if len(ifaces) == 0 {
@@ -37,6 +41,7 @@ func (p *Parser) Parse(f *ast.File) (services []types.Service, err error) {
 			return nil, err
 		}
 		p.setServiceEnums(s, enums)
+		p.setServiceEntities(s, entities)
 		services = append(services, *s)
 	}
 	return
@@ -294,6 +299,27 @@ func (p *Parser) parseEnumCases(file *ast.File, enum string) (cases []types.Enum
 	return
 }
 
+func (p *Parser) parseEntities(ast *astTypes.File) (entities []types.Entity, err error) {
+	for _, t := range ast.Structures {
+		if !strs.HasSuffix(t.Name, "ArgumentsGroup") {
+			e := types.Entity{}
+			e.Name = t.Name
+			for _, f := range t.Fields {
+				field := types.Field{}
+				field.Name = f.Name
+				field.Tags = f.Tags
+				field.Type, err = parseType(f.Variable.Type)
+				if err != nil {
+					return nil, err
+				}
+				e.Fields = append(e.Fields, &field)
+			}
+			entities = append(entities, e)
+		}
+	}
+	return
+}
+
 func (p *Parser) setServiceEnums(service *types.Service, enums []types.Enum) {
 	for _, e := range enums {
 		found := false
@@ -315,6 +341,31 @@ func (p *Parser) setServiceEnums(service *types.Service, enums []types.Enum) {
 		}
 		if found {
 			service.Enums = append(service.Enums, e)
+		}
+	}
+}
+
+func (p *Parser) setServiceEntities(service *types.Service, entities []types.Entity) {
+	for _, e := range entities {
+		found := false
+		for _, method := range service.Methods {
+			for _, arg := range method.Arguments {
+				if arg.Type.Name == e.Name {
+					arg.Type.Entity = &e
+					arg.Type.IsEntity = true
+					found = true
+				}
+			}
+			for _, res := range method.Results {
+				if res.Type.Name == e.Name {
+					res.Type.Entity = &e
+					res.Type.IsEntity = true
+					found = true
+				}
+			}
+		}
+		if found {
+			service.Entities = append(service.Entities, e)
 		}
 	}
 }
