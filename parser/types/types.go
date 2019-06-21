@@ -5,15 +5,16 @@ import (
 )
 
 type Service struct {
-	Name       string
-	Alias      string
-	Docs       []string
-	Path       string
-	ImportPath string
-	Version    Version
-	Methods    []Method
-	Structs    []*Struct
-	Enums      []*Enum
+	Name            string
+	Alias           string
+	Docs            []string
+	Path            string
+	ImportPath      string
+	Version         Version
+	Methods         []Method
+	Entities        []Entity
+	ArgumentsGroups []ArgumentsGroup
+	Enums           []Enum
 
 	Options      ServiceOptions
 	OtherOptions TagsOptions
@@ -80,7 +81,7 @@ type Type struct {
 	IsArgumentsGroup bool
 	IsBytes          bool
 	Value            *Type
-	Struct           *Struct
+	Entity           *Entity
 	Enum             *Enum
 	ArgumentsGroup   *ArgumentsGroup
 }
@@ -159,16 +160,21 @@ type ArgumentsGroup struct {
 	Arguments []*Argument
 }
 
-type Struct struct {
+type Entity struct {
 	Name   string
 	Docs   []string
 	Fields []*Field
 }
 
+type EnumCase struct {
+	Name  string
+	Value int
+}
+
 type Enum struct {
 	Name  string
 	Docs  []string
-	Cases []string
+	Cases []EnumCase
 }
 
 type Argument struct {
