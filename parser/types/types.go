@@ -194,7 +194,7 @@ type Field struct {
 	Docs  []string
 	Alias string
 	Type  *Type
-	Tags  map[string]string
+	Tags  map[string][]string
 }
 
 type Validator struct {
