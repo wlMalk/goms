@@ -11,6 +11,7 @@ type (
 	MethodGenerator         func(file File, service types.Service, method types.Method) error
 	ArgumentsGroupGenerator func(file File, service types.Service, argsGroup types.ArgumentsGroup) error
 	EntityGenerator         func(file File, service types.Service, entity types.Entity) error
+	EnumGenerator           func(file File, service types.Service, enum types.Enum) error
 )
 
 type (
@@ -18,6 +19,7 @@ type (
 	MethodCondition         func(service types.Service, method types.Method) bool
 	ArgumentsGroupCondition func(service types.Service, argsGroup types.ArgumentsGroup) bool
 	EntityCondition         func(service types.Service, entity types.Entity) bool
+	EnumCondition           func(service types.Service, enum types.Enum) bool
 )
 
 type (
@@ -45,6 +47,11 @@ type entityGeneratorHandler struct {
 	conditions []EntityCondition
 }
 
+type enumGeneratorHandler struct {
+	generator  EnumGenerator
+	conditions []EnumCondition
+}
+
 type SpecBeforeFunc func(file File, service types.Service)
 type SpecAfterFunc func(b []byte, service types.Service) ([]byte, error)
 
@@ -60,6 +67,7 @@ type Spec struct {
 	methodGenerators         map[string]methodGeneratorHandler
 	argumentsGroupGenerators map[string]argumentsGroupGeneratorHandler
 	entityGenerators         map[string]entityGeneratorHandler
+	enumGenerators           map[string]enumGeneratorHandler
 	conditions               []ServiceCondition
 	overwrite                bool
 	overwriteFunc            func(service types.Service) bool
@@ -73,6 +81,7 @@ func NewSpec(fileType string) Spec {
 		methodGenerators:         map[string]methodGeneratorHandler{},
 		argumentsGroupGenerators: map[string]argumentsGroupGeneratorHandler{},
 		entityGenerators:         map[string]entityGeneratorHandler{},
+		enumGenerators:           map[string]enumGeneratorHandler{},
 	}
 	f.fileType = fileType
 	return f
@@ -195,6 +204,32 @@ func (f Spec) EntityGeneratorConditions(name string, conds ...EntityCondition) S
 	return f
 }
 
+func (f Spec) AddEnumGenerator(name string, generator EnumGenerator, conds ...EnumCondition) Spec {
+	name = strings.ToLower(name)
+	g := enumGeneratorHandler{
+		generator:  generator,
+		conditions: conds,
+	}
+	f.enumGenerators[name] = g
+	return f
+}
+
+func (f Spec) EnumGenerator(name string, generator EnumGenerator) Spec {
+	name = strings.ToLower(name)
+	g := f.getEnumGenerator(name)
+	g.generator = generator
+	f.enumGenerators[name] = g
+	return f
+}
+
+func (f Spec) EnumGeneratorConditions(name string, conds ...EnumCondition) Spec {
+	name = strings.ToLower(name)
+	g := f.getEnumGenerator(name)
+	g.conditions = append(g.conditions, conds...)
+	f.enumGenerators[name] = g
+	return f
+}
+
 func (f Spec) AddMethodGenerator(name string, generator MethodGenerator, extractor MethodsExtractor, conds ...MethodCondition) Spec {
 	name = strings.ToLower(name)
 	g := methodGeneratorHandler{
@@ -255,6 +290,13 @@ func (f Spec) getEntityGenerator(name string) entityGeneratorHandler {
 		return h
 	}
 	return entityGeneratorHandler{}
+}
+
+func (f Spec) getEnumGenerator(name string) enumGeneratorHandler {
+	if h, ok := f.enumGenerators[name]; ok {
+		return h
+	}
+	return enumGeneratorHandler{}
 }
 
 func (f Spec) getMethodGenerator(name string) methodGeneratorHandler {
