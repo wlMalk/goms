@@ -10,12 +10,14 @@ type (
 	ServiceGenerator        func(file File, service types.Service) error
 	MethodGenerator         func(file File, service types.Service, method types.Method) error
 	ArgumentsGroupGenerator func(file File, service types.Service, argsGroup types.ArgumentsGroup) error
+	EntityGenerator         func(file File, service types.Service, entity types.Entity) error
 )
 
 type (
 	ServiceCondition        func(service types.Service) bool
 	MethodCondition         func(service types.Service, method types.Method) bool
 	ArgumentsGroupCondition func(service types.Service, argsGroup types.ArgumentsGroup) bool
+	EntityCondition         func(service types.Service, entity types.Entity) bool
 )
 
 type (
@@ -38,6 +40,11 @@ type argumentsGroupGeneratorHandler struct {
 	conditions []ArgumentsGroupCondition
 }
 
+type entityGeneratorHandler struct {
+	generator  EntityGenerator
+	conditions []EntityCondition
+}
+
 type SpecBeforeFunc func(file File, service types.Service)
 type SpecAfterFunc func(b []byte, service types.Service) ([]byte, error)
 
@@ -52,6 +59,7 @@ type Spec struct {
 	serviceGenerators        map[string]serviceGeneratorHandler
 	methodGenerators         map[string]methodGeneratorHandler
 	argumentsGroupGenerators map[string]argumentsGroupGeneratorHandler
+	entityGenerators         map[string]entityGeneratorHandler
 	conditions               []ServiceCondition
 	overwrite                bool
 	overwriteFunc            func(service types.Service) bool
@@ -64,6 +72,7 @@ func NewSpec(fileType string) Spec {
 		serviceGenerators:        map[string]serviceGeneratorHandler{},
 		methodGenerators:         map[string]methodGeneratorHandler{},
 		argumentsGroupGenerators: map[string]argumentsGroupGeneratorHandler{},
+		entityGenerators:         map[string]entityGeneratorHandler{},
 	}
 	f.fileType = fileType
 	return f
@@ -160,6 +169,32 @@ func (f Spec) ArgumentsGroupGeneratorConditions(name string, conds ...ArgumentsG
 	return f
 }
 
+func (f Spec) AddEntityGenerator(name string, generator EntityGenerator, conds ...EntityCondition) Spec {
+	name = strings.ToLower(name)
+	g := entityGeneratorHandler{
+		generator:  generator,
+		conditions: conds,
+	}
+	f.entityGenerators[name] = g
+	return f
+}
+
+func (f Spec) EntityGenerator(name string, generator EntityGenerator) Spec {
+	name = strings.ToLower(name)
+	g := f.getEntityGenerator(name)
+	g.generator = generator
+	f.entityGenerators[name] = g
+	return f
+}
+
+func (f Spec) EntityGeneratorConditions(name string, conds ...EntityCondition) Spec {
+	name = strings.ToLower(name)
+	g := f.getEntityGenerator(name)
+	g.conditions = append(g.conditions, conds...)
+	f.entityGenerators[name] = g
+	return f
+}
+
 func (f Spec) AddMethodGenerator(name string, generator MethodGenerator, extractor MethodsExtractor, conds ...MethodCondition) Spec {
 	name = strings.ToLower(name)
 	g := methodGeneratorHandler{
@@ -213,6 +248,13 @@ func (f Spec) getArgumentsGroupGenerator(name string) argumentsGroupGeneratorHan
 		return h
 	}
 	return argumentsGroupGeneratorHandler{}
+}
+
+func (f Spec) getEntityGenerator(name string) entityGeneratorHandler {
+	if h, ok := f.entityGenerators[name]; ok {
+		return h
+	}
+	return entityGeneratorHandler{}
 }
 
 func (f Spec) getMethodGenerator(name string) methodGeneratorHandler {
