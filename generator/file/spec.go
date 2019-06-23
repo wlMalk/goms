@@ -7,13 +7,15 @@ import (
 )
 
 type (
-	ServiceGenerator func(file File, service types.Service) error
-	MethodGenerator  func(file File, service types.Service, method types.Method) error
+	ServiceGenerator        func(file File, service types.Service) error
+	MethodGenerator         func(file File, service types.Service, method types.Method) error
+	ArgumentsGroupGenerator func(file File, service types.Service, argsGroup types.ArgumentsGroup) error
 )
 
 type (
-	ServiceCondition func(service types.Service) bool
-	MethodCondition  func(service types.Service, method types.Method) bool
+	ServiceCondition        func(service types.Service) bool
+	MethodCondition         func(service types.Service, method types.Method) bool
+	ArgumentsGroupCondition func(service types.Service, argsGroup types.ArgumentsGroup) bool
 )
 
 type (
@@ -31,30 +33,37 @@ type methodGeneratorHandler struct {
 	extractor  MethodsExtractor
 }
 
+type argumentsGroupGeneratorHandler struct {
+	generator  ArgumentsGroupGenerator
+	conditions []ArgumentsGroupCondition
+}
+
 type SpecBeforeFunc func(file File, service types.Service)
 type SpecAfterFunc func(b []byte, service types.Service) ([]byte, error)
 
 type Spec struct {
-	path              string
-	pathFunc          func(service types.Service) string
-	name              string
-	nameFunc          func(service types.Service) string
-	fileType          string
-	beforeFuncs       []SpecBeforeFunc
-	afterFuncs        []SpecAfterFunc
-	serviceGenerators map[string]serviceGeneratorHandler
-	methodGenerators  map[string]methodGeneratorHandler
-	conditions        []ServiceCondition
-	overwrite         bool
-	overwriteFunc     func(service types.Service) bool
-	merge             bool
-	mergeFunc         func(service types.Service) bool
+	path                     string
+	pathFunc                 func(service types.Service) string
+	name                     string
+	nameFunc                 func(service types.Service) string
+	fileType                 string
+	beforeFuncs              []SpecBeforeFunc
+	afterFuncs               []SpecAfterFunc
+	serviceGenerators        map[string]serviceGeneratorHandler
+	methodGenerators         map[string]methodGeneratorHandler
+	argumentsGroupGenerators map[string]argumentsGroupGeneratorHandler
+	conditions               []ServiceCondition
+	overwrite                bool
+	overwriteFunc            func(service types.Service) bool
+	merge                    bool
+	mergeFunc                func(service types.Service) bool
 }
 
 func NewSpec(fileType string) Spec {
 	f := Spec{
-		serviceGenerators: map[string]serviceGeneratorHandler{},
-		methodGenerators:  map[string]methodGeneratorHandler{},
+		serviceGenerators:        map[string]serviceGeneratorHandler{},
+		methodGenerators:         map[string]methodGeneratorHandler{},
+		argumentsGroupGenerators: map[string]argumentsGroupGeneratorHandler{},
 	}
 	f.fileType = fileType
 	return f
@@ -125,6 +134,32 @@ func (f Spec) ServiceGeneratorConditions(name string, conds ...ServiceCondition)
 	return f
 }
 
+func (f Spec) AddArgumentsGroupGenerator(name string, generator ArgumentsGroupGenerator, conds ...ArgumentsGroupCondition) Spec {
+	name = strings.ToLower(name)
+	g := argumentsGroupGeneratorHandler{
+		generator:  generator,
+		conditions: conds,
+	}
+	f.argumentsGroupGenerators[name] = g
+	return f
+}
+
+func (f Spec) ArgumentsGroupGenerator(name string, generator ArgumentsGroupGenerator) Spec {
+	name = strings.ToLower(name)
+	g := f.getArgumentsGroupGenerator(name)
+	g.generator = generator
+	f.argumentsGroupGenerators[name] = g
+	return f
+}
+
+func (f Spec) ArgumentsGroupGeneratorConditions(name string, conds ...ArgumentsGroupCondition) Spec {
+	name = strings.ToLower(name)
+	g := f.getArgumentsGroupGenerator(name)
+	g.conditions = append(g.conditions, conds...)
+	f.argumentsGroupGenerators[name] = g
+	return f
+}
+
 func (f Spec) AddMethodGenerator(name string, generator MethodGenerator, extractor MethodsExtractor, conds ...MethodCondition) Spec {
 	name = strings.ToLower(name)
 	g := methodGeneratorHandler{
@@ -171,6 +206,13 @@ func (f Spec) getServiceGenerator(name string) serviceGeneratorHandler {
 		return h
 	}
 	return serviceGeneratorHandler{}
+}
+
+func (f Spec) getArgumentsGroupGenerator(name string) argumentsGroupGeneratorHandler {
+	if h, ok := f.argumentsGroupGenerators[name]; ok {
+		return h
+	}
+	return argumentsGroupGeneratorHandler{}
 }
 
 func (f Spec) getMethodGenerator(name string) methodGeneratorHandler {

@@ -75,7 +75,6 @@ type Type struct {
 	IsMap            bool
 	IsImport         bool
 	IsEntity         bool
-	IsStruct         bool
 	IsEnum           bool
 	IsBuiltin        bool
 	IsArgumentsGroup bool
