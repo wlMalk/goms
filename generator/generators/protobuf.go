@@ -38,6 +38,18 @@ func ProtoBufEntityDefinition(file file.File, service types.Service, entity type
 	return nil
 }
 
+func ProtoBufArgumentsGroupDefinition(file file.File, service types.Service, argGroup types.ArgumentsGroup) error {
+	argGroupName := strings.ToUpperFirst(argGroup.Name)
+	file.Pf("message %s {", argGroupName)
+	for i, arg := range argGroup.Arguments {
+		argName := strings.ToUpperFirst(arg.Name)
+		file.Pf("\t%s %s = %d;", arg.Type.ProtoBufType(), argName, i+1)
+	}
+	file.Pf("}")
+	file.Pf("")
+	return nil
+}
+
 func ProtoBufMethodResponseDefinition(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("message %sResponse {", methodName)
