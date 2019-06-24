@@ -26,6 +26,18 @@ func ProtoBufMethodRequestDefinition(file file.File, service types.Service, meth
 	return nil
 }
 
+func ProtoBufEntityDefinition(file file.File, service types.Service, entity types.Entity) error {
+	entityName := strings.ToUpperFirst(entity.Name)
+	file.Pf("message %s {", entityName)
+	for i, field := range entity.Fields {
+		fieldName := strings.ToUpperFirst(field.Name)
+		file.Pf("\t%s %s = %d;", field.Type.ProtoBufType(), fieldName, i+1)
+	}
+	file.Pf("}")
+	file.Pf("")
+	return nil
+}
+
 func ProtoBufMethodResponseDefinition(file file.File, service types.Service, method types.Method) error {
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("message %sResponse {", methodName)
