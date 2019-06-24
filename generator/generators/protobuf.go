@@ -1,6 +1,8 @@
 package generators
 
 import (
+	strs "strings"
+
 	"github.com/wlMalk/goms/constants"
 	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/helpers"
@@ -44,6 +46,18 @@ func ProtoBufArgumentsGroupDefinition(file file.File, service types.Service, arg
 	for i, arg := range argGroup.Arguments {
 		argName := strings.ToUpperFirst(arg.Name)
 		file.Pf("\t%s %s = %d;", arg.Type.ProtoBufType(), argName, i+1)
+	}
+	file.Pf("}")
+	file.Pf("")
+	return nil
+}
+
+func ProtoBufEnumDefinition(file file.File, service types.Service, enum types.Enum) error {
+	enumName := strings.ToUpperFirst(enum.Name)
+	file.Pf("enum %s {", enumName)
+	for _, c := range enum.Cases {
+		caseName := strs.ToUpper(strings.ToSnakeCase(c.Name))
+		file.Pf("\t%s = %d;", caseName, c.Value)
 	}
 	file.Pf("}")
 	file.Pf("")
