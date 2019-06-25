@@ -62,6 +62,14 @@ func (g *Generator) AddEntityGeneratorWithConditions(name string, generatorName 
 	g.AddSpec(name, g.GetSpec(name).AddEntityGenerator(generatorName, generator, conds...))
 }
 
+func (g *Generator) AddArgumentsGroupGenerator(name string, generatorName string, generator file.ArgumentsGroupGenerator) {
+	g.AddSpec(name, g.GetSpec(name).AddArgumentsGroupGenerator(generatorName, generator))
+}
+
+func (g *Generator) AddArgumentsGroupGeneratorWithConditions(name string, generatorName string, generator file.ArgumentsGroupGenerator, conds ...file.ArgumentsGroupCondition) {
+	g.AddSpec(name, g.GetSpec(name).AddArgumentsGroupGenerator(generatorName, generator, conds...))
+}
+
 func (g *Generator) GetSpec(name string) file.Spec {
 	return g.specs[strings.ToLower(name)]
 }
