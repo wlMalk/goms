@@ -70,6 +70,14 @@ func (g *Generator) AddArgumentsGroupGeneratorWithConditions(name string, genera
 	g.AddSpec(name, g.GetSpec(name).AddArgumentsGroupGenerator(generatorName, generator, conds...))
 }
 
+func (g *Generator) AddEnumGenerator(name string, generatorName string, generator file.EnumGenerator) {
+	g.AddSpec(name, g.GetSpec(name).AddEnumGenerator(generatorName, generator))
+}
+
+func (g *Generator) AddEnumGeneratorWithConditions(name string, generatorName string, generator file.EnumGenerator, conds ...file.EnumCondition) {
+	g.AddSpec(name, g.GetSpec(name).AddEnumGenerator(generatorName, generator, conds...))
+}
+
 func (g *Generator) GetSpec(name string) file.Spec {
 	return g.specs[strings.ToLower(name)]
 }
