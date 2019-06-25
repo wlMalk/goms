@@ -54,6 +54,14 @@ func (g *Generator) AddMethodGeneratorWithExtractorAndConditions(name string, ge
 	g.AddSpec(name, g.GetSpec(name).AddMethodGenerator(generatorName, generator, extractor, conds...))
 }
 
+func (g *Generator) AddEntityGenerator(name string, generatorName string, generator file.EntityGenerator) {
+	g.AddSpec(name, g.GetSpec(name).AddEntityGenerator(generatorName, generator))
+}
+
+func (g *Generator) AddEntityGeneratorWithConditions(name string, generatorName string, generator file.EntityGenerator, conds ...file.EntityCondition) {
+	g.AddSpec(name, g.GetSpec(name).AddEntityGenerator(generatorName, generator, conds...))
+}
+
 func (g *Generator) GetSpec(name string) file.Spec {
 	return g.specs[strings.ToLower(name)]
 }
