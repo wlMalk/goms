@@ -45,6 +45,9 @@ func ProtoBufServiceDefinitionsFileSpec(g *Generator) {
 		return len(method.Results) > 0
 	})
 	g.AddServiceGenerator(constants.SpecNameProtoBufServiceDefinitions, constants.ServiceGeneratorProtoBufServiceDefinition, generators.ProtoBufServiceDefinition)
+	g.AddEntityGenerator(constants.SpecNameProtoBufServiceDefinitions, constants.EntityGeneratorProtoBufEntityDefinition, generators.ProtoBufEntityDefinition)
+	g.AddArgumentsGroupGenerator(constants.SpecNameProtoBufServiceDefinitions, constants.ArgumentsGroupGeneratorProtoBufArgumentsGroupDefinition, generators.ProtoBufArgumentsGroupDefinition)
+	g.AddEnumGenerator(constants.SpecNameProtoBufServiceDefinitions, constants.EnumGeneratorProtoBufEnumDefinition, generators.ProtoBufEnumDefinition)
 }
 
 func ServiceMainFileSpec(g *Generator) {
