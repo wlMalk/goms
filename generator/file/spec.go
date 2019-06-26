@@ -320,15 +320,45 @@ func (f Spec) Generate(service types.Service, creator Creator) (File, error) {
 	var err error
 	file := createFile(f, service, creator)
 	applySpecFuncs(file, service, f.beforeFuncs...)
+
+	err = f.generateService(service, file)
+	if err != nil {
+		return nil, err
+	}
+	err = f.generateMethods(service, file)
+	if err != nil {
+		return nil, err
+	}
+	err = f.generateEntities(service, file)
+	if err != nil {
+		return nil, err
+	}
+	err = f.generateArgumentsGroups(service, file)
+	if err != nil {
+		return nil, err
+	}
+	err = f.generateEnums(service, file)
+	if err != nil {
+		return nil, err
+	}
+
+	return file, nil
+}
+
+func (f Spec) generateService(service types.Service, file File) (err error) {
 	for _, g := range f.serviceGenerators {
 		if !checkServiceConditions(service, g.conditions...) {
 			continue
 		}
 		err = g.generator(file, service)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
+	return nil
+}
+
+func (f Spec) generateMethods(service types.Service, file File) (err error) {
 	for _, g := range f.methodGenerators {
 		methods := service.Methods
 		if g.extractor != nil {
@@ -340,11 +370,59 @@ func (f Spec) Generate(service types.Service, creator Creator) (File, error) {
 			}
 			err = g.generator(file, service, method)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
 	}
-	return file, nil
+	return nil
+}
+
+func (f Spec) generateEntities(service types.Service, file File) (err error) {
+	for _, g := range f.entityGenerators {
+		entities := service.Entities
+		for _, entity := range entities {
+			if !checkEntityConditions(service, entity, g.conditions...) {
+				continue
+			}
+			err = g.generator(file, service, entity)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (f Spec) generateEnums(service types.Service, file File) (err error) {
+	for _, g := range f.enumGenerators {
+		enums := service.Enums
+		for _, enum := range enums {
+			if !checkEnumConditions(service, enum, g.conditions...) {
+				continue
+			}
+			err = g.generator(file, service, enum)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (f Spec) generateArgumentsGroups(service types.Service, file File) (err error) {
+	for _, g := range f.argumentsGroupGenerators {
+		argsGroups := service.ArgumentsGroups
+		for _, argsGroup := range argsGroups {
+			if !checkArgumentsGroupConditions(service, argsGroup, g.conditions...) {
+				continue
+			}
+			err = g.generator(file, service, argsGroup)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func createFile(f Spec, service types.Service, creator Creator) File {
@@ -381,6 +459,33 @@ func checkServiceConditions(service types.Service, conds ...ServiceCondition) bo
 func checkMethodConditions(service types.Service, method types.Method, conds ...MethodCondition) bool {
 	for _, cond := range conds {
 		if !cond(service, method) {
+			return false
+		}
+	}
+	return true
+}
+
+func checkEntityConditions(service types.Service, entity types.Entity, conds ...EntityCondition) bool {
+	for _, cond := range conds {
+		if !cond(service, entity) {
+			return false
+		}
+	}
+	return true
+}
+
+func checkArgumentsGroupConditions(service types.Service, argsGroup types.ArgumentsGroup, conds ...ArgumentsGroupCondition) bool {
+	for _, cond := range conds {
+		if !cond(service, argsGroup) {
+			return false
+		}
+	}
+	return true
+}
+
+func checkEnumConditions(service types.Service, enum types.Enum, conds ...EnumCondition) bool {
+	for _, cond := range conds {
+		if !cond(service, enum) {
 			return false
 		}
 	}
