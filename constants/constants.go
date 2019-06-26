@@ -108,6 +108,18 @@ const (
 )
 
 const (
+	EntityGeneratorProtoBufEntityDefinition string = "proto-buf-entity-definition"
+)
+
+const (
+	ArgumentsGroupGeneratorProtoBufArgumentsGroupDefinition string = "proto-buf-arguments-group-definition"
+)
+
+const (
+	EnumGeneratorProtoBufEnumDefinition string = "proto-buf-enum-definition"
+)
+
+const (
 	SpecNameDockerfile                      string = "dockerfile"
 	SpecNameProtoBufServiceDefinitions      string = "proto-buf-service-definitions"
 	SpecNameServiceMain                     string = "service-main"
