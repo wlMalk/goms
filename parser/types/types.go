@@ -100,15 +100,14 @@ func (t *Type) String() (s string) {
 		s += "*"
 	}
 	if t.IsMap {
-		s += "map[" + t.Name + "]" + t.Value.String()
+		s += "map[" + t.NameWithImport() + "]" + t.Value.String()
 		return
 	}
-	if t.IsImport {
-		s += t.Pkg + "." + t.Name
-	} else if !t.IsBytes {
-		s += t.Name
-	} else {
+
+	if t.IsBytes {
 		s += "[]byte"
+	} else {
+		s += t.NameWithImport()
 	}
 	return
 }
@@ -117,9 +116,19 @@ func (t *Type) GoArgumentType() string {
 	return t.String()
 }
 
+func (t *Type) NameWithImport() string {
+	if t.IsImport {
+		return t.Pkg + "." + t.Name
+	}
+	if t.IsEntity || t.IsEnum || t.IsArgumentsGroup {
+		return "types." + t.Name
+	}
+	return t.Name
+}
+
 func (t *Type) GoType() string {
 	if t.IsVariadic {
-		return "[]" + t.Name
+		return "[]" + t.NameWithImport()
 	}
 	return t.String()
 }
