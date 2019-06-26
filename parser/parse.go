@@ -401,6 +401,7 @@ func (p *Parser) setServiceArgumentsGroups(service *types.Service, argumentsGrou
 		for _, method := range service.Methods {
 			for _, arg := range method.Arguments {
 				if arg.Type.Name == ag.Name+"ArgumentsGroup" {
+					arg.Type.Name = ag.Name
 					arg.Type.ArgumentsGroup = &ag
 					arg.Type.IsArgumentsGroup = true
 					found = true
