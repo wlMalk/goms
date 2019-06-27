@@ -24,11 +24,23 @@ func GRPCTransportClientStruct(file file.File, service types.Service) error {
 }
 
 func GRPCTransportClientNewFunc(file file.File, service types.Service) error {
+	file.AddImport("kit_grpc", "github.com/go-kit/kit/transport/grpc")
+	file.AddImport("", "google.golang.org/grpc")
+	file.Pf("func New(conn *grpc.ClientConn, opts ...kit_grpc.ClientOption) *Client {")
+	file.Pf("return NewSpecial(conn, func(_ string) []kit_grpc.ClientOption {")
+	file.Pf("return opts")
+	file.Pf("})")
+	file.Pf("}")
+	file.Pf("")
+	return nil
+}
+
+func GRPCTransportClientNewSpecialFunc(file file.File, service types.Service) error {
 	serviceName := strings.ToUpperFirst(service.Name)
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("kit_grpc", "github.com/go-kit/kit/transport/grpc")
 	file.AddImport("", "google.golang.org/grpc")
-	file.Pf("func New(conn *grpc.ClientConn, opts ...kit_grpc.ClientOption) *Client {")
+	file.Pf("func NewSpecial(conn *grpc.ClientConn, optionsFunc func(method string) (opts []kit_grpc.ClientOption)) *Client {")
 	file.Pf("return &Client{")
 	for _, method := range helpers.GetMethodsWithGRPCClientEnabled(service) {
 		file.AddImport("", service.ImportPath, "/pkg/service/handlers/converters")
@@ -48,7 +60,7 @@ func GRPCTransportClientNewFunc(file file.File, service types.Service) error {
 			file.AddImport("", "github.com/golang/protobuf/ptypes/empty")
 			file.Pf("empty.Empty{},")
 		}
-		file.Pf("opts...,")
+		file.Pf("optionsFunc(\"%s\")...,", helpers.GetName(methodName, method.Alias))
 		file.Pf(").Endpoint())),")
 	}
 	file.Pf("}")

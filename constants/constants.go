@@ -45,6 +45,7 @@ const (
 	ServiceGeneratorValidatingMiddlewareNewFunc               string = "validating-middleware-new-func"
 	ServiceGeneratorGRPCTransportClientStruct                 string = "grpc-transport-client-struct"
 	ServiceGeneratorGRPCTransportClientNewFunc                string = "grpc-transport-client-new-func"
+	ServiceGeneratorGRPCTransportClientNewSpecialFunc         string = "grpc-transport-client-new-special-func"
 	ServiceGeneratorGRPCTransportClientGlobalVar              string = "grpc-transport-client-global-var"
 	ServiceGeneratorGRPCTransportServerRegisterFunc           string = "grpc-transport-server-register-func"
 	ServiceGeneratorGRPCTransportServerRegisterSpecialFunc    string = "grpc-transport-server-register-special-func"

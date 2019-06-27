@@ -265,6 +265,7 @@ func GRPCClientFileSpec(g *Generator) {
 			Conditions(helpers.IsGRPCClientEnabled))
 	g.AddServiceGenerator(constants.SpecNameGRPCClient, constants.ServiceGeneratorGRPCTransportClientStruct, generators.GRPCTransportClientStruct)
 	g.AddServiceGenerator(constants.SpecNameGRPCClient, constants.ServiceGeneratorGRPCTransportClientNewFunc, generators.GRPCTransportClientNewFunc)
+	g.AddServiceGenerator(constants.SpecNameGRPCClient, constants.ServiceGeneratorGRPCTransportClientNewSpecialFunc, generators.GRPCTransportClientNewSpecialFunc)
 	g.AddMethodGeneratorWithExtractor(constants.SpecNameGRPCClient, constants.MethodGeneratorGRPCTransportClientMethodFunc, generators.GRPCTransportClientMethodFunc, helpers.GetMethodsWithGRPCClientEnabled)
 }
 
