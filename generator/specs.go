@@ -326,6 +326,7 @@ func HTTPClientFileSpec(g *Generator) {
 			Conditions(helpers.IsHTTPClientEnabled))
 	g.AddServiceGenerator(constants.SpecNameHTTPClient, constants.ServiceGeneratorHTTPTransportClientStruct, generators.HTTPTransportClientStruct)
 	g.AddServiceGenerator(constants.SpecNameHTTPClient, constants.ServiceGeneratorHTTPTransportClientNewFunc, generators.HTTPTransportClientNewFunc)
+	g.AddServiceGenerator(constants.SpecNameHTTPClient, constants.ServiceGeneratorHTTPTransportClientNewSpecialFunc, generators.HTTPTransportClientNewSpecialFunc)
 	g.AddMethodGeneratorWithExtractor(constants.SpecNameHTTPClient, constants.MethodGeneratorHTTPTransportClientMethodFunc, generators.HTTPTransportClientMethodFunc, helpers.GetMethodsWithHTTPClientEnabled)
 }
 

@@ -52,6 +52,7 @@ const (
 	ServiceGeneratorGRPCTransportServerHandlerStruct          string = "grpc-transport-server-handler-struct"
 	ServiceGeneratorHTTPTransportClientStruct                 string = "http-transport-client-struct"
 	ServiceGeneratorHTTPTransportClientNewFunc                string = "http-transport-client-new-func"
+	ServiceGeneratorHTTPTransportClientNewSpecialFunc         string = "http-transport-client-new-special-func"
 	ServiceGeneratorHTTPTransportClientGlobalVar              string = "http-transport-client-global-var"
 	ServiceGeneratorHTTPTransportServerRegisterFunc           string = "http-transport-server-register-func"
 	ServiceGeneratorHTTPTransportServerRegisterSpecialFunc    string = "http-transport-server-register-special-func"

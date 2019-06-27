@@ -24,12 +24,24 @@ func HTTPTransportClientStruct(file file.File, service types.Service) error {
 }
 
 func HTTPTransportClientNewFunc(file file.File, service types.Service) error {
+	file.AddImport("", "net/url")
+	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
+	file.Pf("func New(u *url.URL, opts ...kit_http.ClientOption) *Client {")
+	file.Pf("return NewSpecial(u, func(_ string) []kit_http.ClientOption {")
+	file.Pf("return opts")
+	file.Pf("})")
+	file.Pf("}")
+	file.Pf("")
+	return nil
+}
+
+func HTTPTransportClientNewSpecialFunc(file file.File, service types.Service) error {
 	serviceNameSnake := strings.ToSnakeCase(service.Name)
 	file.AddImport("", "net/url")
 	file.AddImport("kit_http", "github.com/go-kit/kit/transport/http")
 	file.AddImport("", service.ImportPath, "/pkg/service/handlers/converters")
 	file.AddImport(serviceNameSnake+"_http", service.ImportPath, "/pkg/transport/http")
-	file.Pf("func New(u *url.URL, opts ...kit_http.ClientOption) *Client {")
+	file.Pf("func NewSpecial(u *url.URL, optionsFunc func(method string) (opts []kit_http.ClientOption)) *Client {")
 	file.Pf("return &Client{")
 	for _, method := range service.Methods {
 		methodName := strings.ToUpperFirst(method.Name)
@@ -40,7 +52,7 @@ func HTTPTransportClientNewFunc(file file.File, service types.Service) error {
 		file.Pf("\"POST\", u,")
 		file.Pf("%s_http.Encode%sRequest,", serviceNameSnake, methodName)
 		file.Pf("%s_http.Decode%sResponse,", serviceNameSnake, methodName)
-		file.Pf("opts...,")
+		file.Pf("optionsFunc(\"%s\")...,", helpers.GetName(methodName, method.Alias))
 		file.Pf(").Endpoint())),")
 	}
 	file.Pf("}")
