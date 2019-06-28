@@ -17,6 +17,7 @@ type File interface {
 	WriteTo(w io.Writer) (n int64, err error)
 	AddImport(alias string, path ...string)
 	HasImport(path ...string) bool
+	FormatComments(s ...string) []string
 	C(s string)
 	Cs(s ...string)
 	Cf(format string, args ...interface{})
