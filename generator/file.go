@@ -68,6 +68,10 @@ func (fs Files) Save() error {
 		_, err := os.Stat(filePath)
 		if (err != nil && os.IsNotExist(err)) || (err == nil && f.Overwrite()) {
 			buf := new(bytes.Buffer)
+			header := f.FormatComments(generateFileHeader(f.Overwrite())...)
+			for _, h := range header {
+				fmt.Fprintln(buf, h)
+			}
 			_, err = f.WriteTo(buf)
 			if err != nil {
 				return err
