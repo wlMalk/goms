@@ -56,6 +56,17 @@ func (f *TextFile) WriteTo(w io.Writer) (int64, error) {
 	return f.writeLines(w)
 }
 
+func (f *TextFile) FormatComments(cs ...string) (fcs []string) {
+	for _, c := range cs {
+		if c == "" {
+			fcs = append(fcs, "")
+			continue
+		}
+		fcs = append(fcs, fmt.Sprintf(f.commentFormat, c))
+	}
+	return
+}
+
 func (f *TextFile) P(s string) {
 	f.lines = append(f.lines, s)
 }

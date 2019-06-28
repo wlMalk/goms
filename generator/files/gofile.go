@@ -89,6 +89,17 @@ func (f *GoFile) writeImports() (lines []string) {
 	return
 }
 
+func (f *GoFile) FormatComments(cs ...string) (fcs []string) {
+	for _, c := range cs {
+		if c == "" {
+			fcs = append(fcs, "")
+			continue
+		}
+		fcs = append(fcs, fmt.Sprintf("// %s", c))
+	}
+	return
+}
+
 func (f *GoFile) HasImport(path ...string) bool {
 	for i := range path {
 		path[i] = strs.Trim(path[i], "/")
