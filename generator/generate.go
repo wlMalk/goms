@@ -35,6 +35,7 @@ var builtInGenerators []GeneratorOption = []GeneratorOption{
 	ProtoResponsesConvertersFileSpec,
 	RequestsFileSpec,
 	ResponseFileSpec,
+	ServiceTypesDefinitionsFileSpec,
 }
 
 var builtInFileCreators []GeneratorOption = []GeneratorOption{

@@ -457,3 +457,16 @@ func ResponseFileSpec(g *Generator) {
 		return len(method.Results) > 0
 	})
 }
+func ServiceTypesDefinitionsFileSpec(g *Generator) {
+	g.AddSpec(constants.SpecNameServiceTypesDefinitions,
+		file.NewSpec("go").
+			Path(filepath.Join("pkg", "service", "types"), nil).
+			Name("types.goms", nil).
+			Overwrite(true, nil).
+			Conditions(func(service types.Service) bool {
+				return len(service.Entities) > 0 || len(service.ArgumentsGroups) > 0 || len(service.Enums) > 0
+			}))
+	g.AddEntityGenerator(constants.SpecNameServiceTypesDefinitions, constants.EntityGeneratorServiceEntityType, generators.ServiceEntityType)
+	g.AddArgumentsGroupGenerator(constants.SpecNameServiceTypesDefinitions, constants.ArgumentsGroupGeneratorServiceArgumentsGroupType, generators.ServiceArgumentsGroupType)
+	g.AddEnumGenerator(constants.SpecNameServiceTypesDefinitions, constants.EnumGeneratorServiceEnumType, generators.ServiceEnumType)
+}

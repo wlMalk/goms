@@ -113,14 +113,17 @@ const (
 
 const (
 	EntityGeneratorProtoBufEntityDefinition string = "proto-buf-entity-definition"
+	EntityGeneratorServiceEntityType        string = "service-entity-type"
 )
 
 const (
 	ArgumentsGroupGeneratorProtoBufArgumentsGroupDefinition string = "proto-buf-arguments-group-definition"
+	ArgumentsGroupGeneratorServiceArgumentsGroupType        string = "service-arguments-group-type"
 )
 
 const (
 	EnumGeneratorProtoBufEnumDefinition string = "proto-buf-enum-definition"
+	EnumGeneratorServiceEnumType        string = "service-enum-type"
 )
 
 const (
@@ -156,6 +159,7 @@ const (
 	SpecNameServiceMiddleware               string = "service-middleware"
 	SpecNameServiceStartCMD                 string = "service-start-cmd"
 	SpecNameServiceTransportEndpoints       string = "service-transport-endpoints"
+	SpecNameServiceTypesDefinitions         string = "service-types-definitions"
 	SpecNameValidatingMiddleware            string = "validating-middleware"
 )
 
