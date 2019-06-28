@@ -314,7 +314,11 @@ func (f Spec) Generate(service types.Service, creator Creator) (File, error) {
 	if !checkServiceConditions(service, f.conditions...) {
 		return nil, nil
 	}
-	if len(f.serviceGenerators) == 0 && len(f.methodGenerators) == 0 {
+	if len(f.serviceGenerators) == 0 &&
+		len(f.methodGenerators) == 0 &&
+		len(f.entityGenerators) == 0 &&
+		len(f.argumentsGroupGenerators) == 0 &&
+		len(f.enumGenerators) == 0 {
 		return nil, nil
 	}
 	var err error
