@@ -35,7 +35,6 @@ func parseTNameType(t *types.Type, typ astTypes.TName) bool {
 		t.IsBuiltin = true
 	} else if !astTypes.IsBuiltin(typ) {
 		t.Name = typ.TypeName
-		t.IsEntity = true
 	} else {
 		return false
 	}
