@@ -5,10 +5,17 @@ import (
 	strs "strings"
 
 	"github.com/wlMalk/goms/constants"
+	"github.com/wlMalk/goms/generator/file"
 	"github.com/wlMalk/goms/generator/files"
 	"github.com/wlMalk/goms/generator/strings"
 	"github.com/wlMalk/goms/parser/types"
 )
+
+func AddTypesImports(file file.File, service types.Service) {
+	if len(service.Entities) > 0 || len(service.ArgumentsGroups) > 0 || len(service.Enums) > 0 {
+		file.AddImport("", service.ImportPath, "/pkg/service/types")
+	}
+}
 
 func GetMethodArguments(args []*types.Argument) []string {
 	var a []string

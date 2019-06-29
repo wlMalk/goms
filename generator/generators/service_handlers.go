@@ -10,6 +10,7 @@ import (
 )
 
 func MethodHandlers(file file.File, service types.Service, method types.Method) error {
+	helpers.AddTypesImports(file, service)
 	MethodHandlerTypes(file, service, method)
 	MethodHandlerFuncTypes(file, service, method)
 	MethodHandlerFuncHandlers(file, service, method)

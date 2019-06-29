@@ -26,6 +26,7 @@ func ServiceImplementationStructNewFunc(file file.File, service types.Service) e
 }
 
 func ServiceMethodImplementation(file file.File, service types.Service, method types.Method) error {
+	helpers.AddTypesImports(file, service)
 	file.AddImport("", "context")
 	methodName := strings.ToUpperFirst(method.Name)
 	serviceName := strings.ToUpperFirst(service.Name)

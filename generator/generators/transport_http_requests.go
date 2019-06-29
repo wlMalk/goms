@@ -10,6 +10,7 @@ import (
 )
 
 func HTTPRequest(file file.File, service types.Service, method types.Method) error {
+	helpers.AddTypesImports(file, service)
 	if len(method.Arguments) == 0 {
 		return nil
 	}

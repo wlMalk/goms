@@ -141,6 +141,7 @@ func ErrorLoggingMiddlewareMethodHandler(file file.File, service types.Service, 
 }
 
 func LoggingMiddlewareTypes(file file.File, service types.Service) error {
+	helpers.AddTypesImports(file, service)
 	methods := helpers.GetMethodsWithLoggingEnabled(service)
 	if len(methods) > 0 {
 		file.Pf("type (")

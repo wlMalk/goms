@@ -10,6 +10,7 @@ import (
 )
 
 func HandlerConverterTypes(file file.File, service types.Service) error {
+	helpers.AddTypesImports(file, service)
 	file.Pf("type (")
 	file.Pf("requestResponseHandler struct {")
 	file.Pf("handler handlers.Handler")

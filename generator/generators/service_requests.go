@@ -10,6 +10,7 @@ import (
 )
 
 func ServiceRequestStruct(file file.File, service types.Service, method types.Method) error {
+	helpers.AddTypesImports(file, service)
 	methodName := strings.ToUpperFirst(method.Name)
 	file.Pf("type %sRequest struct {", methodName)
 	for _, arg := range method.Arguments {
@@ -20,6 +21,7 @@ func ServiceRequestStruct(file file.File, service types.Service, method types.Me
 }
 
 func ServiceRequestNewFunc(file file.File, service types.Service, method types.Method) error {
+	helpers.AddTypesImports(file, service)
 	methodName := strings.ToUpperFirst(method.Name)
 	args := helpers.GetMethodArguments(method.Arguments)
 	file.Pf("func %s(%s)*%sRequest{", methodName, strs.Join(args, ", "), methodName)
