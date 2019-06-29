@@ -16,6 +16,15 @@ func (p *Parser) setUpMethodFromService(s *types.Service, m *types.Method) {
 }
 
 func validateMethod(m *types.Method) error {
+	{
+		if m.Options.HTTP.Method != "POST" && m.Options.HTTP.Method != "PUT" && m.Options.HTTP.Method != "PATCH" {
+			for _, arg := range m.Arguments {
+				if arg.Options.HTTP.Origin == "BODY" {
+					return fmt.Errorf("invalid http origin 'BODY' for '%s' argument in '%s' method with '%s' verb", arg.Name, m.Name, m.Options.HTTP.Method)
+				}
+			}
+		}
+	}
 	return nil
 }
 
