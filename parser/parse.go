@@ -348,7 +348,7 @@ func (p *Parser) parseArgumentsGroups(ast *astTypes.File) (argumentsGroups []typ
 func (p *Parser) setServiceEnums(service *types.Service, enums []types.Enum) {
 	for _, e := range enums {
 		found := false
-		for _, method := range service.Methods {
+		for i, method := range service.Methods {
 			for _, arg := range method.Arguments {
 				if arg.Type.Name == e.Name {
 					arg.Type.Enum = &e
@@ -363,6 +363,7 @@ func (p *Parser) setServiceEnums(service *types.Service, enums []types.Enum) {
 					found = true
 				}
 			}
+			service.Methods[i] = method
 		}
 		if found {
 			service.Enums = append(service.Enums, e)
@@ -373,7 +374,7 @@ func (p *Parser) setServiceEnums(service *types.Service, enums []types.Enum) {
 func (p *Parser) setServiceEntities(service *types.Service, entities []types.Entity) {
 	for _, e := range entities {
 		found := false
-		for _, method := range service.Methods {
+		for i, method := range service.Methods {
 			for _, arg := range method.Arguments {
 				if arg.Type.Name == e.Name {
 					arg.Type.Entity = &e
@@ -388,6 +389,7 @@ func (p *Parser) setServiceEntities(service *types.Service, entities []types.Ent
 					found = true
 				}
 			}
+			service.Methods[i] = method
 		}
 		if found {
 			service.Entities = append(service.Entities, e)
@@ -398,7 +400,7 @@ func (p *Parser) setServiceEntities(service *types.Service, entities []types.Ent
 func (p *Parser) setServiceArgumentsGroups(service *types.Service, argumentsGroups []types.ArgumentsGroup) {
 	for _, ag := range argumentsGroups {
 		found := false
-		for _, method := range service.Methods {
+		for i, method := range service.Methods {
 			for _, arg := range method.Arguments {
 				if arg.Type.Name == ag.Name+"ArgumentsGroup" {
 					arg.Type.Name = ag.Name
@@ -414,6 +416,7 @@ func (p *Parser) setServiceArgumentsGroups(service *types.Service, argumentsGrou
 					found = true
 				}
 			}
+			service.Methods[i] = method
 		}
 		if found {
 			service.ArgumentsGroups = append(service.ArgumentsGroups, ag)
