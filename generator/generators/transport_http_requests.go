@@ -272,7 +272,21 @@ func QueryExtractor(file file.File, arg *types.Argument) {
 		file.Pf("var values %s", arg.Type.GoType())
 		file.Pf("for _,v:=range %ss {", lowerArgName)
 		file.Pf("if len(v) > 0 {")
-		ArgumentConverter(file, arg, "vs", "v")
+		if arg.Type.IsEntity {
+			file.AddImport("", "encoding/json")
+			if arg.Type.IsPointer {
+				file.Pf("vs := *types.%s{}", arg.Type.Entity.Name)
+				file.Pf("err = json.Unmarshal([]byte(v), vs)")
+			} else {
+				file.Pf("vs := types.%s{}", arg.Type.Entity.Name)
+				file.Pf("err = json.Unmarshal([]byte(v), &vs)")
+			}
+			file.Pf("if err != nil {")
+			file.Pf("return nil, err")
+			file.Pf("}")
+		} else {
+			ArgumentConverter(file, arg, "vs", "v")
+		}
 		file.Pf("values = append(values, %s)", getTypeConverterWrapper(arg.Type.GoType(), "vs"))
 		file.Pf("}")
 		file.Pf("}")
@@ -281,7 +295,21 @@ func QueryExtractor(file file.File, arg *types.Argument) {
 	} else {
 		file.Pf("v:=query.Get(\"%s\")", argNameSnake)
 		file.Pf("if len(v) > 0 {")
-		ArgumentConverter(file, arg, "vs", "v")
+		if arg.Type.IsEntity {
+			file.AddImport("", "encoding/json")
+			if arg.Type.IsPointer {
+				file.Pf("vs := *types.%s{}", arg.Type.Entity.Name)
+				file.Pf("err = json.Unmarshal([]byte(v), vs)")
+			} else {
+				file.Pf("vs := types.%s{}", arg.Type.Entity.Name)
+				file.Pf("err = json.Unmarshal([]byte(v), &vs)")
+			}
+			file.Pf("if err != nil {")
+			file.Pf("return nil, err")
+			file.Pf("}")
+		} else {
+			ArgumentConverter(file, arg, "vs", "v")
+		}
 		file.Pf("req.%s = vs", argName)
 		file.Pf("}")
 	}
