@@ -60,7 +60,13 @@ func MethodMetricsTag(method *types.Method, tag string) error {
 
 func MethodHTTPMethodTag(method *types.Method, tag string) error {
 	httpMethod := strs.ToUpper(tag)
-	if httpMethod != "POST" && httpMethod != "GET" && httpMethod != "PUT" && httpMethod != "DELETE" && httpMethod != "OPTIONS" && httpMethod != "HEAD" {
+	if httpMethod != "POST" &&
+		httpMethod != "PATCH" &&
+		httpMethod != "GET" &&
+		httpMethod != "PUT" &&
+		httpMethod != "DELETE" &&
+		httpMethod != "OPTIONS" &&
+		httpMethod != "HEAD" {
 		return fmt.Errorf("invalid http-method value '%s'", tag)
 	}
 	method.Options.HTTP.Method = httpMethod
